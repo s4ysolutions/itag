@@ -20,7 +20,6 @@ public class MainActivity extends Activity {
         Uri appLinkData = appLinkIntent.getData();
         */
 
-        setupContent();
     }
 
     private void setupContent() {
@@ -32,4 +31,9 @@ public class MainActivity extends Activity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupContent();
+    }
 }
