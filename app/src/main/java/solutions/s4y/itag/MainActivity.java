@@ -38,7 +38,11 @@ public class MainActivity extends Activity {
         if (mBluetoothAdapter==null) {
             fragment = new NoBLEFragment();
         }else {
-            fragment = new BLEFragment();
+            if ( mBluetoothAdapter.isEnabled()) {
+                fragment = new BLEFragment();
+            }else{
+                fragment = new DisabledBLEFragment();
+            }
         }
         fragmentTransaction.add(R.id.content, fragment);
         fragmentTransaction.commit();
