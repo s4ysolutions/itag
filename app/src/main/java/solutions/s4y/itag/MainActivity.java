@@ -10,9 +10,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    static private final int REQUEST_ENABLE_BT = 1;
+    static public final int REQUEST_ENABLE_BT = 1;
     private BluetoothAdapter mBluetoothAdapter;
 
     @Override
@@ -54,4 +56,17 @@ public class MainActivity extends Activity {
         setupContent();
     }
 
+
+    public void onEnableBLEClick(View ignored) {
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, MainActivity.REQUEST_ENABLE_BT);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode==REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
+            setupContent();
+        }
+    }
 }

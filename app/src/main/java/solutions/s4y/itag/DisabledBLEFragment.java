@@ -1,6 +1,8 @@
 package solutions.s4y.itag;
 
 
+import android.bluetooth.BluetoothAdapter;
+import android.content.Intent;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -23,7 +25,7 @@ public class DisabledBLEFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_disabled_ble, container, false);
+        return inflater.inflate(R.layout.fragment_ble_disabled, container, false);
     }
 
 }
