@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
                 fragment = new DisabledBLEFragment();
             }
         }
-        fragmentTransaction.add(R.id.content, fragment);
+        fragmentTransaction.replace(R.id.content, fragment);
         fragmentTransaction.commit();
     }
 
