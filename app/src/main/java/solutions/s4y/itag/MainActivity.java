@@ -10,12 +10,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import solutions.s4y.itag.ble.LeScanObservable;
+import solutions.s4y.itag.ble.LeScanResult;
+
 public class MainActivity extends Activity {
     static public final int REQUEST_ENABLE_BT = 1;
-    private BluetoothAdapter mBluetoothAdapter;
+    public BluetoothAdapter mBluetoothAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,12 +43,12 @@ public class MainActivity extends Activity {
         final FragmentManager fragmentManager = getFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         Fragment fragment;
-        if (mBluetoothAdapter==null) {
+        if (mBluetoothAdapter == null) {
             fragment = new NoBLEFragment();
-        }else {
-            if ( mBluetoothAdapter.isEnabled()) {
+        } else {
+            if (mBluetoothAdapter.isEnabled()) {
                 fragment = new BLEFragment();
-            }else{
+            } else {
                 fragment = new DisabledBLEFragment();
             }
         }
@@ -50,12 +56,43 @@ public class MainActivity extends Activity {
         fragmentTransaction.commit();
     }
 
+    private Disposable mDisposableLeScan;
+
     @Override
     protected void onResume() {
         super.onResume();
         setupContent();
     }
 
+    @Override
+    protected void onPause() {
+        if (mDisposableLeScan != null) {
+            mDisposableLeScan.dispose();
+            mDisposableLeScan = null;
+        }
+        super.onPause();
+    }
+
+    public void onStartStopScan(View ignored) {
+        if (mDisposableLeScan == null) {
+            mDisposableLeScan =
+                    LeScanObservable
+                            .observable(mBluetoothAdapter, 20)
+                            .subscribe(
+                                    result -> { Log.d("AAA", result.toString()+" "+Thread.currentThread().getName());
+                                    },
+                                    error -> {
+                                        Log.e("AAA", error.toString()+" "+Thread.currentThread().getName());
+                                    },
+                                    () -> {
+                                        Log.i("AAA","Complete"+" "+Thread.currentThread().getName());
+                                    }
+                            );
+        } else {
+            mDisposableLeScan.dispose();
+            mDisposableLeScan = null;
+        }
+    }
 
     public void onEnableBLEClick(View ignored) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -65,7 +102,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode==REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
             setupContent();
         }
     }
