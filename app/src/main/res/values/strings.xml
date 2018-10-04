@@ -5,4 +5,7 @@
     <string name="hello_no_ble_fragment">Hello no BLE fragment</string>
     <string name="hello_ble_fragment">Hello BLE fragment</string>
     <string name="hello_disabled_ble_fragment">Hello disabled BLE fragment</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

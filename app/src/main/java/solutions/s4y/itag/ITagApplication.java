@@ -7,7 +7,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.subjects.PublishSubject;
 
 public final class ITagApplication extends Application {
-    final static public PublishSubject<Exception> errorNotifier = PublishSubject.create();
+    final static public PublishSubject<Throwable> errorNotifier = PublishSubject.create();
     final private CompositeDisposable mCompositeDisposable = new CompositeDisposable();
 
     @Override

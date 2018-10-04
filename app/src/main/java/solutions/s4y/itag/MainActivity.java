@@ -12,12 +12,15 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import solutions.s4y.itag.ble.LeScanObservable;
 import solutions.s4y.itag.ble.LeScanResult;
+import solutions.s4y.itag.ble.LeScanner;
 
 public class MainActivity extends Activity {
     static public final int REQUEST_ENABLE_BT = 1;
@@ -40,57 +43,67 @@ public class MainActivity extends Activity {
     }
 
     private void setupContent() {
+        ProgressBar pb = findViewById(R.id.progress);
+
         final FragmentManager fragmentManager = getFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         Fragment fragment;
-        if (mBluetoothAdapter == null) {
-            fragment = new NoBLEFragment();
+        if (LeScanner.isScanning) {
+            pb.setVisibility(View.VISIBLE);
+            fragment = new LeScanFragment();
         } else {
-            if (mBluetoothAdapter.isEnabled()) {
-                fragment = new BLEFragment();
+            pb.setVisibility(View.GONE);
+            if (mBluetoothAdapter == null) {
+                fragment = new NoBLEFragment();
             } else {
-                fragment = new DisabledBLEFragment();
+                if (mBluetoothAdapter.isEnabled()) {
+                    fragment = new BLEFragment();
+                } else {
+                    fragment = new DisabledBLEFragment();
+                }
             }
         }
         fragmentTransaction.replace(R.id.content, fragment);
         fragmentTransaction.commit();
     }
 
-    private Disposable mDisposableLeScan;
+    private CompositeDisposable mDisposables;
 
     @Override
     protected void onResume() {
         super.onResume();
         setupContent();
+        if (BuildConfig.DEBUG) {
+            if (mDisposables != null) {
+                ITagApplication.errorNotifier.onNext(new Exception("MainActivity has not null mDisposables"));
+                mDisposables.dispose();
+            }
+        }
+        mDisposables = new CompositeDisposable();
+        mDisposables.add(LeScanner.subject.subscribe(ignored -> setupContent()));
     }
 
     @Override
     protected void onPause() {
-        if (mDisposableLeScan != null) {
-            mDisposableLeScan.dispose();
-            mDisposableLeScan = null;
+        if (BuildConfig.DEBUG) {
+            if (mDisposables == null) {
+                ITagApplication.errorNotifier.onNext(new Exception("MainActivity has null mDisposables"));
+            }
+        }
+        if (mDisposables != null) {
+            mDisposables.dispose();
+            mDisposables = null;
         }
         super.onPause();
     }
 
     public void onStartStopScan(View ignored) {
-        if (mDisposableLeScan == null) {
-            mDisposableLeScan =
-                    LeScanObservable
-                            .observable(mBluetoothAdapter, 20)
-                            .subscribe(
-                                    result -> { Log.d("AAA", result.toString()+" "+Thread.currentThread().getName());
-                                    },
-                                    error -> {
-                                        Log.e("AAA", error.toString()+" "+Thread.currentThread().getName());
-                                    },
-                                    () -> {
-                                        Log.i("AAA","Complete"+" "+Thread.currentThread().getName());
-                                    }
-                            );
+        if (LeScanner.isScanning) {
+            LeScanner.stopScan();
         } else {
-            mDisposableLeScan.dispose();
-            mDisposableLeScan = null;
+            if (mBluetoothAdapter != null) {
+                LeScanner.startScan(mBluetoothAdapter);
+            }
         }
     }
 
