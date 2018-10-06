@@ -10,3 +10,4 @@
 .externalNativeBuild
 /app/release
 .idea/caches
+.idea/assetWizardSettings.xml
