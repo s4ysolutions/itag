@@ -5,25 +5,20 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.Toast;
-
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import solutions.s4y.itag.ble.LeScanObservable;
-import solutions.s4y.itag.ble.LeScanResult;
+import solutions.s4y.itag.ble.Db;
 import solutions.s4y.itag.ble.LeScanner;
 
 public class MainActivity extends Activity {
     static public final int REQUEST_ENABLE_BT = 1;
+    static public final int REQUEST_ENABLE_LOCATION = 2;
     public BluetoothAdapter mBluetoothAdapter;
 
     @Override
@@ -42,22 +37,32 @@ public class MainActivity extends Activity {
             mBluetoothAdapter = bluetoothManager.getAdapter();
     }
 
-    private void setupContent() {
+    private void setupProgressBar(){
         ProgressBar pb = findViewById(R.id.progress);
+        if (LeScanner.isScanning) {
+            pb.setVisibility(View.VISIBLE);
+            pb.setIndeterminate(false);
+            pb.setMax(LeScanner.TIMEOUT);
+            pb.setProgress(LeScanner.tick);
+        } else {
+            pb.setVisibility(View.GONE);
+        }
+    }
 
+    private void setupContent() {
         final FragmentManager fragmentManager = getFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         Fragment fragment;
         if (LeScanner.isScanning) {
-            pb.setVisibility(View.VISIBLE);
+            setupProgressBar();
             fragment = new LeScanFragment();
         } else {
-            pb.setVisibility(View.GONE);
+            setupProgressBar();
             if (mBluetoothAdapter == null) {
                 fragment = new NoBLEFragment();
             } else {
                 if (mBluetoothAdapter.isEnabled()) {
-                    fragment = new BLEFragment();
+                    fragment = new ITagsFragment();
                 } else {
                     fragment = new DisabledBLEFragment();
                 }
@@ -81,6 +86,7 @@ public class MainActivity extends Activity {
         }
         mDisposables = new CompositeDisposable();
         mDisposables.add(LeScanner.subject.subscribe(ignored -> setupContent()));
+        mDisposables.add(LeScanner.subjectTimer.subscribe(ignored->setupProgressBar()));
     }
 
     @Override
@@ -97,12 +103,23 @@ public class MainActivity extends Activity {
         super.onPause();
     }
 
+    public void onRememberForget(View sender) {
+        BluetoothDevice device = (BluetoothDevice)sender.getTag();
+        if (device==null) return;
+        if (Db.has(device)) {
+            Db.forget(this, device);
+        }else{
+            Db.remember(this, device);
+            LeScanner.stopScan();
+        }
+    }
+
     public void onStartStopScan(View ignored) {
         if (LeScanner.isScanning) {
             LeScanner.stopScan();
         } else {
             if (mBluetoothAdapter != null) {
-                LeScanner.startScan(mBluetoothAdapter);
+                LeScanner.startScan(mBluetoothAdapter, this);
             }
         }
     }
@@ -115,8 +132,18 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
-            setupContent();
+        if (resultCode==RESULT_OK) {
+            switch (requestCode) {
+                case REQUEST_ENABLE_BT:
+                    setupContent();
+                    break;
+                case REQUEST_ENABLE_LOCATION:
+                    if (mBluetoothAdapter != null) {
+                        LeScanner.startScan(mBluetoothAdapter, this);
+                    }
+                    break;
+            }
         }
+
     }
 }
