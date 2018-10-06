@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -20,8 +21,8 @@ import solutions.s4y.itag.ble.LeScanner;
  * A simple {@link Fragment} subclass.
  */
 public class LeScanFragment extends Fragment {
-    private class ResultsAdapter extends ArrayAdapter<LeScanResult> {
-        ResultsAdapter() {
+    private class Adapter extends ArrayAdapter<LeScanResult> {
+        Adapter() {
             super(getActivity(), R.layout.fragment_le_scan_item, LeScanner.results);
         }
 
@@ -36,6 +37,9 @@ public class LeScanFragment extends Fragment {
             tv.setText(r.device.getName()+" "+r.device.getType());
             tv = convertView.findViewById(R.id.text_addr);
             tv.setText(r.device.getAddress());
+
+            ImageView btn = convertView.findViewById(R.id.btn_connect);
+            btn.setTag(r.device);
             return convertView;
         }
     }
@@ -51,7 +55,7 @@ public class LeScanFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_le_scan, container, false);
         ListView listView = view.findViewById(R.id.results_list);
-        listView.setAdapter(new ResultsAdapter());
+        listView.setAdapter(new Adapter());
         return view;
     }
 
@@ -86,7 +90,7 @@ public class LeScanFragment extends Fragment {
     private void updateResultsList() {
 
         ListView listView = Objects.requireNonNull(getView()).findViewById(R.id.results_list);
-        ((ResultsAdapter)(listView.getAdapter())).notifyDataSetChanged();
+        ((Adapter)(listView.getAdapter())).notifyDataSetChanged();
 //        ((ResultsAdapter)(listView.getAdapter())).clear();
 //        ((ResultsAdapter)(listView.getAdapter())).addAll(LeScanner.results);
     }
