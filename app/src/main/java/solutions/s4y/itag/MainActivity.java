@@ -1,6 +1,7 @@
 package solutions.s4y.itag;
 
 import android.app.Activity;
+import android.app.Application;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 import io.reactivex.disposables.CompositeDisposable;
 import solutions.s4y.itag.ble.Db;
+import solutions.s4y.itag.ble.Device;
 import solutions.s4y.itag.ble.LeScanner;
 
 public class MainActivity extends Activity {
@@ -103,14 +105,26 @@ public class MainActivity extends Activity {
         super.onPause();
     }
 
-    public void onRememberForget(View sender) {
+    public void onRemember(View sender) {
         BluetoothDevice device = (BluetoothDevice)sender.getTag();
-        if (device==null) return;
-        if (Db.has(device)) {
-            Db.forget(this, device);
-        }else{
+        if (device==null) {
+            ITagApplication.errorNotifier.onNext(new Exception("No BLE device"));
+            return;
+        }
+        if (!Db.has(device)) {
             Db.remember(this, device);
             LeScanner.stopScan();
+        }
+    }
+
+    public void onForget(View sender) {
+        Device device = (Device)sender.getTag();
+        if (device==null) {
+            ITagApplication.errorNotifier.onNext(new Exception("No device"));
+            return;
+        }
+        if (Db.has(device)) {
+            Db.forget(this, device);
         }
     }
 

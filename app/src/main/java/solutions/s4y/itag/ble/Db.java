@@ -14,9 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.annotations.NonNull;
+import io.reactivex.subjects.PublishSubject;
 import solutions.s4y.itag.ITagApplication;
 
 public class Db {
+    static public final PublishSubject<Device> subject = PublishSubject.create();
+
     public static final List<Device> devices = new ArrayList<>(4);
 
     static private Device findByAddr(@NonNull final String addr) {
@@ -24,10 +27,6 @@ public class Db {
             if (d.addr.equals(addr)) return d;
         }
         return null;
-    }
-
-    static public Device find(@NonNull final BluetoothDevice device) {
-        return findByAddr(device.getAddress());
     }
 
     static private File getSer(@NonNull final Context context) throws IOException {
@@ -79,20 +78,28 @@ public class Db {
 
     static public void remember(@NonNull final Context context, @NonNull final BluetoothDevice device) {
         if (findByAddr(device.getAddress()) == null) {
-            devices.add(new Device(device));
+            final Device d = new Device(device);
+            devices.add(d);
             save(context);
+            subject.onNext(d);
         }
     }
 
-    static public void forget(@NonNull final Context context, @NonNull final BluetoothDevice device) {
-        Device existing = findByAddr(device.getAddress());
+    static public void forget(@NonNull final Context context, @NonNull final Device device) {
+        Device existing = findByAddr(device.addr);
         if (existing != null) {
             devices.remove(existing);
             save(context);
+            subject.onNext(existing);
         }
     }
 
     static public boolean has(@NonNull final BluetoothDevice device) {
         return findByAddr(device.getAddress()) != null;
     }
+
+    static public boolean has(@NonNull final Device device) {
+        return findByAddr(device.addr) != null;
+    }
+
 }
