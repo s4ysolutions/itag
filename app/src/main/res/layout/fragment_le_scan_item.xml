@@ -22,10 +22,11 @@
 
     <ImageView
         android:id="@+id/btn_connect"
-        android:layout_width="0.4in"
-        android:layout_height="0.4in"
+        android:layout_width="@dimen/buttonHeight"
+        android:layout_height="@dimen/buttonHeight"
+        android:layout_margin="@dimen/buttonMargin"
         android:contentDescription="@string/rememebr"
-        android:onClick="onRememberForget"
+        android:onClick="onRemember"
         android:src="@drawable/link" />
 
 </LinearLayout>
