@@ -31,7 +31,7 @@
     <LinearLayout
         style="?android:attr/actionBarStyle"
         android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
+        android:layout_height="wrap_content"
         android:orientation="horizontal">
 
         <View
@@ -42,28 +42,35 @@
 
         <ImageView
             android:id="@+id/btn_set_name"
-            style="?android:attr/actionButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_width="@android:dimen/app_icon_size"
+            android:layout_height="@android:dimen/app_icon_size"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="4dp"
             android:contentDescription="@string/change_name"
             android:onClick="onSetName"
             android:src="@drawable/rename" />
 
         <ImageView
             android:id="@+id/btn_color"
-            style="?android:attr/actionButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_width="@android:dimen/app_icon_size"
+            android:layout_height="@android:dimen/app_icon_size"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="4dp"
             android:contentDescription="@string/color"
             android:onClick="onChangeColor"
             android:src="@drawable/color" />
 
         <ImageView
             android:id="@+id/btn_forget"
-            style="?android:attr/actionButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_margin="@dimen/buttonMargin"
+            android:layout_width="@android:dimen/app_icon_size"
+            android:layout_height="@android:dimen/app_icon_size"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="4dp"
             android:contentDescription="@string/forget"
             android:onClick="onForget"
             android:src="@drawable/minus" />

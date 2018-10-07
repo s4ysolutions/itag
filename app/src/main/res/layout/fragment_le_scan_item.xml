@@ -2,15 +2,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".MainActivity"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="4dp"
+    tools:context=".MainActivity">
 
     <TextView
         android:id="@+id/text_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:text="TextView" />
 
     <TextView
@@ -18,15 +21,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:gravity="center_vertical"
         android:text="TextView" />
 
     <ImageView
         android:id="@+id/btn_connect"
-        android:layout_width="@dimen/buttonHeight"
-        android:layout_height="@dimen/buttonHeight"
+        android:layout_width="@android:dimen/app_icon_size"
+        android:layout_height="@android:dimen/app_icon_size"
         android:layout_margin="@dimen/buttonMargin"
         android:contentDescription="@string/rememebr"
         android:onClick="onRemember"
-        android:src="@drawable/link" />
+        android:src="@drawable/plus" />
 
 </LinearLayout>

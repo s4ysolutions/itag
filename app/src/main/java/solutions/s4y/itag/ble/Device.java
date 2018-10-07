@@ -14,7 +14,7 @@ public final class Device implements Serializable {
         BLUE
     }
 
-    final String addr;
+    public final String addr;
     public Color color;
     public String name;
 

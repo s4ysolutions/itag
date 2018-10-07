@@ -13,6 +13,8 @@
     <string name="confirm_forget">The device will be forgotten, are you sure? You will be able to reconnect this device and remember it in any moment though.\n\nForget?</string>
     <string name="change_name">Set iTag\'s name</string>
 
+    <string name="scanning">Scanning for iTags...</string>
+
     <string name="color">Change device color</string>
     <string name="start_scan">Scan for new devices</string>
     <string name="rememebr">Remember device</string>

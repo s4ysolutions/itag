@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/actionbar"
@@ -18,13 +19,14 @@
             style="?android:attr/actionButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:contentDescription="@string/app_name"
             android:scaleType="centerInside"
             android:src="@drawable/ic_launcher_foreground" />
 
         <TextView
             android:id="@+id/text_title"
             style="?android:attr/actionBarTabTextStyle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
@@ -32,13 +34,14 @@
 
         <ImageView
             android:id="@+id/imageView"
-            style="?android:attr/actionButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="8dp"
             android:contentDescription="@string/start_scan"
             android:onClick="onStartStopScan"
-            android:src="@drawable/start_scan" />
+            android:scaleType="centerInside"
+            android:src="@drawable/scan" />
 
     </LinearLayout>
 </LinearLayout>

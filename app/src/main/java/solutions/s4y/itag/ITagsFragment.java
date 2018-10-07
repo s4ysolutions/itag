@@ -58,6 +58,7 @@ public class ITagsFragment extends Fragment {
         final ImageView imageITag = itagLayout.findViewById(R.id.image_itag);
         imageITag.setImageResource(imageId);
         final TextView textName = itagLayout.findViewById(R.id.text_name);
+//        textName.setText(device.name!=null && device.name.length()>0 ?device.name:device.addr);
         textName.setText(device.name);
     }
 
