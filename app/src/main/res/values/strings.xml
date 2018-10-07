@@ -27,4 +27,5 @@
     <string name="green">Green</string>
     <string name="blue">Blue</string>
 
+    <string name="help_scan">You have no iTag devices connected yet.\n\nClick "Scan" button above to start searching.</string>
 </resources>

@@ -44,4 +44,5 @@
             android:src="@drawable/scan" />
 
     </LinearLayout>
+
 </LinearLayout>
