@@ -12,6 +12,7 @@
     <string name="cancel">Cancel</string>
 
     <string name="color">Change device color</string>
+    <string name="start_scan">Scan for new devices</string>
     <string name="rememebr">Remember device</string>
     <string name="forget">Forget device</string>
     <string name="itag">Connected iTag</string>
