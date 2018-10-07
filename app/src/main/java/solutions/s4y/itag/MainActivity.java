@@ -1,6 +1,8 @@
 package solutions.s4y.itag;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -126,7 +128,13 @@ public class MainActivity extends Activity {
             return;
         }
         if (Db.has(device)) {
-            Db.forget(this, device);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.confirm_forget)
+                    .setTitle(R.string.confirm_title)
+                    .setPositiveButton(android.R.string.yes, (dialog, which) -> Db.forget(this, device))
+                    .setNegativeButton(android.R.string.no, (dialog, which) -> dialog.cancel())
+                    .show();
+            ;
         }
     }
 

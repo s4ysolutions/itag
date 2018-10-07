@@ -9,8 +9,8 @@
 
     <string name="request_permission_title">Permission required</string>
     <string name="request_location_permission">Starting from Android 6.0 Marhmallow the system requires location permission in order to scan for Bluetooth LE devices. This application is not using this information in any way.</string>
-    <string name="ok">Ok</string>
-    <string name="cancel">Cancel</string>
+    <string name="confirm_title">Confirm</string>
+    <string name="confirm_forget">The device will be forgotten, are you sure? You will be able to reconnect this device and remember it in any moment though.\n\nForget?</string>
     <string name="change_name">Set iTag\'s name</string>
 
     <string name="color">Change device color</string>

@@ -22,13 +22,13 @@ public class SetNameDialogFragment extends DialogFragment {
         textName.setText(device.name);
         builder.setTitle(R.string.change_name)
                 .setView(view)
-                .setPositiveButton(R.string.ok, (dialog, id) -> {
+                .setPositiveButton(android.R.string.ok, (dialog, id) -> {
                     device.name=textName.getText().toString();
                     Db.save(getActivity());
                     Db.subject.onNext(device);
                     // dialog.dismiss();
                 })
-                .setNegativeButton(R.string.cancel, (dialog, id) -> {
+                .setNegativeButton(android.R.string.cancel, (dialog, id) -> {
                     //dialog.cancel();
                 });
         return builder.create();
