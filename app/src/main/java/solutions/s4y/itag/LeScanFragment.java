@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import java.util.Objects;
 
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
@@ -27,14 +28,15 @@ public class LeScanFragment extends Fragment {
         }
 
         @Override
-        public View getView(int position,View convertView, ViewGroup parent) {
+        public View getView(@NonNull int position, View convertView,  ViewGroup parent) {
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_le_scan_item, parent, false);
             }
             LeScanResult r = getItem(position);
             TextView tv;
             tv = convertView.findViewById(R.id.text_name);
-            tv.setText(r.device.getName()+" "+r.device.getType());
+            assert r != null;
+            tv.setText(r.device.getName());
             tv = convertView.findViewById(R.id.text_addr);
             tv.setText(r.device.getAddress());
 
