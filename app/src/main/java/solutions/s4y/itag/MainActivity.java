@@ -1,6 +1,5 @@
 package solutions.s4y.itag;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -12,7 +11,6 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
@@ -78,6 +76,15 @@ public class MainActivity extends Activity {
         fragmentTransaction.commit();
     }
 
+    @Override
+    public void onBackPressed() {
+        if (LeScanner.isScanning) {
+            LeScanner.stopScan();
+        }else{
+            super.onBackPressed();// your code.
+        }
+    }
+
     private CompositeDisposable mDisposables;
 
     @Override
@@ -134,7 +141,6 @@ public class MainActivity extends Activity {
                     .setPositiveButton(android.R.string.yes, (dialog, which) -> Db.forget(this, device))
                     .setNegativeButton(android.R.string.no, (dialog, which) -> dialog.cancel())
                     .show();
-            ;
         }
     }
 
@@ -156,30 +162,27 @@ public class MainActivity extends Activity {
         }
         final PopupMenu popupMenu = new PopupMenu(this, sender);
         popupMenu.inflate(R.menu.color);
-        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.black:
-                        device.color=Device.Color.BLACK;
-                        break;
-                    case R.id.white:
-                        device.color=Device.Color.WHITE;
-                        break;
-                    case R.id.red:
-                        device.color=Device.Color.RED;
-                        break;
-                    case R.id.green:
-                        device.color=Device.Color.GREEN;
-                        break;
-                    case R.id.blue:
-                        device.color=Device.Color.BLUE;
-                        break;
-                }
-                Db.save(MainActivity.this);
-                Db.subject.onNext(device);
-                return true;
+        popupMenu.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.black:
+                    device.color=Device.Color.BLACK;
+                    break;
+                case R.id.white:
+                    device.color=Device.Color.WHITE;
+                    break;
+                case R.id.red:
+                    device.color=Device.Color.RED;
+                    break;
+                case R.id.green:
+                    device.color=Device.Color.GREEN;
+                    break;
+                case R.id.blue:
+                    device.color=Device.Color.BLUE;
+                    break;
             }
+            Db.save(MainActivity.this);
+            Db.subject.onNext(device);
+            return true;
         });
         popupMenu.show();
     }
