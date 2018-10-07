@@ -10,7 +10,8 @@ public final class Device implements Serializable {
         BLACK,
         WHITE,
         RED,
-        GREEN
+        GREEN,
+        BLUE
     }
 
     final String addr;

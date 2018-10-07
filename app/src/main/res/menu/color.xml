@@ -6,15 +6,19 @@
         android:icon="@drawable/itag_black"
         android:title="@string/black" />
     <item
-        android:id="@+id/white"
-        android:icon="@drawable/itag_white"
-        android:title="@string/white" />
+        android:id="@+id/blue"
+        android:icon="@drawable/itag_blue"
+        android:title="@string/blue" />
+    <item
+        android:id="@+id/green"
+        android:icon="@drawable/itag_green"
+        android:title="@string/green" />
     <item
         android:id="@+id/red"
         android:icon="@drawable/itag_red"
         android:title="@string/red" />
     <item
-        android:id="@+id/green"
-        android:icon="@drawable/itag_green"
-        android:title="@string/green" />
+        android:id="@+id/white"
+        android:icon="@drawable/itag_white"
+        android:title="@string/white" />
 </menu>

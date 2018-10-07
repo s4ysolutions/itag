@@ -47,6 +47,9 @@ public class ITagsFragment extends Fragment {
             case GREEN:
                 imageId = R.drawable.itag_green;
                 break;
+            case BLUE:
+                imageId = R.drawable.itag_blue;
+                break;
             default:
                 imageId = R.drawable.itag_white;
         }

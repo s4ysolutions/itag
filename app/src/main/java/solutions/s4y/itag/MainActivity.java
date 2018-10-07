@@ -165,6 +165,9 @@ public class MainActivity extends Activity {
                     case R.id.green:
                         device.color=Device.Color.GREEN;
                         break;
+                    case R.id.blue:
+                        device.color=Device.Color.BLUE;
+                        break;
                 }
                 Db.save(MainActivity.this);
                 Db.subject.onNext(device);
