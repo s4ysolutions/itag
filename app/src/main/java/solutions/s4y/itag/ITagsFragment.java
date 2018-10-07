@@ -31,6 +31,29 @@ public class ITagsFragment extends Fragment {
         // Required empty public constructor
     }
 
+    private void setupTag(final Device device, final View itagLayout) {
+        final View btnForget = itagLayout.findViewById(R.id.btn_forget);
+        btnForget.setTag(device);
+        final View btnColor = itagLayout.findViewById(R.id.btn_color);
+        btnColor.setTag(device);
+        int imageId;
+        switch (device.color) {
+            case BLACK:
+                imageId = R.drawable.itag_black;
+                break;
+            case RED:
+                imageId = R.drawable.itag_red;
+                break;
+            case GREEN:
+                imageId = R.drawable.itag_green;
+                break;
+            default:
+                imageId = R.drawable.itag_white;
+        }
+        final ImageView imageITag = itagLayout.findViewById(R.id.image_itag);
+        imageITag.setImageResource(imageId);
+    }
+
     private void setupTags(ViewGroup root) {
         View tagsLayout = root.findViewById(R.id.tags);
         int index = -1;
@@ -38,19 +61,15 @@ public class ITagsFragment extends Fragment {
             root.removeView(tagsLayout);
             index = root.indexOfChild(tagsLayout);
         }
-        int s = Db.devices.size();
-        int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
+        final int s = Db.devices.size();
+        final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
         tagsLayout = getActivity().getLayoutInflater().inflate(rid, root, false);
         root.addView(tagsLayout, index);
-        if (s>0) {
-            View itagLayout = tagsLayout.findViewById(R.id.tag_1);
-            View btnForget = itagLayout.findViewById(R.id.btn_forget);
-            btnForget.setTag(Db.devices.get(0));
+        if (s > 0) {
+            setupTag(Db.devices.get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
         }
-        if (s>1) {
-            View itagLayout = tagsLayout.findViewById(R.id.tag_2);
-            View btnForget = itagLayout.findViewById(R.id.btn_forget);
-            btnForget.setTag(Db.devices.get(1));
+        if (s > 1) {
+            setupTag(Db.devices.get(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
         }
         /*
         if (s>2) {

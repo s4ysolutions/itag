@@ -62,7 +62,7 @@ public class Db {
         }
     }
 
-    private static void save(@NonNull final Context context) {
+    public static void save(@NonNull final Context context) {
         try (FileOutputStream fos = new FileOutputStream(getSer(context))) {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(devices);

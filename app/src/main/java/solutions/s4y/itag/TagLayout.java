@@ -6,6 +6,7 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import io.reactivex.annotations.NonNull;
 import io.reactivex.annotations.Nullable;

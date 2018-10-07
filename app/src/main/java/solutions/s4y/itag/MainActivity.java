@@ -11,8 +11,11 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
+
 import io.reactivex.disposables.CompositeDisposable;
 import solutions.s4y.itag.ble.Db;
 import solutions.s4y.itag.ble.Device;
@@ -39,7 +42,7 @@ public class MainActivity extends Activity {
             mBluetoothAdapter = bluetoothManager.getAdapter();
     }
 
-    private void setupProgressBar(){
+    private void setupProgressBar() {
         ProgressBar pb = findViewById(R.id.progress);
         if (LeScanner.isScanning) {
             pb.setVisibility(View.VISIBLE);
@@ -88,7 +91,7 @@ public class MainActivity extends Activity {
         }
         mDisposables = new CompositeDisposable();
         mDisposables.add(LeScanner.subject.subscribe(ignored -> setupContent()));
-        mDisposables.add(LeScanner.subjectTimer.subscribe(ignored->setupProgressBar()));
+        mDisposables.add(LeScanner.subjectTimer.subscribe(ignored -> setupProgressBar()));
     }
 
     @Override
@@ -106,8 +109,8 @@ public class MainActivity extends Activity {
     }
 
     public void onRemember(View sender) {
-        BluetoothDevice device = (BluetoothDevice)sender.getTag();
-        if (device==null) {
+        BluetoothDevice device = (BluetoothDevice) sender.getTag();
+        if (device == null) {
             ITagApplication.errorNotifier.onNext(new Exception("No BLE device"));
             return;
         }
@@ -118,8 +121,8 @@ public class MainActivity extends Activity {
     }
 
     public void onForget(View sender) {
-        Device device = (Device)sender.getTag();
-        if (device==null) {
+        Device device = (Device) sender.getTag();
+        if (device == null) {
             ITagApplication.errorNotifier.onNext(new Exception("No device"));
             return;
         }
@@ -138,6 +141,39 @@ public class MainActivity extends Activity {
         }
     }
 
+    public void onChangeColor(View sender) {
+        final Device device = (Device) sender.getTag();
+        if (device == null) {
+            ITagApplication.errorNotifier.onNext(new Exception("No device"));
+            return;
+        }
+        final PopupMenu popupMenu = new PopupMenu(this, sender);
+        popupMenu.inflate(R.menu.color);
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.black:
+                        device.color=Device.Color.BLACK;
+                        break;
+                    case R.id.white:
+                        device.color=Device.Color.WHITE;
+                        break;
+                    case R.id.red:
+                        device.color=Device.Color.RED;
+                        break;
+                    case R.id.green:
+                        device.color=Device.Color.GREEN;
+                        break;
+                }
+                Db.save(MainActivity.this);
+                Db.subject.onNext(device);
+                return true;
+            }
+        });
+        popupMenu.show();
+    }
+
     public void onEnableBLEClick(View ignored) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBtIntent, MainActivity.REQUEST_ENABLE_BT);
@@ -146,7 +182,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode==RESULT_OK) {
+        if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case REQUEST_ENABLE_BT:
                     setupContent();

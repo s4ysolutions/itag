@@ -2,9 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical" android:layout_width="match_parent"
-    tools:context=".MainActivity"
-    android:layout_height="match_parent">
+    android:id="@+id/layout_itag"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
 
     <ImageView
         android:id="@+id/image_itag"
@@ -18,8 +20,9 @@
         android:src="@drawable/itag_white" />
 
     <LinearLayout
+        style="?android:attr/actionBarStyle"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="?android:attr/actionBarSize"
         android:orientation="horizontal">
 
         <View
@@ -29,9 +32,19 @@
             android:layout_weight="1" />
 
         <ImageView
+            android:id="@+id/btn_color"
+            style="?android:attr/actionButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/color"
+            android:onClick="onChangeColor"
+            android:src="@drawable/color" />
+
+        <ImageView
             android:id="@+id/btn_forget"
-            android:layout_width="@dimen/buttonHeight"
-            android:layout_height="@dimen/buttonHeight"
+            style="?android:attr/actionButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:layout_margin="@dimen/buttonMargin"
             android:contentDescription="@string/forget"
             android:onClick="onForget"

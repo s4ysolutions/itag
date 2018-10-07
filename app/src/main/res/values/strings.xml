@@ -11,8 +11,14 @@
     <string name="ok">Ok</string>
     <string name="cancel">Cancel</string>
 
+    <string name="color">Change device color</string>
     <string name="rememebr">Remember device</string>
     <string name="forget">Forget device</string>
     <string name="itag">Connected iTag</string>
+
+    <string name="white">White</string>
+    <string name="black">Black</string>
+    <string name="red">Red</string>
+    <string name="green">Green</string>
 
 </resources>
