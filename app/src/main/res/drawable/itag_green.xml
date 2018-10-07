@@ -13,7 +13,7 @@
                 <item android:color="#FFb30343" android:offset="1"/>
                 -->
                 <item android:color="#dff2c0" android:offset="0"/>
-                <item android:color="#a9dc56" android:offset="1"/>
+                <item android:color="#b3e16b" android:offset="1"/>
             </gradient>
         </aapt:attr>
     </path>
