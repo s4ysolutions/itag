@@ -36,6 +36,8 @@ public class ITagsFragment extends Fragment {
         btnForget.setTag(device);
         final View btnColor = itagLayout.findViewById(R.id.btn_color);
         btnColor.setTag(device);
+        final View btnSetName = itagLayout.findViewById(R.id.btn_set_name);
+        btnSetName.setTag(device);
         int imageId;
         switch (device.color) {
             case BLACK:
@@ -55,6 +57,8 @@ public class ITagsFragment extends Fragment {
         }
         final ImageView imageITag = itagLayout.findViewById(R.id.image_itag);
         imageITag.setImageResource(imageId);
+        final TextView textName = itagLayout.findViewById(R.id.text_name);
+        textName.setText(device.name);
     }
 
     private void setupTags(ViewGroup root) {

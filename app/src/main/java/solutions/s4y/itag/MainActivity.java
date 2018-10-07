@@ -1,7 +1,6 @@
 package solutions.s4y.itag;
 
 import android.app.Activity;
-import android.app.Application;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -182,6 +181,18 @@ public class MainActivity extends Activity {
         startActivityForResult(enableBtIntent, MainActivity.REQUEST_ENABLE_BT);
     }
 
+
+    public void onSetName(View sender) {
+        final Device device = (Device) sender.getTag();
+        if (device == null) {
+            ITagApplication.errorNotifier.onNext(new Exception("No device"));
+            return;
+        }
+
+        SetNameDialogFragment.device = device;
+        new SetNameDialogFragment().show(getFragmentManager(),"setname");
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -199,4 +210,5 @@ public class MainActivity extends Activity {
         }
 
     }
+
 }

@@ -16,9 +16,11 @@ public final class Device implements Serializable {
 
     final String addr;
     public Color color;
+    public String name;
 
     Device(BluetoothDevice device) {
         this.addr = device.getAddress();
         this.color=Color.WHITE;
+        this.name="";
     }
 }
