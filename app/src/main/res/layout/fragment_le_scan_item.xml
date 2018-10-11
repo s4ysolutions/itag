@@ -51,6 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:max="100"
+            android:paddingEnd="8dp"
             android:progress="30" />
 
         <TextView
