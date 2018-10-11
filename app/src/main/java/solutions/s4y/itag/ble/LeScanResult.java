@@ -4,10 +4,10 @@ import android.bluetooth.BluetoothDevice;
 
 public class LeScanResult {
     final public BluetoothDevice device;
-    final int rssi;
+    public int rssi;
     final byte[] scanRecord;
 
-    public LeScanResult(BluetoothDevice device, int rssi, byte[] scanRecord) {
+    LeScanResult(BluetoothDevice device, int rssi, byte[] scanRecord) {
         this.device = device;
         this.rssi = rssi;
         this.scanRecord = scanRecord;

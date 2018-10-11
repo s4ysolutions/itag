@@ -8,7 +8,10 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -24,6 +27,7 @@ public final class LeScanner {
     static public boolean isScanning;
     static public int tick;
     static public final List<LeScanResult> results = new ArrayList<>(4);
+    static public LeScanResult lastScanResult;
 
     private static CompositeDisposable disposable;
 
@@ -68,12 +72,21 @@ public final class LeScanner {
                     .subscribe(
                             result -> {
                                 if (result.device.getAddress() == null) return;
-                                String name = result.device.getAddress();
-                                if (name == null) return;
-                                for (LeScanResult r : results) {
-                                    if (name.equals(r.device.getAddress())) return;
+                                String addr = result.device.getAddress();
+                                if (addr == null) return;
+                                lastScanResult = result;
+                                LeScanResult existing=null;
+                                for(LeScanResult r: results) {
+                                    if (addr.equals(r.device.getAddress())){
+                                        existing=r;
+                                        break;
+                                    }
                                 }
-                                results.add(result);
+                                if (existing==null) {
+                                    results.add(result);
+                                }else {
+                                    existing.rssi=result.rssi;
+                                }
                                 subject.onNext(LeScanner.class);
                             },
                             err -> {

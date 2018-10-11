@@ -8,9 +8,12 @@ import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
@@ -24,6 +27,8 @@ public class MainActivity extends Activity {
     static public final int REQUEST_ENABLE_BT = 1;
     static public final int REQUEST_ENABLE_LOCATION = 2;
     public BluetoothAdapter mBluetoothAdapter;
+    public GattService mGattService;
+    public boolean mGattBound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +44,7 @@ public class MainActivity extends Activity {
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager != null)
             mBluetoothAdapter = bluetoothManager.getAdapter();
+
     }
 
     private void setupProgressBar() {
@@ -53,14 +59,24 @@ public class MainActivity extends Activity {
         }
     }
 
+    private enum FragmentType {
+        OTHER,
+        SCANNER
+    }
+    private FragmentType mSelectedFragment;
+
     private void setupContent() {
         final FragmentManager fragmentManager = getFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        Fragment fragment;
+        Fragment fragment=null;
         if (LeScanner.isScanning) {
             setupProgressBar();
-            fragment = new LeScanFragment();
+            if (mSelectedFragment!=FragmentType.SCANNER) {
+                fragment = new LeScanFragment();
+                mSelectedFragment = FragmentType.SCANNER;
+            }
         } else {
+            mSelectedFragment = FragmentType.OTHER;
             setupProgressBar();
             if (mBluetoothAdapter == null) {
                 fragment = new NoBLEFragment();
@@ -72,8 +88,10 @@ public class MainActivity extends Activity {
                 }
             }
         }
-        fragmentTransaction.replace(R.id.content, fragment);
-        fragmentTransaction.commit();
+        if (fragment!=null) {
+            fragmentTransaction.replace(R.id.content, fragment);
+            fragmentTransaction.commit();
+        }
     }
 
     @Override
@@ -85,11 +103,26 @@ public class MainActivity extends Activity {
         }
     }
 
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            mGattService = ((GattService.GattBinder)binder).getService();
+            mGattBound = true;
+            // setupContent();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mGattBound = false;
+        }
+    };
+
     private CompositeDisposable mDisposables;
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
         setupContent();
         if (BuildConfig.DEBUG) {
             if (mDisposables != null) {
@@ -100,10 +133,13 @@ public class MainActivity extends Activity {
         mDisposables = new CompositeDisposable();
         mDisposables.add(LeScanner.subject.subscribe(ignored -> setupContent()));
         mDisposables.add(LeScanner.subjectTimer.subscribe(ignored -> setupProgressBar()));
+        Intent intent = new Intent(this, GattService.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
-    protected void onPause() {
+    protected void onStop() {
+        unbindService(mConnection);
         if (BuildConfig.DEBUG) {
             if (mDisposables == null) {
                 ITagApplication.errorNotifier.onNext(new Exception("MainActivity has null mDisposables"));
@@ -113,7 +149,7 @@ public class MainActivity extends Activity {
             mDisposables.dispose();
             mDisposables = null;
         }
-        super.onPause();
+        super.onStop();
     }
 
     public void onRemember(View sender) {
