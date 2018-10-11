@@ -2,12 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/item_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="4dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:padding="4dp"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
     tools:context=".MainActivity">
 
     <LinearLayout

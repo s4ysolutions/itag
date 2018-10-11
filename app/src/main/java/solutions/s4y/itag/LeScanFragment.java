@@ -1,5 +1,6 @@
 package solutions.s4y.itag;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -65,6 +66,12 @@ public class LeScanFragment extends Fragment {
 
             ImageView btn = convertView.findViewById(R.id.btn_connect);
             btn.setTag(r.device);
+
+            if (position % 2 == 1) {
+                convertView.findViewById(R.id.item_root).setBackgroundColor(0xffe0e0e0);
+            }else {
+                convertView.findViewById(R.id.item_root).setBackgroundColor(Color.TRANSPARENT);
+            }
             return convertView;
         }
     }
