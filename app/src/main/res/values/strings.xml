@@ -13,13 +13,18 @@
     <string name="confirm_forget">The device will be forgotten, are you sure? You will be able to reconnect this device and remember it in any moment though.\n\nForget?</string>
     <string name="change_name">Set iTag\'s name</string>
 
-    <string name="scanning">Scanning for iTags...</string>
+    <string name="scanning">Scanning for iTags&#8230;</string>
+    <string name="scanning_new">Scanning for new iTags&#8230;</string>
+    <string name="scanning_more">Scanning for more iTags&#8230;</string>
 
     <string name="color">Change device color</string>
     <string name="start_scan">Scan for new devices</string>
     <string name="rememebr">Remember device</string>
     <string name="forget">Forget device</string>
     <string name="itag">Connected iTag</string>
+
+    <string name="rssi">Signal strength: %d</string>
+    <string name="rssi_get">Getting signal strength</string>
 
     <string name="white">White</string>
     <string name="black">Black</string>
