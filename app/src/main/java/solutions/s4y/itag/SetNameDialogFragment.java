@@ -25,7 +25,7 @@ public class SetNameDialogFragment extends DialogFragment {
                 .setPositiveButton(android.R.string.ok, (dialog, id) -> {
                     device.name=textName.getText().toString();
                     Db.save(getActivity());
-                    Db.subject.onNext(device);
+                    Db.notifyChange();
                     // dialog.dismiss();
                 })
                 .setNegativeButton(android.R.string.cancel, (dialog, id) -> {

@@ -6,27 +6,19 @@ import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.Objects;
 
-import io.reactivex.disposables.CompositeDisposable;
 import solutions.s4y.itag.ble.Db;
 import solutions.s4y.itag.ble.Device;
-import solutions.s4y.itag.ble.LeScanResult;
-import solutions.s4y.itag.ble.LeScanner;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITagsFragment extends Fragment {
-    private CompositeDisposable mCompositeDisposable;
-
+public class ITagsFragment extends Fragment implements Db.DbListener {
     public ITagsFragment() {
         // Required empty public constructor
     }
@@ -105,30 +97,17 @@ public class ITagsFragment extends Fragment {
     public void onResume() {
         super.onResume();
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
-        if (BuildConfig.DEBUG) {
-            if (mCompositeDisposable != null) {
-                ITagApplication.errorNotifier.onNext(new Exception("ITagsFragment has not null mCompositeDisposable"));
-                mCompositeDisposable.dispose();
-            }
-        }
-        mCompositeDisposable = new CompositeDisposable();
-        mCompositeDisposable.add(Db.subject.subscribe(ignored -> setupTags((ViewGroup) Objects.requireNonNull(getView()))));
-
+        Db.addListener(this);
     }
 
     @Override
     public void onPause() {
-        if (BuildConfig.DEBUG) {
-            if (mCompositeDisposable == null) {
-                ITagApplication.errorNotifier.onNext(new Exception("ITagsFragment has null mCompositeDisposable"));
-            }
-        }
-        if (mCompositeDisposable != null) {
-            mCompositeDisposable.dispose();
-            mCompositeDisposable = null;
-        }
-
+        Db.removeListener(this);
         super.onPause();
     }
 
+    @Override
+    public void onChange() {
+        setupTags((ViewGroup) Objects.requireNonNull(getView()));
+    }
 }

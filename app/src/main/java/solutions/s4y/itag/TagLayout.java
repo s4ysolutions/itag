@@ -6,29 +6,28 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 
-import io.reactivex.annotations.NonNull;
-import io.reactivex.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class TagLayout extends FrameLayout {
-    public TagLayout(@NonNull Context context) {
+    public TagLayout(@NotNull Context context) {
         super(context);
         setup();
     }
 
-    public TagLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public TagLayout(@NotNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         setup();
     }
 
-    public TagLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public TagLayout(@NotNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setup();
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public TagLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public TagLayout(@NotNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         setup();
     }

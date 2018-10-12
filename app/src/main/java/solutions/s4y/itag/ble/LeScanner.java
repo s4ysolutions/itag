@@ -4,20 +4,16 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.subjects.PublishSubject;
+import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
@@ -27,12 +23,82 @@ public final class LeScanner {
     static public boolean isScanning;
     static public int tick;
     static public final List<LeScanResult> results = new ArrayList<>(4);
-    static public LeScanResult lastScanResult;
 
-    private static CompositeDisposable disposable;
+    public interface LeScannerListener {
+        void onStartScan();
+        void onNewDeviceScanned(LeScanResult result);
+        void onTick(int tick, int max);
+        void onStopScan();
+    }
 
-    static public final PublishSubject<Class<LeScanner>> subject = PublishSubject.create();
-    static public final PublishSubject<Class<LeScanner>> subjectTimer = PublishSubject.create();
+    static final private List<LeScannerListener> mListeners=new ArrayList<>();
+
+    static public void addListener(LeScannerListener listener) {
+        if (BuildConfig.DEBUG) {
+            if (mListeners.contains(listener)) {
+                ITagApplication.handleError(new Exception("LeScanner.addListener duplicate listener"));
+            }
+        }
+        mListeners.add(listener);
+    }
+
+    static public void removeListener(LeScannerListener listener) {
+        if (BuildConfig.DEBUG) {
+            if (!mListeners.contains(listener)) {
+                ITagApplication.handleError(new Exception("LeScanner.removeListener non existing listener"));
+            }
+        }
+        mListeners.add(listener);
+    }
+
+    static private void notifyStart() {
+        for(LeScannerListener listener: mListeners) {
+            listener.onStartScan();
+        }
+    }
+
+    static private void notifyStop() {
+        for(LeScannerListener listener: mListeners) {
+            listener.onStopScan();
+        }
+    }
+
+    static private void notifyTick() {
+        for(LeScannerListener listener: mListeners) {
+            listener.onTick(tick, TIMEOUT);
+        }
+    }
+
+    static private void notifyNewDeviceScanned(LeScanResult result) {
+        for(LeScannerListener listener: mListeners) {
+            listener.onNewDeviceScanned(result);
+        }
+    }
+
+    private static BluetoothAdapter.LeScanCallback sLeScanCallback = new BluetoothAdapter.LeScanCallback() {
+        @Override
+        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+            LeScanResult result = new LeScanResult(device, rssi, scanRecord);
+            if (Db.has(device)) return;
+            if (result.device.getAddress() == null) return;
+            String addr = result.device.getAddress();
+            if (addr == null) return;
+            LeScanResult existing=null;
+            for(LeScanResult r: results) {
+                if (addr.equals(r.device.getAddress())){
+                    existing=r;
+                    break;
+                }
+            }
+            if (existing==null) {
+                results.add(result);
+            }else {
+                existing.rssi=result.rssi;
+            }
+
+            notifyNewDeviceScanned(result);
+        }
+    };
 
     @TargetApi(Build.VERSION_CODES.M)
     static public void startScan(final BluetoothAdapter bluetoothAdapter, MainActivity activity) {
@@ -52,64 +118,36 @@ public final class LeScanner {
                 }
             }
         }
+        tick=0;
         results.clear();
         isScanning = true;
-        subject.onNext(LeScanner.class);
-        if (disposable == null) {
-            tick = 0;
-            disposable = new CompositeDisposable();
+        notifyStart();
 
-            final Disposable timer = Observable
-                    .interval(1, TimeUnit.SECONDS)
-                    .subscribe(ts -> {
-                        tick++;
-                        subjectTimer.onNext(LeScanner.class);
-                    });
+        final Handler handler = new Handler();
 
-            disposable.add(LeScanObservable
-                    .observable(bluetoothAdapter, TIMEOUT)
-                    .filter(result -> !Db.has(result.device))
-                    .subscribe(
-                            result -> {
-                                if (result.device.getAddress() == null) return;
-                                String addr = result.device.getAddress();
-                                if (addr == null) return;
-                                lastScanResult = result;
-                                LeScanResult existing=null;
-                                for(LeScanResult r: results) {
-                                    if (addr.equals(r.device.getAddress())){
-                                        existing=r;
-                                        break;
-                                    }
-                                }
-                                if (existing==null) {
-                                    results.add(result);
-                                }else {
-                                    existing.rssi=result.rssi;
-                                }
-                                subject.onNext(LeScanner.class);
-                            },
-                            err -> {
-                                timer.dispose();
-                                ITagApplication.errorNotifier.onNext(err);
-                                stopScan();
-                            },
-                            () -> {
-                                timer.dispose();
-                                stopScan();
-                            }
-                    )
-            );
-            disposable.add(timer);
-        }
+        final Runnable run1sec = new Runnable() {
+            @Override
+            public void run() {
+                if (isScanning) {
+                    tick++;
+                    notifyTick();
+                    handler.postDelayed(this, 1000);
+                }
+            }
+        };
+        handler.postDelayed(run1sec,1000);
+
+        handler.postDelayed(() -> {
+            stopScan(bluetoothAdapter);
+        }, TIMEOUT * 1000);
+
+
+        bluetoothAdapter.startLeScan(sLeScanCallback);
     }
 
-    static public void stopScan() {
-        if (disposable != null) {
-            disposable.dispose();
-            disposable = null;
-        }
+    static public void stopScan(final BluetoothAdapter bluetoothAdapter) {
+        bluetoothAdapter.stopLeScan(sLeScanCallback);
         isScanning = false;
-        subject.onNext(LeScanner.class);
+        notifyStop();
     }
 }

@@ -20,7 +20,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-import io.reactivex.subjects.PublishSubject;
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
 
@@ -38,8 +37,6 @@ public class GattService extends Service {
             this.rssi = rssi;
         }
     }
-
-    public static final PublishSubject<RssiData> subjectRssi = PublishSubject.create();
 
     public static final UUID IMMEDIATE_ALERT_SERVICE =
             UUID.fromString("00001802-0000-1000-8000-00805f9b34fb");
@@ -128,7 +125,7 @@ public class GattService extends Service {
                     } else if (GENERIC_SERVICE.equals(service.getUuid())) {
                     } else {
                         if (BuildConfig.DEBUG) {
-                            ITagApplication.errorNotifier.onNext(new Exception("Unknown service: " + service.getUuid().toString()));
+                            ITagApplication.handleError(new Exception("Unknown service: " + service.getUuid().toString()));
                         }
                     }
                 }
@@ -150,7 +147,6 @@ public class GattService extends Service {
                                     " status=GATT_SUCCESS");
                 }
                 RssiData rssiData = new RssiData(gatt, rssi);
-                subjectRssi.onNext(rssiData);
             }
         }
     }
@@ -162,7 +158,7 @@ public class GattService extends Service {
         }
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
-            ITagApplication.errorNotifier.onNext(new Exception("No adapter"));
+            ITagApplication.handleError(new Exception("No adapter"));
             return;
         }
         if (mGatts.containsKey(address)) {
@@ -174,7 +170,7 @@ public class GattService extends Service {
         } else {
             if (BuildConfig.DEBUG) {
                 if (mConnectedAddr.contains(address)) {
-                    ITagApplication.errorNotifier.onNext(new Exception("Duplicate add connect"));
+                    ITagApplication.handleError(new Exception("Duplicate add connect"));
                 }
                 mConnectedAddr.add(address);
             }
@@ -216,12 +212,12 @@ public class GattService extends Service {
             Log.d(T, "startListenRssi: addr="+addr+", attempt to stop returned "+restart);
         }
         if (BuildConfig.DEBUG && restart) {
-            ITagApplication.errorNotifier.onNext(new Exception("Restart existing Rssi Listener"));
+            ITagApplication.handleError(new Exception("Restart existing Rssi Listener"));
         }
 
         final BluetoothGatt gatt = mGatts.get(addr);
         if (gatt == null) {
-            ITagApplication.errorNotifier.onNext(new Exception("Attempt to startListenRssi on non-existing gatt"));
+            ITagApplication.handleError(new Exception("Attempt to startListenRssi on non-existing gatt"));
             return;
         }
 

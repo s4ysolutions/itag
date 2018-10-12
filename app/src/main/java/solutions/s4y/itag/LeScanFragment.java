@@ -11,17 +11,10 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.Objects;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.annotations.Nullable;
-import io.reactivex.disposables.CompositeDisposable;
 import solutions.s4y.itag.ble.Db;
-import solutions.s4y.itag.ble.Device;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
 
@@ -29,14 +22,14 @@ import solutions.s4y.itag.ble.LeScanner;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class LeScanFragment extends Fragment {
+public class LeScanFragment extends Fragment implements LeScanner.LeScannerListener {
     private class Adapter extends ArrayAdapter<LeScanResult> {
         Adapter() {
             super(getActivity(), R.layout.fragment_le_scan_item, LeScanner.results);
         }
 
         @Override
-        public View getView(@NonNull int position, View convertView, ViewGroup parent) {
+        public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_le_scan_item, parent, false);
             }
@@ -53,9 +46,9 @@ public class LeScanFragment extends Fragment {
             ProgressBar pb = convertView.findViewById(R.id.pb_rssi);
             tv = convertView.findViewById(R.id.text_rssi);
 
-            for(LeScanResult result: LeScanner.results) {
-                if (addr.equals(result.device.getAddress())){
-                    int rssi=result.rssi;
+            for (LeScanResult result : LeScanner.results) {
+                if (addr.equals(result.device.getAddress())) {
+                    int rssi = result.rssi;
                     tv.setText(String.format(getString(R.string.rssi), rssi));
                     pb.setIndeterminate(false);
                     pb.setMax(120);
@@ -69,14 +62,12 @@ public class LeScanFragment extends Fragment {
 
             if (position % 2 == 1) {
                 convertView.findViewById(R.id.item_root).setBackgroundColor(0xffe0e0e0);
-            }else {
+            } else {
                 convertView.findViewById(R.id.item_root).setBackgroundColor(Color.TRANSPARENT);
             }
             return convertView;
         }
     }
-
-    private CompositeDisposable mCompositeDisposable;
 
     public LeScanFragment() {
         // Required empty public constructor
@@ -93,67 +84,27 @@ public class LeScanFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        if (BuildConfig.DEBUG) {
-            if (mCompositeDisposable != null) {
-                ITagApplication.errorNotifier.onNext(new Exception("LeScanFragment has not null mCompositeDisposable"));
-                mCompositeDisposable.dispose();
-            }
-        }
-        mCompositeDisposable = new CompositeDisposable();
-        mCompositeDisposable.add(LeScanner.subject.subscribe(ignored -> {
-            updateResultsList();
-            if (LeScanner.isScanning && LeScanner.lastScanResult != null) {
-                MainActivity activity = ((MainActivity) (getActivity()));
-                if (activity.mGattBound) {
-                    /*
-                    activity.mGattService.connect(
-                            LeScanner.lastScanResult.device.getAddress(),
-                            false);
-                            */
-                }
-            }
-        }));
-        /*
-        mCompositeDisposable.add(GattService.subjectRssi
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(rssiData -> {
-                    if (getView() != null) {
-                        updateResultsList();
-                    }
-                }));
-          */
-    }
-
-    @Override
-    public void onDestroy() {
-        if (BuildConfig.DEBUG) {
-            if (mCompositeDisposable == null) {
-                ITagApplication.errorNotifier.onNext(new Exception("LeScanFragment has null mCompositeDisposable"));
-            }
-        }
-        if (mCompositeDisposable != null) {
-            mCompositeDisposable.dispose();
-            mCompositeDisposable = null;
-        }
-        super.onDestroy();
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         updateResultsList();
+        LeScanner.addListener(this);
+    }
+
+    @Override
+    public void onPause() {
+        LeScanner.removeListener(this);
+        super.onPause();
     }
 
     private void updateResultsList() {
-        final ListView listView = Objects.requireNonNull(getView()).findViewById(R.id.results_list);
+        View root = getView();
+        if (root==null) return;
+        final ListView listView = root.findViewById(R.id.results_list);
         final Adapter adapter = ((Adapter) (listView.getAdapter()));
         final int index = listView.getFirstVisiblePosition();
         adapter.notifyDataSetChanged();
         listView.smoothScrollToPosition(index);
-        final TextView tv = getView().findViewById(R.id.text_scanning);
+        final TextView tv = root.findViewById(R.id.text_scanning);
         if (LeScanner.results.size() > 0) {
             tv.setText(R.string.scanning_more);
         } else if (Db.devices.size() > 0) {
@@ -162,4 +113,25 @@ public class LeScanFragment extends Fragment {
             tv.setText(R.string.scanning);
         }
     }
+
+    @Override
+    public void onStartScan() {
+        updateResultsList();
+    }
+
+    @Override
+    public void onNewDeviceScanned(LeScanResult result) {
+        updateResultsList();
+    }
+
+    @Override
+    public void onTick(int tick, int max) {
+        updateResultsList();
+    }
+
+    @Override
+    public void onStopScan() {
+        updateResultsList();
+    }
+
 }

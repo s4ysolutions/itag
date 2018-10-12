@@ -18,13 +18,13 @@ import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 
-import io.reactivex.disposables.CompositeDisposable;
 import solutions.s4y.itag.ble.Db;
 import solutions.s4y.itag.ble.Device;
 import solutions.s4y.itag.ble.GattService;
+import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements LeScanner.LeScannerListener, Db.DbListener {
     static public final int REQUEST_ENABLE_BT = 1;
     static public final int REQUEST_ENABLE_LOCATION = 2;
     public BluetoothAdapter mBluetoothAdapter;
@@ -60,19 +60,21 @@ public class MainActivity extends Activity {
         }
     }
 
+
     private enum FragmentType {
         OTHER,
         SCANNER
     }
+
     private FragmentType mSelectedFragment;
 
     private void setupContent() {
         final FragmentManager fragmentManager = getFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        Fragment fragment=null;
+        Fragment fragment = null;
         if (LeScanner.isScanning) {
             setupProgressBar();
-            if (mSelectedFragment!=FragmentType.SCANNER) {
+            if (mSelectedFragment != FragmentType.SCANNER) {
                 fragment = new LeScanFragment();
                 mSelectedFragment = FragmentType.SCANNER;
             }
@@ -89,7 +91,7 @@ public class MainActivity extends Activity {
                 }
             }
         }
-        if (fragment!=null) {
+        if (fragment != null) {
             fragmentTransaction.replace(R.id.content, fragment);
             fragmentTransaction.commit();
         }
@@ -97,9 +99,9 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (LeScanner.isScanning) {
-            LeScanner.stopScan();
-        }else{
+        if (LeScanner.isScanning && mBluetoothAdapter != null) {
+            LeScanner.stopScan(mBluetoothAdapter);
+        } else {
             super.onBackPressed();// your code.
         }
     }
@@ -108,7 +110,7 @@ public class MainActivity extends Activity {
         @Override
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
-            mGattService = ((GattService.GattBinder)binder).getService();
+            mGattService = ((GattService.GattBinder) binder).getService();
             mGattBound = true;
             // setupContent();
         }
@@ -119,56 +121,46 @@ public class MainActivity extends Activity {
         }
     };
 
-    private CompositeDisposable mDisposables;
-
     @Override
     protected void onStart() {
         super.onStart();
         setupContent();
-        if (BuildConfig.DEBUG) {
-            if (mDisposables != null) {
-                ITagApplication.errorNotifier.onNext(new Exception("MainActivity has not null mDisposables"));
-                mDisposables.dispose();
-            }
-        }
-        mDisposables = new CompositeDisposable();
-        mDisposables.add(LeScanner.subject.subscribe(ignored -> setupContent()));
-        mDisposables.add(LeScanner.subjectTimer.subscribe(ignored -> setupProgressBar()));
         Intent intent = new Intent(this, GattService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        LeScanner.addListener(this);
+        Db.addListener(this);
     }
 
     @Override
     protected void onStop() {
         unbindService(mConnection);
-        if (BuildConfig.DEBUG) {
-            if (mDisposables == null) {
-                ITagApplication.errorNotifier.onNext(new Exception("MainActivity has null mDisposables"));
-            }
-        }
-        if (mDisposables != null) {
-            mDisposables.dispose();
-            mDisposables = null;
-        }
+        Db.addListener(this);
+        LeScanner.removeListener(this);
         super.onStop();
     }
 
     public void onRemember(View sender) {
         BluetoothDevice device = (BluetoothDevice) sender.getTag();
         if (device == null) {
-            ITagApplication.errorNotifier.onNext(new Exception("No BLE device"));
+            ITagApplication.handleError(new Exception("No BLE device"));
             return;
         }
         if (!Db.has(device)) {
+            if (BuildConfig.DEBUG) {
+                if (mBluetoothAdapter == null) {
+                    ITagApplication.handleError(new Exception("onRemember mBluetoothAdapter=null"));
+                    return;
+                }
+            }
             Db.remember(this, device);
-            LeScanner.stopScan();
+            LeScanner.stopScan(mBluetoothAdapter);
         }
     }
 
     public void onForget(View sender) {
         Device device = (Device) sender.getTag();
         if (device == null) {
-            ITagApplication.errorNotifier.onNext(new Exception("No device"));
+            ITagApplication.handleError(new Exception("No device"));
             return;
         }
         if (Db.has(device)) {
@@ -182,19 +174,24 @@ public class MainActivity extends Activity {
     }
 
     public void onStartStopScan(View ignored) {
-        if (LeScanner.isScanning) {
-            LeScanner.stopScan();
-        } else {
-            if (mBluetoothAdapter != null) {
-                LeScanner.startScan(mBluetoothAdapter, this);
+        if (BuildConfig.DEBUG) {
+            if (mBluetoothAdapter == null) {
+                ITagApplication.handleError(new Exception("onStartStopScan mBluetoothAdapter=null"));
+                return;
             }
+        }
+
+        if (LeScanner.isScanning) {
+            LeScanner.stopScan(mBluetoothAdapter);
+        } else {
+            LeScanner.startScan(mBluetoothAdapter, this);
         }
     }
 
     public void onChangeColor(View sender) {
         final Device device = (Device) sender.getTag();
         if (device == null) {
-            ITagApplication.errorNotifier.onNext(new Exception("No device"));
+            ITagApplication.handleError(new Exception("No device"));
             return;
         }
         final PopupMenu popupMenu = new PopupMenu(this, sender);
@@ -202,23 +199,23 @@ public class MainActivity extends Activity {
         popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.black:
-                    device.color=Device.Color.BLACK;
+                    device.color = Device.Color.BLACK;
                     break;
                 case R.id.white:
-                    device.color=Device.Color.WHITE;
+                    device.color = Device.Color.WHITE;
                     break;
                 case R.id.red:
-                    device.color=Device.Color.RED;
+                    device.color = Device.Color.RED;
                     break;
                 case R.id.green:
-                    device.color=Device.Color.GREEN;
+                    device.color = Device.Color.GREEN;
                     break;
                 case R.id.blue:
-                    device.color=Device.Color.BLUE;
+                    device.color = Device.Color.BLUE;
                     break;
             }
             Db.save(MainActivity.this);
-            Db.subject.onNext(device);
+            Db.notifyChange();
             return true;
         });
         popupMenu.show();
@@ -233,12 +230,12 @@ public class MainActivity extends Activity {
     public void onSetName(View sender) {
         final Device device = (Device) sender.getTag();
         if (device == null) {
-            ITagApplication.errorNotifier.onNext(new Exception("No device"));
+            ITagApplication.handleError(new Exception("No device"));
             return;
         }
 
         SetNameDialogFragment.device = device;
-        new SetNameDialogFragment().show(getFragmentManager(),"setname");
+        new SetNameDialogFragment().show(getFragmentManager(), "setname");
     }
 
     @Override
@@ -259,4 +256,29 @@ public class MainActivity extends Activity {
 
     }
 
+    @Override
+    public void onStartScan() {
+        setupContent();
+    }
+
+    @Override
+    public void onNewDeviceScanned(LeScanResult result) {
+        setupContent();
+    }
+
+    @Override
+    public void onTick(int tick, int max) {
+        setupProgressBar();
+    }
+
+    @Override
+    public void onStopScan() {
+        setupContent();
+    }
+
+
+    @Override
+    public void onChange() {
+        setupContent();
+    }
 }
