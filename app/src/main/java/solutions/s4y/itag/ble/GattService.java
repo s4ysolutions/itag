@@ -1,4 +1,4 @@
-package solutions.s4y.itag;
+package solutions.s4y.itag.ble;
 
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.ArraySet;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -22,6 +21,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import io.reactivex.subjects.PublishSubject;
+import solutions.s4y.itag.BuildConfig;
+import solutions.s4y.itag.ITagApplication;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 

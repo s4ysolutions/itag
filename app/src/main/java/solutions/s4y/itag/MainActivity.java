@@ -21,6 +21,7 @@ import android.widget.ProgressBar;
 import io.reactivex.disposables.CompositeDisposable;
 import solutions.s4y.itag.ble.Db;
 import solutions.s4y.itag.ble.Device;
+import solutions.s4y.itag.ble.GattService;
 import solutions.s4y.itag.ble.LeScanner;
 
 public class MainActivity extends Activity {
