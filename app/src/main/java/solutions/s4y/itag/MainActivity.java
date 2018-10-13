@@ -134,7 +134,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     @Override
     protected void onStop() {
         unbindService(mConnection);
-        Db.addListener(this);
+        Db.removeListener(this);
         LeScanner.removeListener(this);
         super.onStop();
     }
