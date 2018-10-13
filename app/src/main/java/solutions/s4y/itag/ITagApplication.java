@@ -27,6 +27,7 @@ public final class ITagApplication extends Application {
             if (context==null) {
                 Log.e(LT,"Attempt to handle error before application created", th);
             }else {
+                Log.e(LT,"Toasted", th);
                 Toast.makeText(context, th.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
