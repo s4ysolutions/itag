@@ -26,7 +26,7 @@ public class Db {
     private final static List<DbListener> mDbListeners = new ArrayList<>(4);
     public static final List<Device> devices = new ArrayList<>(4);
 
-    public static void addListener(DbListener listener){
+    public static void addListener(DbListener listener) {
         if (BuildConfig.DEBUG) {
             if (mDbListeners.contains(listener)) {
                 ITagApplication.handleError(new Exception("Db.addListener duplcate"));
@@ -35,7 +35,7 @@ public class Db {
         mDbListeners.add(listener);
     }
 
-    public static void removeListener(DbListener listener){
+    public static void removeListener(DbListener listener) {
         if (BuildConfig.DEBUG) {
             if (!mDbListeners.contains(listener)) {
                 ITagApplication.handleError(new Exception("Db.removeListener non existing"));
@@ -44,8 +44,8 @@ public class Db {
         mDbListeners.remove(listener);
     }
 
-    public static void notifyChange(){
-        for(DbListener listener:mDbListeners){
+    public static void notifyChange() {
+        for (DbListener listener : mDbListeners) {
             listener.onChange();
         }
     }
@@ -57,16 +57,21 @@ public class Db {
         return null;
     }
 
-    static private File getSer(@NotNull final Context context) throws IOException {
-        File file = new File(context.getFilesDir(), "db");
+    static private File getDbFile(
+            @NotNull final Context context,
+            @NotNull final String name) throws IOException {
+        File file = new File(context.getFilesDir(), name);
         //noinspection ResultOfMethodCallIgnored
         file.createNewFile();
         return file;
     }
 
-    static public void load(@NotNull final Context context) {
+    static private void loadFromFile(
+            @NotNull final Context context,
+            @NotNull final String fileName,
+            @NotNull final List<Device> devices) {
         devices.clear();
-        try (FileInputStream fis = new FileInputStream(getSer(context))) {
+        try (FileInputStream fis = new FileInputStream(getDbFile(context, fileName))) {
             ObjectInputStream ois = new ObjectInputStream(fis);
             Object read = ois.readObject();
             if (read instanceof List) {
@@ -90,11 +95,85 @@ public class Db {
         }
     }
 
+    static public void load(@NotNull final Context context) {
+        loadFromFile(context, "db", devices);
+    }
+
+    private static List<Device> loadOldDevices(@NotNull final Context context) {
+        final List<Device> devices = new ArrayList<>(16);
+        loadFromFile(context, "db.old", devices);
+        return devices;
+    }
+
+    public static Device getOldDevice(@NotNull final Context context, String addr) {
+        final List<Device> oldDevices = loadOldDevices(context);
+        for (Device oldDevice : oldDevices) {
+            if (oldDevice.addr.equals(addr)) {
+                return oldDevice;
+            }
+        }
+        return null;
+    }
+
+    private static void updateOld(@NotNull final Context context) {
+        final List<Device> composeDevices = new ArrayList<>(16);
+
+        try {
+            final List<Device> oldDevices = loadOldDevices(context);
+            for (Device oldDevice : oldDevices) {
+                Device found = null;
+                for (Device current : devices) {
+                    if (oldDevice.addr.equals(current.addr)) {
+                        found = current;
+                        break;
+                    }
+                }
+                if (found == null) {
+                    composeDevices.add(oldDevice);
+                } else {
+                    composeDevices.add(found);
+                }
+            }
+            for (Device current : devices) {
+                boolean found = false;
+                for (Device oldDevice : oldDevices) {
+                    if (oldDevice.addr.equals(current.addr)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    composeDevices.add(current);
+                }
+            }
+        } catch (NullPointerException ignored) {
+            try {
+                getDbFile(context, "db.old").delete();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(getDbFile(context, "db.old"))) {
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(composeDevices  );
+            oos.close();
+        } catch (FileNotFoundException e) {
+            ITagApplication.handleError(e);
+            e.printStackTrace();
+        } catch (IOException e) {
+            ITagApplication.handleError(e);
+            e.printStackTrace();
+        }
+    }
+
     public static void save(@NotNull final Context context) {
-        try (FileOutputStream fos = new FileOutputStream(getSer(context))) {
+        try (FileOutputStream fos = new FileOutputStream(getDbFile(context, "db"))) {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(devices);
             oos.close();
+            updateOld(context);
         } catch (FileNotFoundException e) {
             ITagApplication.handleError(e);
             e.printStackTrace();
@@ -106,7 +185,8 @@ public class Db {
 
     static public void remember(@NotNull final Context context, @NotNull final BluetoothDevice device) {
         if (findByAddr(device.getAddress()) == null) {
-            final Device d = new Device(device);
+            final Device oldDevice = getOldDevice(context, device.getAddress());
+            final Device d = new Device(device, oldDevice);
             devices.add(d);
             save(context);
             notifyChange();
