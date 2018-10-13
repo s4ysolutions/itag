@@ -47,7 +47,7 @@ public final class LeScanner {
                 ITagApplication.handleError(new Exception("LeScanner.removeListener non existing listener"));
             }
         }
-        mListeners.add(listener);
+        mListeners.remove(listener);
     }
 
     static private void notifyStart() {
