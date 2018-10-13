@@ -24,7 +24,7 @@ public class ITagsDb {
     }
 
     private final static List<DbListener> mDbListeners = new ArrayList<>(4);
-    public static final List<ITagDevice> devices = new ArrayList<>(4);
+    private static List<ITagDevice> devices;
 
     public static void addListener(DbListener listener) {
         if (BuildConfig.DEBUG) {
@@ -95,7 +95,7 @@ public class ITagsDb {
         }
     }
 
-    static public void load(@NotNull final Context context) {
+    static private void load(@NotNull final Context context) {
         loadFromFile(context, "db", devices);
     }
 
@@ -105,7 +105,7 @@ public class ITagsDb {
         return devices;
     }
 
-    public static ITagDevice getOldDevice(@NotNull final Context context, String addr) {
+    private static ITagDevice getOldDevice(@NotNull final Context context, String addr) {
         final List<ITagDevice> oldDevices = loadOldDevices(context);
         for (ITagDevice oldDevice : oldDevices) {
             if (oldDevice.addr.equals(addr)) {
@@ -210,4 +210,11 @@ public class ITagsDb {
         return findByAddr(device.addr) != null;
     }
 
+    static public List<ITagDevice> getDevices(Context context){
+        if (devices==null){
+            devices = new ArrayList<>(4);
+            load(context);
+        }
+        return devices;
+    }
 }

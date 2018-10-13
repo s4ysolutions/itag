@@ -12,6 +12,8 @@ import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import solutions.s4y.itag.BuildConfig;
@@ -47,13 +49,46 @@ public class ITagGatt {
             UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
             */
 
+    private final String mAddr;
     private BluetoothDevice mDevice;
     private BluetoothGatt mGatt;
     private boolean mIsError;
     private boolean mIsConnected;
     private boolean mIsConnecting;
+    private boolean mIsTransmitting;
 
     private BluetoothGattService mImmediateAlertService;
+
+    public interface OnConnectionChangeListener {
+        void onConnectionChange(@NotNull final ITagGatt gatt);
+    }
+
+    private static final List<OnConnectionChangeListener> mConnectionChangeListeners =
+            new ArrayList<>(4);
+
+    public static void addOnConnectionChnageListener(OnConnectionChangeListener listener){
+        if (BuildConfig.DEBUG) {
+            if (mConnectionChangeListeners.contains(listener)) {
+                ITagApplication.handleError(new Error("Add duplicate OnConnectionChangeListener listener"));
+            }
+        }
+        mConnectionChangeListeners.add(listener);
+    }
+
+    public static void removeOnConnectionChnageListener(OnConnectionChangeListener listener){
+        if (BuildConfig.DEBUG) {
+            if (!mConnectionChangeListeners.contains(listener)) {
+                ITagApplication.handleError(new Error("Remove nonexisting OnConnectionChangeListener listener"));
+            }
+        }
+        mConnectionChangeListeners.remove(listener);
+    }
+
+    private void notifyConnectionChanged(){
+        for(OnConnectionChangeListener listener: mConnectionChangeListeners){
+            listener.onConnectionChange(this);
+        }
+    }
 
     private final BluetoothGattCallback mCallback = new BluetoothGattCallback() {
         @Override
@@ -85,8 +120,9 @@ public class ITagGatt {
                 if (BuildConfig.DEBUG) {
                     Log.d(T, "GattCallback.onServicesDiscovered: not GATT_SUCCESS");
                 }
-                ITagApplication.handleError(new Exception("onServicesDiscovered failed"));
+                ITagApplication.handleError(new Exception("onServicesDiscovered failed: code="+status));
                 mIsError = true;
+                notifyConnectionChanged();
             }
         }
 
@@ -120,6 +156,7 @@ public class ITagGatt {
                 }
                 mIsConnecting = false;
                 mIsConnected = true;
+                notifyConnectionChanged();
             } else {
                 mIsError = true;
 
@@ -127,17 +164,29 @@ public class ITagGatt {
                     Log.d(T, "GattCallback.onServicesDiscovered: not GATT_SUCCESS");
                 }
                 ITagApplication.handleError(new Exception("onServicesDiscovered failed"));
+                notifyConnectionChanged();
             }
         }
 
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            mIsTransmitting=false;
+            notifyConnectionChanged();
+        }
     };
 
     private void endConnection() {
         mGatt.close();
+        reset();
+        notifyConnectionChanged();
+    }
+
+    private void reset(){
         mGatt = null;
         mIsConnected = false;
         mDevice = null;
         mIsError = false;
+        mIsTransmitting = false;
     }
 
     private void writeCharacteristic(
@@ -154,16 +203,19 @@ public class ITagGatt {
             return;
         }
         final BluetoothGattCharacteristic characteristic = service.getCharacteristics().get(0);
+        characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
         Log.d(T,
                 "writeCharacteristic: service=" + service.getUuid() +
                         " characteristic=" + characteristic.getUuid() +
                         " value desired=" + value+
-                        " value =" + characteristic.getValue()[0]
+                        " value =" + (characteristic.getValue()!=null && characteristic.getValue().length>0?characteristic.getValue()[0]:"N/A")
         );
         mGatt.writeCharacteristic(characteristic);
+        mIsTransmitting=true;
+        notifyConnectionChanged();
     }
 
-    public void connect(@NotNull final Context contex, @NotNull final String address) {
+    void connect(@NotNull final Context contex) {
         if (BuildConfig.DEBUG) {
             if (mGatt != null) {
                 ITagApplication.handleError(new Exception("DeviceGatt.connect: mGatt!=null"));
@@ -175,8 +227,9 @@ public class ITagGatt {
                 ITagApplication.handleError(new Exception("DeviceGatt.connect: mIsConnecting"));
             }
         }
-        mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address);
-        mDevice.connectGatt(contex, true, mCallback);
+        reset();
+        mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mAddr);
+        mGatt=mDevice.connectGatt(contex, true, mCallback);
     }
 
     public void disconnect() {
@@ -192,17 +245,18 @@ public class ITagGatt {
         endConnection();
     }
 
-    public void alert() {
+    void alert() {
         if (BuildConfig.DEBUG) {
             Log.d(T,"alert15sec");
         }
 
+        // TODO: handle not connected
         if (!mIsConnected) {
             ITagApplication.handleError(new Exception("Not connected"));
             return;
         }
 
-        writeCharacteristic(mImmediateAlertService, ALERT_LEVEL_CHARACTERISTIC, NO_ALERT);
+        writeCharacteristic(mImmediateAlertService, ALERT_LEVEL_CHARACTERISTIC, HIGH_ALERT);
     }
 
     public void stopAlert() {
@@ -215,7 +269,22 @@ public class ITagGatt {
             return;
         }
 
-        writeCharacteristic(mImmediateAlertService, ALERT_LEVEL_CHARACTERISTIC, HIGH_ALERT);
+        writeCharacteristic(mImmediateAlertService, ALERT_LEVEL_CHARACTERISTIC, NO_ALERT);
     }
 
+    public boolean isConnecting() {
+        return mIsConnecting;
+    }
+
+    public boolean isConnected() {
+        return mIsConnected && !mIsError;
+    }
+
+    public boolean isTransmitting() {
+        return mIsTransmitting;
+    }
+
+    public ITagGatt(String addr) {
+        mAddr = addr;
+    }
 }

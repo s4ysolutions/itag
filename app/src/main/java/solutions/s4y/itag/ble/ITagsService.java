@@ -6,6 +6,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 
 import solutions.s4y.itag.BuildConfig;
@@ -28,6 +30,7 @@ public class ITagsService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        connect();
         return mBinder;
     }
 
@@ -38,5 +41,26 @@ public class ITagsService extends Service {
         }
 
         super.onDestroy();
+    }
+
+    public ITagGatt getGatt(@NotNull final String addr, boolean connect) {
+        ITagGatt gatt = mGatts.get(addr);
+        if (gatt == null) {
+            gatt = new ITagGatt(addr);
+            mGatts.put(addr, gatt);
+            if (connect) gatt.connect(this);
+        }
+        return gatt;
+    }
+
+    public void connect() {
+        for (ITagDevice device: ITagsDb.getDevices(this)) {
+            getGatt(device.addr, true);
+        }
+    }
+
+    public void alert(@NotNull final String addr) {
+        ITagGatt gatt = mGatts.get(addr);
+        gatt.alert();
     }
 }

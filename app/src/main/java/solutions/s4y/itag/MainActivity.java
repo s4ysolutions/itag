@@ -28,8 +28,8 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     static public final int REQUEST_ENABLE_BT = 1;
     static public final int REQUEST_ENABLE_LOCATION = 2;
     public BluetoothAdapter mBluetoothAdapter;
-    public ITagsService mGattService;
-    public boolean mGattBound;
+    public ITagsService mITagsService;
+    public boolean mITagsServiceBound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,14 +110,15 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         @Override
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
-            mGattService = ((ITagsService.GattBinder) binder).getService();
-            mGattBound = true;
+            mITagsService = ((ITagsService.GattBinder) binder).getService();
+            mITagsServiceBound = true;
+            mITagsService.connect();
             // setupContent();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
-            mGattBound = false;
+            mITagsServiceBound = false;
         }
     };
 
@@ -171,6 +172,17 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                     .setNegativeButton(android.R.string.no, (dialog, which) -> dialog.cancel())
                     .show();
         }
+    }
+
+    public void onAlert(View sender) {
+        if (!mITagsServiceBound)
+            return;
+        ITagDevice device = (ITagDevice) sender.getTag();
+        if (device == null) {
+            ITagApplication.handleError(new Exception("No device"));
+            return;
+        }
+        mITagsService.alert(device.addr);
     }
 
     public void onStartStopScan(View ignored) {

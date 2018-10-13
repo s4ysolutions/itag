@@ -19,7 +19,6 @@ public final class ITagApplication extends Application {
     public void onCreate() {
         super.onCreate();
         context=this;
-        ITagsDb.load(this);
     }
 
     static public void handleError(Throwable th) {

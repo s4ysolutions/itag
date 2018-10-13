@@ -9,16 +9,20 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 
+import solutions.s4y.itag.ble.ITagGatt;
 import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.ITagDevice;
+import solutions.s4y.itag.ble.ITagsService;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITagsFragment extends Fragment implements ITagsDb.DbListener {
+public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.OnConnectionChangeListener {
     public ITagsFragment() {
         // Required empty public constructor
     }
@@ -49,9 +53,24 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener {
         }
         final ImageView imageITag = itagLayout.findViewById(R.id.image_itag);
         imageITag.setImageResource(imageId);
+        imageITag.setTag(device);
         final TextView textName = itagLayout.findViewById(R.id.text_name);
 //        textName.setText(device.name!=null && device.name.length()>0 ?device.name:device.addr);
         textName.setText(device.name);
+        final ImageView imgStatus=itagLayout.findViewById(R.id.bt_status);
+
+        MainActivity mainActivity=(MainActivity)getActivity();
+        int rid=R.drawable.bt_setup;
+        if (mainActivity.mITagsServiceBound){
+            ITagsService service=mainActivity.mITagsService;
+            ITagGatt gatt=service.getGatt(device.addr, false);
+            if (gatt.isConnected()){
+                rid=R.drawable.bt;
+            }else if (gatt.isTransmitting()){
+                rid=R.drawable.bt_call;
+            }
+        }
+        imgStatus.setImageResource(rid);
     }
 
     private void setupTags(ViewGroup root) {
@@ -61,15 +80,15 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener {
             root.removeView(tagsLayout);
             index = root.indexOfChild(tagsLayout);
         }
-        final int s = ITagsDb.devices.size();
+        final int s = ITagsDb.getDevices(getActivity()).size();
         final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
         tagsLayout = getActivity().getLayoutInflater().inflate(rid, root, false);
         root.addView(tagsLayout, index);
         if (s > 0) {
-            setupTag(ITagsDb.devices.get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
+            setupTag(ITagsDb.getDevices(getActivity()).get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
         }
         if (s > 1) {
-            setupTag(ITagsDb.devices.get(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
+            setupTag(ITagsDb.getDevices(getActivity()).get(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
         }
         /*
         if (s>2) {
@@ -98,10 +117,12 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener {
         super.onResume();
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
         ITagsDb.addListener(this);
+        ITagGatt.addOnConnectionChnageListener(this);
     }
 
     @Override
     public void onPause() {
+        ITagGatt.removeOnConnectionChnageListener(this);
         ITagsDb.removeListener(this);
         super.onPause();
     }
@@ -109,5 +130,10 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener {
     @Override
     public void onChange() {
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
+    }
+
+    @Override
+    public void onConnectionChange(@NotNull ITagGatt gatt) {
+        getActivity().runOnUiThread(() -> setupTags((ViewGroup) Objects.requireNonNull(getView())));
     }
 }

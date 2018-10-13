@@ -105,7 +105,7 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
         final TextView tv = root.findViewById(R.id.text_scanning);
         if (LeScanner.results.size() > 0) {
             tv.setText(R.string.scanning_more);
-        } else if (ITagsDb.devices.size() > 0) {
+        } else if (ITagsDb.getDevices(getActivity()).size() > 0) {
             tv.setText(R.string.scanning_new);
         } else {
             tv.setText(R.string.scanning);
