@@ -20,7 +20,7 @@ import android.widget.ProgressBar;
 
 import solutions.s4y.itag.ble.Db;
 import solutions.s4y.itag.ble.ITagDevice;
-import solutions.s4y.itag.ble.GattService;
+import solutions.s4y.itag.ble.ITagsService;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
 
@@ -28,7 +28,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     static public final int REQUEST_ENABLE_BT = 1;
     static public final int REQUEST_ENABLE_LOCATION = 2;
     public BluetoothAdapter mBluetoothAdapter;
-    public GattService mGattService;
+    public ITagsService mGattService;
     public boolean mGattBound;
 
     @Override
@@ -110,7 +110,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         @Override
         public void onServiceConnected(ComponentName className,
                                        IBinder binder) {
-            mGattService = ((GattService.GattBinder) binder).getService();
+            mGattService = ((ITagsService.GattBinder) binder).getService();
             mGattBound = true;
             // setupContent();
         }
@@ -125,7 +125,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     protected void onStart() {
         super.onStart();
         setupContent();
-        Intent intent = new Intent(this, GattService.class);
+        Intent intent = new Intent(this, ITagsService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         LeScanner.addListener(this);
         Db.addListener(this);

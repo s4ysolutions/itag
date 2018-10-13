@@ -38,7 +38,7 @@
         </activity>
 
         <service
-            android:name=".ble.GattService"
+            android:name=".ble.ITagsService"
             android:enabled="true"
             android:exported="false"></service>
     </application>

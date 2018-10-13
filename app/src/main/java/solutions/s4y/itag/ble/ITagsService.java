@@ -10,20 +10,20 @@ import java.util.HashMap;
 
 import solutions.s4y.itag.BuildConfig;
 
-public class GattService extends Service {
-    private static final String T = GattService.class.getName();
+public class ITagsService extends Service {
+    private static final String T = ITagsService.class.getName();
 
     private HashMap<String, ITagGatt> mGatts = new HashMap<>(4);
 
     public class GattBinder extends Binder {
-        public GattService getService() {
-            return GattService.this;
+        public ITagsService getService() {
+            return ITagsService.this;
         }
     }
 
     private IBinder mBinder = new GattBinder();
 
-    public GattService() {
+    public ITagsService() {
     }
 
     @Override
