@@ -9,10 +9,10 @@ import android.view.View;
 import android.widget.TextView;
 
 import solutions.s4y.itag.ble.Db;
-import solutions.s4y.itag.ble.Device;
+import solutions.s4y.itag.ble.ITagDevice;
 
 public class SetNameDialogFragment extends DialogFragment {
-    public static Device device;
+    public static ITagDevice device;
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());

@@ -24,7 +24,7 @@ public class Db {
     }
 
     private final static List<DbListener> mDbListeners = new ArrayList<>(4);
-    public static final List<Device> devices = new ArrayList<>(4);
+    public static final List<ITagDevice> devices = new ArrayList<>(4);
 
     public static void addListener(DbListener listener) {
         if (BuildConfig.DEBUG) {
@@ -50,8 +50,8 @@ public class Db {
         }
     }
 
-    static private Device findByAddr(@NotNull final String addr) {
-        for (Device d : devices) {
+    static private ITagDevice findByAddr(@NotNull final String addr) {
+        for (ITagDevice d : devices) {
             if (d.addr.equals(addr)) return d;
         }
         return null;
@@ -69,7 +69,7 @@ public class Db {
     static private void loadFromFile(
             @NotNull final Context context,
             @NotNull final String fileName,
-            @NotNull final List<Device> devices) {
+            @NotNull final List<ITagDevice> devices) {
         devices.clear();
         try (FileInputStream fis = new FileInputStream(getDbFile(context, fileName))) {
             ObjectInputStream ois = new ObjectInputStream(fis);
@@ -77,8 +77,8 @@ public class Db {
             if (read instanceof List) {
                 List dd = (List) read;
                 for (Object d : dd) {
-                    if (d instanceof Device) {
-                        devices.add((Device) d);
+                    if (d instanceof ITagDevice) {
+                        devices.add((ITagDevice) d);
                     }
                 }
             }
@@ -99,15 +99,15 @@ public class Db {
         loadFromFile(context, "db", devices);
     }
 
-    private static List<Device> loadOldDevices(@NotNull final Context context) {
-        final List<Device> devices = new ArrayList<>(16);
+    private static List<ITagDevice> loadOldDevices(@NotNull final Context context) {
+        final List<ITagDevice> devices = new ArrayList<>(16);
         loadFromFile(context, "db.old", devices);
         return devices;
     }
 
-    public static Device getOldDevice(@NotNull final Context context, String addr) {
-        final List<Device> oldDevices = loadOldDevices(context);
-        for (Device oldDevice : oldDevices) {
+    public static ITagDevice getOldDevice(@NotNull final Context context, String addr) {
+        final List<ITagDevice> oldDevices = loadOldDevices(context);
+        for (ITagDevice oldDevice : oldDevices) {
             if (oldDevice.addr.equals(addr)) {
                 return oldDevice;
             }
@@ -116,13 +116,13 @@ public class Db {
     }
 
     private static void updateOld(@NotNull final Context context) {
-        final List<Device> composeDevices = new ArrayList<>(16);
+        final List<ITagDevice> composeDevices = new ArrayList<>(16);
 
         try {
-            final List<Device> oldDevices = loadOldDevices(context);
-            for (Device oldDevice : oldDevices) {
-                Device found = null;
-                for (Device current : devices) {
+            final List<ITagDevice> oldDevices = loadOldDevices(context);
+            for (ITagDevice oldDevice : oldDevices) {
+                ITagDevice found = null;
+                for (ITagDevice current : devices) {
                     if (oldDevice.addr.equals(current.addr)) {
                         found = current;
                         break;
@@ -134,9 +134,9 @@ public class Db {
                     composeDevices.add(found);
                 }
             }
-            for (Device current : devices) {
+            for (ITagDevice current : devices) {
                 boolean found = false;
-                for (Device oldDevice : oldDevices) {
+                for (ITagDevice oldDevice : oldDevices) {
                     if (oldDevice.addr.equals(current.addr)) {
                         found = true;
                         break;
@@ -185,16 +185,16 @@ public class Db {
 
     static public void remember(@NotNull final Context context, @NotNull final BluetoothDevice device) {
         if (findByAddr(device.getAddress()) == null) {
-            final Device oldDevice = getOldDevice(context, device.getAddress());
-            final Device d = new Device(device, oldDevice);
+            final ITagDevice oldDevice = getOldDevice(context, device.getAddress());
+            final ITagDevice d = new ITagDevice(device, oldDevice);
             devices.add(d);
             save(context);
             notifyChange();
         }
     }
 
-    static public void forget(@NotNull final Context context, @NotNull final Device device) {
-        Device existing = findByAddr(device.addr);
+    static public void forget(@NotNull final Context context, @NotNull final ITagDevice device) {
+        ITagDevice existing = findByAddr(device.addr);
         if (existing != null) {
             devices.remove(existing);
             save(context);
@@ -206,7 +206,7 @@ public class Db {
         return findByAddr(device.getAddress()) != null;
     }
 
-    static public boolean has(@NotNull final Device device) {
+    static public boolean has(@NotNull final ITagDevice device) {
         return findByAddr(device.addr) != null;
     }
 

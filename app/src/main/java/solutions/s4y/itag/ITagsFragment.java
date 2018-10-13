@@ -12,7 +12,7 @@ import android.widget.TextView;
 import java.util.Objects;
 
 import solutions.s4y.itag.ble.Db;
-import solutions.s4y.itag.ble.Device;
+import solutions.s4y.itag.ble.ITagDevice;
 
 
 /**
@@ -23,7 +23,7 @@ public class ITagsFragment extends Fragment implements Db.DbListener {
         // Required empty public constructor
     }
 
-    private void setupTag(final Device device, final View itagLayout) {
+    private void setupTag(final ITagDevice device, final View itagLayout) {
         final View btnForget = itagLayout.findViewById(R.id.btn_forget);
         btnForget.setTag(device);
         final View btnColor = itagLayout.findViewById(R.id.btn_color);

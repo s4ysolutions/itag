@@ -19,7 +19,7 @@ import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 
 import solutions.s4y.itag.ble.Db;
-import solutions.s4y.itag.ble.Device;
+import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.GattService;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
@@ -158,7 +158,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     }
 
     public void onForget(View sender) {
-        Device device = (Device) sender.getTag();
+        ITagDevice device = (ITagDevice) sender.getTag();
         if (device == null) {
             ITagApplication.handleError(new Exception("No device"));
             return;
@@ -189,7 +189,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     }
 
     public void onChangeColor(View sender) {
-        final Device device = (Device) sender.getTag();
+        final ITagDevice device = (ITagDevice) sender.getTag();
         if (device == null) {
             ITagApplication.handleError(new Exception("No device"));
             return;
@@ -199,19 +199,19 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.black:
-                    device.color = Device.Color.BLACK;
+                    device.color = ITagDevice.Color.BLACK;
                     break;
                 case R.id.white:
-                    device.color = Device.Color.WHITE;
+                    device.color = ITagDevice.Color.WHITE;
                     break;
                 case R.id.red:
-                    device.color = Device.Color.RED;
+                    device.color = ITagDevice.Color.RED;
                     break;
                 case R.id.green:
-                    device.color = Device.Color.GREEN;
+                    device.color = ITagDevice.Color.GREEN;
                     break;
                 case R.id.blue:
-                    device.color = Device.Color.BLUE;
+                    device.color = ITagDevice.Color.BLUE;
                     break;
             }
             Db.save(MainActivity.this);
@@ -228,7 +228,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
 
     public void onSetName(View sender) {
-        final Device device = (Device) sender.getTag();
+        final ITagDevice device = (ITagDevice) sender.getTag();
         if (device == null) {
             ITagApplication.handleError(new Exception("No device"));
             return;
