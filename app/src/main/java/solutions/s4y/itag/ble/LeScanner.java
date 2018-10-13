@@ -11,7 +11,6 @@ import android.os.Handler;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
@@ -79,7 +78,7 @@ public final class LeScanner {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             LeScanResult result = new LeScanResult(device, rssi, scanRecord);
-            if (Db.has(device)) return;
+            if (ITagsDb.has(device)) return;
             if (result.device.getAddress() == null) return;
             String addr = result.device.getAddress();
             if (addr == null) return;

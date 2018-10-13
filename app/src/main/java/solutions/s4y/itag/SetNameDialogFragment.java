@@ -8,7 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
-import solutions.s4y.itag.ble.Db;
+import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.ITagDevice;
 
 public class SetNameDialogFragment extends DialogFragment {
@@ -24,8 +24,8 @@ public class SetNameDialogFragment extends DialogFragment {
                 .setView(view)
                 .setPositiveButton(android.R.string.ok, (dialog, id) -> {
                     device.name=textName.getText().toString();
-                    Db.save(getActivity());
-                    Db.notifyChange();
+                    ITagsDb.save(getActivity());
+                    ITagsDb.notifyChange();
                     // dialog.dismiss();
                 })
                 .setNegativeButton(android.R.string.cancel, (dialog, id) -> {

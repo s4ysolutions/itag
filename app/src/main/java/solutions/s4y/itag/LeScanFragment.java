@@ -12,9 +12,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.util.Objects;
-
-import solutions.s4y.itag.ble.Db;
+import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
 
@@ -107,7 +105,7 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
         final TextView tv = root.findViewById(R.id.text_scanning);
         if (LeScanner.results.size() > 0) {
             tv.setText(R.string.scanning_more);
-        } else if (Db.devices.size() > 0) {
+        } else if (ITagsDb.devices.size() > 0) {
             tv.setText(R.string.scanning_new);
         } else {
             tv.setText(R.string.scanning);

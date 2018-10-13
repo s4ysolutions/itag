@@ -11,14 +11,14 @@ import android.widget.TextView;
 
 import java.util.Objects;
 
-import solutions.s4y.itag.ble.Db;
+import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.ITagDevice;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITagsFragment extends Fragment implements Db.DbListener {
+public class ITagsFragment extends Fragment implements ITagsDb.DbListener {
     public ITagsFragment() {
         // Required empty public constructor
     }
@@ -61,15 +61,15 @@ public class ITagsFragment extends Fragment implements Db.DbListener {
             root.removeView(tagsLayout);
             index = root.indexOfChild(tagsLayout);
         }
-        final int s = Db.devices.size();
+        final int s = ITagsDb.devices.size();
         final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
         tagsLayout = getActivity().getLayoutInflater().inflate(rid, root, false);
         root.addView(tagsLayout, index);
         if (s > 0) {
-            setupTag(Db.devices.get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
+            setupTag(ITagsDb.devices.get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
         }
         if (s > 1) {
-            setupTag(Db.devices.get(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
+            setupTag(ITagsDb.devices.get(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
         }
         /*
         if (s>2) {
@@ -97,12 +97,12 @@ public class ITagsFragment extends Fragment implements Db.DbListener {
     public void onResume() {
         super.onResume();
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
-        Db.addListener(this);
+        ITagsDb.addListener(this);
     }
 
     @Override
     public void onPause() {
-        Db.removeListener(this);
+        ITagsDb.removeListener(this);
         super.onPause();
     }
 

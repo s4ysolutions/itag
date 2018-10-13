@@ -18,13 +18,13 @@ import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 
-import solutions.s4y.itag.ble.Db;
+import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagsService;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
 
-public class MainActivity extends Activity implements LeScanner.LeScannerListener, Db.DbListener {
+public class MainActivity extends Activity implements LeScanner.LeScannerListener, ITagsDb.DbListener {
     static public final int REQUEST_ENABLE_BT = 1;
     static public final int REQUEST_ENABLE_LOCATION = 2;
     public BluetoothAdapter mBluetoothAdapter;
@@ -128,13 +128,13 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         Intent intent = new Intent(this, ITagsService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         LeScanner.addListener(this);
-        Db.addListener(this);
+        ITagsDb.addListener(this);
     }
 
     @Override
     protected void onStop() {
         unbindService(mConnection);
-        Db.removeListener(this);
+        ITagsDb.removeListener(this);
         LeScanner.removeListener(this);
         super.onStop();
     }
@@ -145,14 +145,14 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             ITagApplication.handleError(new Exception("No BLE device"));
             return;
         }
-        if (!Db.has(device)) {
+        if (!ITagsDb.has(device)) {
             if (BuildConfig.DEBUG) {
                 if (mBluetoothAdapter == null) {
                     ITagApplication.handleError(new Exception("onRemember mBluetoothAdapter=null"));
                     return;
                 }
             }
-            Db.remember(this, device);
+            ITagsDb.remember(this, device);
             LeScanner.stopScan(mBluetoothAdapter);
         }
     }
@@ -163,11 +163,11 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             ITagApplication.handleError(new Exception("No device"));
             return;
         }
-        if (Db.has(device)) {
+        if (ITagsDb.has(device)) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(R.string.confirm_forget)
                     .setTitle(R.string.confirm_title)
-                    .setPositiveButton(android.R.string.yes, (dialog, which) -> Db.forget(this, device))
+                    .setPositiveButton(android.R.string.yes, (dialog, which) -> ITagsDb.forget(this, device))
                     .setNegativeButton(android.R.string.no, (dialog, which) -> dialog.cancel())
                     .show();
         }
@@ -214,8 +214,8 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                     device.color = ITagDevice.Color.BLUE;
                     break;
             }
-            Db.save(MainActivity.this);
-            Db.notifyChange();
+            ITagsDb.save(MainActivity.this);
+            ITagsDb.notifyChange();
             return true;
         });
         popupMenu.show();

@@ -18,7 +18,7 @@ import java.util.List;
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
 
-public class Db {
+public class ITagsDb {
     public interface DbListener {
         void onChange();
     }

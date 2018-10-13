@@ -8,7 +8,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import solutions.s4y.itag.ble.Db;
+import solutions.s4y.itag.ble.ITagsDb;
 
 public final class ITagApplication extends Application {
     private final static String LT = ITagApplication.class.getName();
@@ -19,7 +19,7 @@ public final class ITagApplication extends Application {
     public void onCreate() {
         super.onCreate();
         context=this;
-        Db.load(this);
+        ITagsDb.load(this);
     }
 
     static public void handleError(Throwable th) {
