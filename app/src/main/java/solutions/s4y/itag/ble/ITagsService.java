@@ -24,6 +24,7 @@ import solutions.s4y.itag.R;
 public class ITagsService extends Service {
     private static final int FOREGROUND_ID = 1;
     private static final String CHANNEL_ID = "itag0";
+    private static final String RUN_IN_FOREGROUND = "run_in_foreground";
     private boolean mChannelCreated;
 
     private static final String T = ITagsService.class.getName();
@@ -43,6 +44,9 @@ public class ITagsService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent.getBooleanExtra(RUN_IN_FOREGROUND, false)) {
+            addToForeground();
+        }
         return START_REDELIVER_INTENT;
     }
 
@@ -135,16 +139,34 @@ public class ITagsService extends Service {
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
-                mChannelCreated=true;
+                mChannelCreated = true;
             }
         }
     }
 
-    public static void start(Context context){
-        if (ITagsDb.getDevices(context).size()>0){
+    public static void start(Context context, boolean foreground) {
+        if (ITagsDb.getDevices(context).size() > 0) {
             Intent intent = new Intent(context, ITagsService.class);
-            context.startService(intent);
+            if (foreground) {
+                intent.putExtra(RUN_IN_FOREGROUND,true);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent);
+                } else {
+                    context.startService(intent);
+                }
+            } else {
+                context.startService(intent);
+            }
         }
+
+    }
+
+    public static void start(Context context) {
+        start(context, false);
+    }
+
+    public static void startInForeground(Context context) {
+        start(context, true);
     }
 
     public static void stop(Context context) {
