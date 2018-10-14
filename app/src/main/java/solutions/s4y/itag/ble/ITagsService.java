@@ -8,6 +8,9 @@ import android.app.Service;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -15,13 +18,15 @@ import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import solutions.s4y.itag.BuildConfig;
+import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
 
-public class ITagsService extends Service {
+public class ITagsService extends Service implements ITagGatt.ITagChangeListener {
     private static final int FOREGROUND_ID = 1;
     private static final String CHANNEL_ID = "itag0";
     private static final String RUN_IN_FOREGROUND = "run_in_foreground";
@@ -30,6 +35,7 @@ public class ITagsService extends Service {
     private static final String T = ITagsService.class.getName();
 
     private HashMap<String, ITagGatt> mGatts = new HashMap<>(4);
+
 
     public class GattBinder extends Binder {
         public ITagsService getService() {
@@ -57,11 +63,20 @@ public class ITagsService extends Service {
     }
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        if (BuildConfig.DEBUG) {
+            Log.d(T, "onCreate");
+        }
+        ITagGatt.addOnITagChangeListener(this);
+    }
+
+    @Override
     public void onDestroy() {
         if (BuildConfig.DEBUG) {
             Log.d(T, "onDestroy");
         }
-
+        ITagGatt.removeOnITagChangeListener(this);
         for (ITagGatt gatt : mGatts.values()) {
             gatt.disconnect();
             gatt.close();
@@ -172,6 +187,35 @@ public class ITagsService extends Service {
     public static void stop(Context context) {
         if (ITagsDb.getDevices(context).size() == 0) {
             context.stopService(new Intent(context, ITagsService.class));
+        }
+    }
+
+
+    @Override
+    public void onITagChange(@NotNull ITagGatt gatt) {
+
+    }
+
+    @Override
+    public void onITagClicked(@NotNull ITagGatt gatt) {
+        AssetFileDescriptor afd = null;
+        try {
+            afd = getAssets().openFd("alarm.mp3");
+            MediaPlayer player = new MediaPlayer();
+            player.setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
+            player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            player.prepare();
+            player.start();
+        }catch (IOException e){
+            ITagApplication.handleError(e);
+        }finally {
+            if (afd!=null) {
+                try {
+                    afd.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }

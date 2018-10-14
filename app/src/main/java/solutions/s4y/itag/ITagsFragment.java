@@ -3,7 +3,6 @@ package solutions.s4y.itag;
 
 import android.os.Bundle;
 import android.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +24,7 @@ import solutions.s4y.itag.ble.ITagsService;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.OnConnectionChangeListener {
+public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener {
     private static final String LT=ITagsFragment.class.getName();
     public ITagsFragment() {
         // Required empty public constructor
@@ -137,12 +136,12 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         super.onResume();
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
         ITagsDb.addListener(this);
-        ITagGatt.addOnConnectionChnageListener(this);
+        ITagGatt.addOnITagChangeListener(this);
     }
 
     @Override
     public void onPause() {
-        ITagGatt.removeOnConnectionChnageListener(this);
+        ITagGatt.removeOnITagChangeListener(this);
         ITagsDb.removeListener(this);
         super.onPause();
     }
@@ -153,7 +152,12 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     }
 
     @Override
-    public void onConnectionChange(@NotNull ITagGatt gatt) {
+    public void onITagChange(@NotNull ITagGatt gatt) {
         getActivity().runOnUiThread(() -> setupTags((ViewGroup) Objects.requireNonNull(getView())));
+    }
+
+    @Override
+    public void onITagClicked(@NotNull ITagGatt gatt) {
+
     }
 }

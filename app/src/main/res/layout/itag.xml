@@ -24,12 +24,19 @@
             android:text="@string/empty"
             android:textAlignment="center" />
 
-        <ImageView
-            android:id="@+id/bt_status"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:contentDescription="@string/empty"
-            android:src="@drawable/bt" />
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/bt_status"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:contentDescription="@string/empty"
+                android:src="@drawable/bt" />
+        </FrameLayout>
+
     </LinearLayout>
 
     <ImageView
