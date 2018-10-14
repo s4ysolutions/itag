@@ -26,20 +26,21 @@ import solutions.s4y.itag.ble.ITagsService;
  * A simple {@link Fragment} subclass.
  */
 public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener {
-    private static final String LT=ITagsFragment.class.getName();
+    private static final String LT = ITagsFragment.class.getName();
+
     public ITagsFragment() {
         // Required empty public constructor
     }
 
     private final View.OnLongClickListener mOnLongClickListener = v -> {
-        ITagDevice device = (ITagDevice)v.getTag();
+        ITagDevice device = (ITagDevice) v.getTag();
         MainActivity mainActivity = (MainActivity) getActivity();
         if (mainActivity.mITagsServiceBound) {
             ITagsService service = mainActivity.mITagsService;
             ITagGatt gatt = service.getGatt(device.addr, true);
             if (gatt.isAlert()) {
                 gatt.stopAlert();
-            }else{
+            } else {
                 gatt.alert();
             }
         }
@@ -126,18 +127,12 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         if (s > 1) {
             setupTag(ITagsDb.getDevices(getActivity()).get(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
         }
-        /*
-        if (s>2) {
-            View itagLayout = tagsLayout.findViewById(R.id.tag_3);
-            View btnForget = itagLayout.findViewById(R.id.btn_forget);
-            btnForget.setTag(Db.devices.get(2));
+        if (s > 2) {
+            setupTag(ITagsDb.getDevices(getActivity()).get(2), tagsLayout.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
         }
-        if (s>3) {
-            View itagLayout = tagsLayout.findViewById(R.id.tag_4);
-            View btnForget = itagLayout.findViewById(R.id.btn_forget);
-            btnForget.setTag(Db.devices.get(3));
+        if (s > 3) {
+            setupTag(ITagsDb.getDevices(getActivity()).get(3), tagsLayout.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
         }
-*/
     }
 
     @Override
