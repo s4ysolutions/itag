@@ -102,15 +102,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
-    public void alert(@NotNull final String addr) {
-        final ITagGatt gatt = mGatts.get(addr);
-        if (gatt.isAlert()) {
-            gatt.stopAlert();
-        } else {
-            gatt.alert();
-        }
-    }
-
     public void addToForeground() {
         Notification.Builder builder = new Notification.Builder(this);
         builder

@@ -336,7 +336,7 @@ public class ITagGatt {
         endConnection();
     }
 
-    void alert() {
+    public void alert() {
         if (BuildConfig.DEBUG) {
             Log.d(T, "alert15sec");
         }
@@ -353,7 +353,7 @@ public class ITagGatt {
         writeCharacteristic(mServiceImmediateAlert, ALERT_LEVEL_CHARACTERISTIC, HIGH_ALERT);
     }
 
-    void stopAlert() {
+    public void stopAlert() {
         if (BuildConfig.DEBUG) {
             Log.d(T, "alert15sec");
         }

@@ -1,6 +1,7 @@
 package solutions.s4y.itag;
 
 
+import android.bluetooth.BluetoothClass;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -29,6 +30,21 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     public ITagsFragment() {
         // Required empty public constructor
     }
+
+    private final View.OnLongClickListener mOnLongClickListener = v -> {
+        ITagDevice device = (ITagDevice)v.getTag();
+        MainActivity mainActivity = (MainActivity) getActivity();
+        if (mainActivity.mITagsServiceBound) {
+            ITagsService service = mainActivity.mITagsService;
+            ITagGatt gatt = service.getGatt(device.addr, true);
+            if (gatt.isAlert()) {
+                gatt.stopAlert();
+            }else{
+                gatt.alert();
+            }
+        }
+        return true;
+    };
 
     private void setupTag(final ITagDevice device, final View itagLayout) {
         final View btnForget = itagLayout.findViewById(R.id.btn_forget);
@@ -73,6 +89,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         }
 
         final ImageView imageITag = itagLayout.findViewById(R.id.image_itag);
+        imageITag.setOnLongClickListener(mOnLongClickListener);
         imageITag.setImageResource(imageId);
         imageITag.setTag(device);
         if (animShake == null) {

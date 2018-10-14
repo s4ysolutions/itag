@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 
+import solutions.s4y.itag.ble.ITagGatt;
 import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagsService;
@@ -184,7 +185,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
     }
 
-    public void onAlert(View sender) {
+    public void onITagClick(View sender) {
         if (!mITagsServiceBound)
             return;
         ITagDevice device = (ITagDevice) sender.getTag();
@@ -192,7 +193,10 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             ITagApplication.handleError(new Exception("No device"));
             return;
         }
-        mITagsService.alert(device.addr);
+        ITagGatt gatt = mITagsService.getGatt(device.addr, true);
+        if (gatt.isAlert()){
+            gatt.stopAlert();
+        }
     }
 
     public void onStartStopScan(View ignored) {

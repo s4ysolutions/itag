@@ -46,7 +46,8 @@
         android:layout_gravity="center_horizontal"
         android:layout_weight="1"
         android:contentDescription="@string/itag"
-        android:onClick="onAlert"
+        android:longClickable="true"
+        android:onClick="onITagClick"
         android:padding="8dp"
         android:scaleType="fitCenter"
         android:src="@drawable/itag_white" />
