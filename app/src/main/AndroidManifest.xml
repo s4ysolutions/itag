@@ -40,7 +40,16 @@
         <service
             android:name=".ble.ITagsService"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false" />
+
+        <receiver
+            android:name=".BluetoothReceiver"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

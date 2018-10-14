@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.TaskStackBuilder;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
@@ -135,6 +136,19 @@ public class ITagsService extends Service {
                 notificationManager.createNotificationChannel(channel);
                 mChannelCreated=true;
             }
+        }
+    }
+
+    public static void start(Context context){
+        if (ITagsDb.getDevices(context).size()>0){
+            Intent intent = new Intent(context, ITagsService.class);
+            context.startService(intent);
+        }
+    }
+
+    public static void stop(Context context) {
+        if (ITagsDb.getDevices(context).size() == 0) {
+            context.stopService(new Intent(context, ITagsService.class));
         }
     }
 }

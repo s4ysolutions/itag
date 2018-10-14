@@ -132,19 +132,17 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         LeScanner.addListener(this);
         ITagsDb.addListener(this);
         // run the service on the activity start if there are remebered itags
-        if (ITagsDb.getDevices(this).size()>0){
-            startService(intent);
-        }
+        ITagsService.start(this);
     }
 
     @Override
     protected void onPause() {
-        if (ITagsDb.getDevices(this).size()==0){
-            stopService(new Intent(this, ITagsService.class));
-        }else {
+        if (ITagsDb.getDevices(this).size()>0){
             if (mITagsServiceBound) {
                 mITagsService.addToForeground();
             }
+        }else{
+            ITagsService.stop(this);
         }
         unbindService(mConnection);
         ITagsDb.removeListener(this);
