@@ -159,8 +159,18 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     }
 
     @Override
-    public void onChange() {
+    public void onDbChange() {
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
+    }
+
+    @Override
+    public void onDbAdd(ITagDevice device) {
+
+    }
+
+    @Override
+    public void onDbRemove(ITagDevice device) {
+
     }
 
     @Override

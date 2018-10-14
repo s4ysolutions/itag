@@ -10,7 +10,9 @@ import android.os.Build;
 import android.os.Handler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
@@ -75,6 +77,7 @@ public final class LeScanner {
     }
 
     private static BluetoothAdapter.LeScanCallback sLeScanCallback = new BluetoothAdapter.LeScanCallback() {
+        final private Map<String, Long> mUpdates= new HashMap<>(8);
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             LeScanResult result = new LeScanResult(device, rssi, scanRecord);
@@ -89,13 +92,26 @@ public final class LeScanner {
                     break;
                 }
             }
+            boolean needNotify;
+            long now = System.currentTimeMillis();
             if (existing==null) {
+                needNotify=true;
                 results.add(result);
+                mUpdates.put(addr, now);
             }else {
-                existing.rssi=result.rssi;
+                Long lastUpdate=mUpdates.get(addr);
+                if (lastUpdate==null || now > lastUpdate+1000) {
+                    needNotify=true;
+                    existing.rssi = result.rssi;
+                    mUpdates.put(addr, now);
+                }else{
+                    needNotify=false;
+                }
             }
 
-            notifyNewDeviceScanned(result);
+            if (needNotify) {
+                notifyNewDeviceScanned(result);
+            }
         }
     };
 

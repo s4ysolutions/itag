@@ -26,7 +26,7 @@ import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
 
-public class ITagsService extends Service implements ITagGatt.ITagChangeListener {
+public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
     private static final int FOREGROUND_ID = 1;
     private static final String CHANNEL_ID = "itag0";
     private static final String RUN_IN_FOREGROUND = "run_in_foreground";
@@ -119,10 +119,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         builder.setContentIntent(pendingIntent);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel();
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            if (notificationManager != null) {
-                NotificationChannel channel = notificationManager.getNotificationChannel(CHANNEL_ID);
-            }
             builder.setChannelId(CHANNEL_ID);
         }
         Notification notification = builder.build();
@@ -209,4 +205,24 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             }
         }
     }
+
+    @Override
+    public void onDbChange() {
+
+    }
+
+    @Override
+    public void onDbAdd(ITagDevice device) {
+        getGatt(device.addr, true);
+    }
+
+    @Override
+    public void onDbRemove(ITagDevice device) {
+        ITagGatt toRemove = mGatts.get(device.addr);
+        if (toRemove!=null) {
+            toRemove.disconnect();
+        }
+        mGatts.remove(device.addr);
+    }
+
 }

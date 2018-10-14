@@ -304,8 +304,18 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
 
     @Override
-    public void onChange() {
+    public void onDbChange() {
         setupContent();
+    }
+
+    @Override
+    public void onDbAdd(ITagDevice device) {
+
+    }
+
+    @Override
+    public void onDbRemove(ITagDevice device) {
+
     }
 
 }

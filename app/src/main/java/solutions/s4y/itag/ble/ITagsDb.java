@@ -20,7 +20,9 @@ import solutions.s4y.itag.ITagApplication;
 
 public class ITagsDb {
     public interface DbListener {
-        void onChange();
+        void onDbChange();
+        void onDbAdd(ITagDevice device);
+        void onDbRemove(ITagDevice device);
     }
 
     private final static List<DbListener> mDbListeners = new ArrayList<>(4);
@@ -46,7 +48,19 @@ public class ITagsDb {
 
     public static void notifyChange() {
         for (DbListener listener : mDbListeners) {
-            listener.onChange();
+            listener.onDbChange();
+        }
+    }
+
+    private static void notifyAdd(ITagDevice device) {
+        for (DbListener listener : mDbListeners) {
+            listener.onDbAdd(device);
+        }
+    }
+
+    private static void notifyRemove(ITagDevice device) {
+        for (DbListener listener : mDbListeners) {
+            listener.onDbRemove(device);
         }
     }
 
@@ -189,6 +203,7 @@ public class ITagsDb {
             final ITagDevice d = new ITagDevice(device, oldDevice);
             devices.add(d);
             save(context);
+            notifyAdd(d);
             notifyChange();
         }
     }
@@ -198,6 +213,7 @@ public class ITagsDb {
         if (existing != null) {
             devices.remove(existing);
             save(context);
+            notifyRemove(device);
             notifyChange();
         }
     }
