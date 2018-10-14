@@ -113,6 +113,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             mITagsService = ((ITagsService.GattBinder) binder).getService();
             mITagsServiceBound = true;
             mITagsService.connect();
+            mITagsService.removeFromForeground();
             setupContent();
         }
 
@@ -138,12 +139,16 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
     @Override
     protected void onPause() {
+        if (ITagsDb.getDevices(this).size()==0){
+            stopService(new Intent(this, ITagsService.class));
+        }else {
+            if (mITagsServiceBound) {
+                mITagsService.addToForeground();
+            }
+        }
         unbindService(mConnection);
         ITagsDb.removeListener(this);
         LeScanner.removeListener(this);
-        if (ITagsDb.getDevices(this).size()==0){
-            stopService(new Intent(this, ITagsService.class));
-        }
         super.onPause();
     }
 

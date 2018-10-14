@@ -1,8 +1,14 @@
 package solutions.s4y.itag.ble;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -11,8 +17,14 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 
 import solutions.s4y.itag.BuildConfig;
+import solutions.s4y.itag.MainActivity;
+import solutions.s4y.itag.R;
 
 public class ITagsService extends Service {
+    private static final int FOREGROUND_ID = 1;
+    private static final String CHANNEL_ID = "itag";
+    private boolean mChannelCreated;
+
     private static final String T = ITagsService.class.getName();
 
     private HashMap<String, ITagGatt> mGatts = new HashMap<>(4);
@@ -30,7 +42,7 @@ public class ITagsService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand(intent, flags, startId);
+        return START_REDELIVER_INTENT;
     }
 
     @Override
@@ -45,7 +57,7 @@ public class ITagsService extends Service {
             Log.d(T, "onDestroy");
         }
 
-        for (ITagGatt gatt: mGatts.values()){
+        for (ITagGatt gatt : mGatts.values()) {
             gatt.disconnect();
             gatt.close();
         }
@@ -65,17 +77,64 @@ public class ITagsService extends Service {
     }
 
     public void connect() {
-        for (ITagDevice device: ITagsDb.getDevices(this)) {
+        for (ITagDevice device : ITagsDb.getDevices(this)) {
             getGatt(device.addr, true);
         }
     }
 
     public void alert(@NotNull final String addr) {
-        ITagGatt gatt = mGatts.get(addr);
+        final ITagGatt gatt = mGatts.get(addr);
         if (gatt.isAlert()) {
             gatt.stopAlert();
-        }else{
+        } else {
             gatt.alert();
+        }
+    }
+
+    public void addToForeground() {
+        Notification.Builder builder = new Notification.Builder(this);
+        builder
+                .setSmallIcon(R.drawable.app)
+                .setContentTitle(getString(R.string.service_in_background));
+        Intent intent = new Intent(this, MainActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addNextIntent(intent);
+        PendingIntent pendingIntent =
+                stackBuilder.getPendingIntent(
+                        0,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+        builder.setContentIntent(pendingIntent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel();
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                NotificationChannel channel = notificationManager.getNotificationChannel(CHANNEL_ID);
+                channel.setSound(null, null);
+            }
+            builder.setChannelId(CHANNEL_ID);
+        }
+        Notification notification = builder.build();
+        startForeground(FOREGROUND_ID, notification);
+    }
+
+    public void removeFromForeground() {
+        stopForeground(true);
+    }
+
+    private void createNotificationChannel() {
+        if (!mChannelCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.app_name);
+//            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            //          channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+                mChannelCreated=true;
+            }
         }
     }
 }
