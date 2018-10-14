@@ -113,7 +113,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             mITagsService = ((ITagsService.GattBinder) binder).getService();
             mITagsServiceBound = true;
             mITagsService.connect();
-            // setupContent();
+            setupContent();
         }
 
         @Override
