@@ -123,8 +123,8 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     };
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
         setupContent();
         Intent intent = new Intent(this, ITagsService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
@@ -137,14 +137,14 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     }
 
     @Override
-    protected void onStop() {
+    protected void onPause() {
         unbindService(mConnection);
         ITagsDb.removeListener(this);
         LeScanner.removeListener(this);
         if (ITagsDb.getDevices(this).size()==0){
             stopService(new Intent(this, ITagsService.class));
         }
-        super.onStop();
+        super.onPause();
     }
 
     public void onRemember(View sender) {
@@ -300,4 +300,5 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     public void onChange() {
         setupContent();
     }
+
 }
