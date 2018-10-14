@@ -23,7 +23,7 @@ import solutions.s4y.itag.R;
 
 public class ITagsService extends Service {
     private static final int FOREGROUND_ID = 1;
-    private static final String CHANNEL_ID = "itag";
+    private static final String CHANNEL_ID = "itag0";
     private boolean mChannelCreated;
 
     private static final String T = ITagsService.class.getName();
@@ -112,7 +112,6 @@ public class ITagsService extends Service {
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 NotificationChannel channel = notificationManager.getNotificationChannel(CHANNEL_ID);
-                channel.setSound(null, null);
             }
             builder.setChannelId(CHANNEL_ID);
         }
@@ -131,6 +130,8 @@ public class ITagsService extends Service {
             int importance = NotificationManager.IMPORTANCE_LOW;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             //          channel.setDescription(description);
+            channel.setSound(null, null);
+            channel.setShowBadge(false);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
