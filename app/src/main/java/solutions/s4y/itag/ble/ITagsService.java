@@ -185,22 +185,26 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
     @Override
     public void onITagClicked(@NotNull ITagGatt gatt) {
-        AssetFileDescriptor afd = null;
-        try {
-            afd = getAssets().openFd("alarm.mp3");
-            MediaPlayer player = new MediaPlayer();
-            player.setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
-            player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            player.prepare();
-            player.start();
-        }catch (IOException e){
-            ITagApplication.handleError(e);
-        }finally {
-            if (afd!=null) {
-                try {
-                    afd.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+        if (gatt.isAlert()) {
+            gatt.stopAlert();
+        }else {
+            AssetFileDescriptor afd = null;
+            try {
+                afd = getAssets().openFd("alarm.mp3");
+                MediaPlayer player = new MediaPlayer();
+                player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                player.prepare();
+                player.start();
+            } catch (IOException e) {
+                ITagApplication.handleError(e);
+            } finally {
+                if (afd != null) {
+                    try {
+                        afd.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
