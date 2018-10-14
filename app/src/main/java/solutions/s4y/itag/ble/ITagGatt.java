@@ -59,7 +59,8 @@ public class ITagGatt {
     private boolean mIsAlertStarting;
     private boolean mIsAlertStoping;
 
-    private BluetoothGattService mImmediateAlertService;
+    private BluetoothGattService mServiceImmediateAlert;
+    private BluetoothGattCharacteristic mCharacteristicFindMe;
 
     public interface OnConnectionChangeListener {
         void onConnectionChange(@NotNull final ITagGatt gatt);
@@ -154,13 +155,30 @@ public class ITagGatt {
                         Log.d(T, "GattCallback.onServicesDiscovered, iterate service=" + service.getUuid());
                     }
                     if (IMMEDIATE_ALERT_SERVICE.equals(service.getUuid())) {
-                        mImmediateAlertService = service;
+                        if (BuildConfig.DEBUG) {
+                            Log.d(T, "GattCallback.onServicesDiscovered, iterated service is IMMEDIATE_ALERT_SERVICE");
+                        }
+                        mServiceImmediateAlert = service;
                         gatt.readCharacteristic(service.getCharacteristic(ALERT_LEVEL_CHARACTERISTIC));
-                        setCharacteristicNotification(gatt, mImmediateAlertService.getCharacteristics().get(0));
+                        setCharacteristicNotification(gatt, mServiceImmediateAlert.getCharacteristics().get(0));
                     } else if (BATTERY_SERVICE.equals(service.getUuid())) {
+                        if (BuildConfig.DEBUG) {
+                            Log.d(T, "GattCallback.onServicesDiscovered, iterated service is BATTERY_SERVICE");
+                        }
                     } else if (FIND_ME_SERVICE.equals(service.getUuid())) {
+                        if (BuildConfig.DEBUG) {
+                            Log.d(T, "GattCallback.onServicesDiscovered, iterated service is FIND_ME_SERVICE");
+                        }
+                        mCharacteristicFindMe = service.getCharacteristics().get(0);
+                        setCharacteristicNotification(gatt, mCharacteristicFindMe);
                     } else if (LINK_LOSS_SERVICE.equals(service.getUuid())) {
+                        if (BuildConfig.DEBUG) {
+                            Log.d(T, "GattCallback.onServicesDiscovered, iterated service is LINK_LOSS_SERVICE");
+                        }
                     } else if (GENERIC_SERVICE.equals(service.getUuid())) {
+                        if (BuildConfig.DEBUG) {
+                            Log.d(T, "GattCallback.onServicesDiscovered, iterated service is GENERIC_SERVICE");
+                        }
                     } else {
                         if (BuildConfig.DEBUG) {
                             ITagApplication.handleError(new Exception("Unknown service: " + service.getUuid().toString()));
@@ -324,7 +342,7 @@ public class ITagGatt {
         mIsAlertStarting=true;
         mIsAlert=false;
         mIsAlertStoping=false;
-        writeCharacteristic(mImmediateAlertService, ALERT_LEVEL_CHARACTERISTIC, HIGH_ALERT);
+        writeCharacteristic(mServiceImmediateAlert, ALERT_LEVEL_CHARACTERISTIC, HIGH_ALERT);
     }
 
     void stopAlert() {
@@ -338,7 +356,7 @@ public class ITagGatt {
         }
 
         mIsAlertStoping=true;
-        writeCharacteristic(mImmediateAlertService, ALERT_LEVEL_CHARACTERISTIC, NO_ALERT);
+        writeCharacteristic(mServiceImmediateAlert, ALERT_LEVEL_CHARACTERISTIC, NO_ALERT);
     }
 
     public boolean isConnecting() {
