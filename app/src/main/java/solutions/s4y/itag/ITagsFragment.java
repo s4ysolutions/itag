@@ -3,9 +3,12 @@ package solutions.s4y.itag;
 
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,6 +26,7 @@ import solutions.s4y.itag.ble.ITagsService;
  * A simple {@link Fragment} subclass.
  */
 public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.OnConnectionChangeListener {
+    private static final String LT=ITagsFragment.class.getName();
     public ITagsFragment() {
         // Required empty public constructor
     }
@@ -34,6 +38,23 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         btnColor.setTag(device);
         final View btnSetName = itagLayout.findViewById(R.id.btn_set_name);
         btnSetName.setTag(device);
+
+        MainActivity mainActivity = (MainActivity) getActivity();
+        int statusId = R.drawable.bt_setup;
+        Animation animShake = null;
+        if (mainActivity.mITagsServiceBound) {
+            ITagsService service = mainActivity.mITagsService;
+            ITagGatt gatt = service.getGatt(device.addr, false);
+            if (gatt.isConnecting() || gatt.isTransmitting()) {
+                statusId = R.drawable.bt_call;
+            } else if (gatt.isConnected()) {
+                statusId = R.drawable.bt;
+            }
+            if (gatt.isAlert()) {
+                animShake = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
+            }
+        }
+
         int imageId;
         switch (device.color) {
             case BLACK:
@@ -51,26 +72,25 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
             default:
                 imageId = R.drawable.itag_white;
         }
+
         final ImageView imageITag = itagLayout.findViewById(R.id.image_itag);
         imageITag.setImageResource(imageId);
         imageITag.setTag(device);
+        if (animShake == null) {
+            animShake = imageITag.getAnimation();
+            if (animShake != null) {
+                animShake.cancel();
+            }
+        } else {
+            imageITag.startAnimation(animShake);
+        }
+
+        final ImageView imgStatus = itagLayout.findViewById(R.id.bt_status);
+        imgStatus.setImageResource(statusId);
+
         final TextView textName = itagLayout.findViewById(R.id.text_name);
 //        textName.setText(device.name!=null && device.name.length()>0 ?device.name:device.addr);
         textName.setText(device.name);
-        final ImageView imgStatus=itagLayout.findViewById(R.id.bt_status);
-
-        MainActivity mainActivity=(MainActivity)getActivity();
-        int rid=R.drawable.bt_setup;
-        if (mainActivity.mITagsServiceBound){
-            ITagsService service=mainActivity.mITagsService;
-            ITagGatt gatt=service.getGatt(device.addr, false);
-            if (gatt.isConnected()){
-                rid=R.drawable.bt;
-            }else if (gatt.isTransmitting()){
-                rid=R.drawable.bt_call;
-            }
-        }
-        imgStatus.setImageResource(rid);
     }
 
     private void setupTags(ViewGroup root) {

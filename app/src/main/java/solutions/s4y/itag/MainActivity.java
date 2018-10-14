@@ -130,6 +130,10 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         LeScanner.addListener(this);
         ITagsDb.addListener(this);
+        // run the service on the activity start if there are remebered itags
+        if (ITagsDb.getDevices(this).size()>0){
+            startService(intent);
+        }
     }
 
     @Override
@@ -137,6 +141,9 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         unbindService(mConnection);
         ITagsDb.removeListener(this);
         LeScanner.removeListener(this);
+        if (ITagsDb.getDevices(this).size()==0){
+            stopService(new Intent(this, ITagsService.class));
+        }
         super.onStop();
     }
 

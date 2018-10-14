@@ -29,6 +29,11 @@ public class ITagsService extends Service {
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
         connect();
         return mBinder;
@@ -40,9 +45,15 @@ public class ITagsService extends Service {
             Log.d(T, "onDestroy");
         }
 
+        for (ITagGatt gatt: mGatts.values()){
+            gatt.disconnect();
+            gatt.close();
+        }
+
         super.onDestroy();
     }
 
+    @NotNull
     public ITagGatt getGatt(@NotNull final String addr, boolean connect) {
         ITagGatt gatt = mGatts.get(addr);
         if (gatt == null) {
@@ -61,6 +72,10 @@ public class ITagsService extends Service {
 
     public void alert(@NotNull final String addr) {
         ITagGatt gatt = mGatts.get(addr);
-        gatt.alert();
+        if (gatt.isAlert()) {
+            gatt.stopAlert();
+        }else{
+            gatt.alert();
+        }
     }
 }
