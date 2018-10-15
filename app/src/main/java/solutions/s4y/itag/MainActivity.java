@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -199,6 +200,8 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         ITagGatt gatt = mITagsService.getGatt(device.addr, true);
         if (gatt.isAlert()){
             gatt.stopAlert();
+        }else{
+            Toast.makeText(this,R.string.help_longpress,Toast.LENGTH_SHORT).show();
         }
     }
 
