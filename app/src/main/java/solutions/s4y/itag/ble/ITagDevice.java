@@ -20,10 +20,12 @@ public final class ITagDevice implements Serializable {
     public final String addr;
     public Color color;
     public String name;
+    public boolean linked;
 
     ITagDevice(final @NotNull BluetoothDevice device, @Nullable  final ITagDevice oldDevice) {
         this.addr = device.getAddress();
         this.color=oldDevice==null?Color.WHITE:oldDevice.color;
         this.name=oldDevice==null?"":oldDevice.name;
+        this.linked=oldDevice==null?false:oldDevice.linked;
     }
 }

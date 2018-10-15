@@ -178,30 +178,55 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
+    private final MediaPlayer mPlayerButton = new MediaPlayer();
 
     @Override
     public void onITagChange(@NotNull ITagGatt gatt) {
-
+        ITagDevice device = ITagsDb.findByAddr(gatt.mAddr);
+        if (gatt.isError() && device != null && device.linked) {
+            AssetFileDescriptor afd = null;
+            try {
+                afd = getAssets().openFd("lost.mp3");
+                mPlayerButton.reset();
+                mPlayerButton.setLooping(true);
+                mPlayerButton.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                mPlayerButton.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mPlayerButton.prepare();
+                mPlayerButton.start();
+            } catch (IOException e) {
+                ITagApplication.handleError(e);
+            } finally {
+                if (afd != null) {
+                    try {
+                        afd.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } else {
+            mPlayerButton.stop();
+            mPlayerButton.reset();
+        }
     }
 
-    private final MediaPlayer mPlayer=new MediaPlayer();
 
     @Override
     public void onITagClicked(@NotNull ITagGatt gatt) {
         if (gatt.isAlert()) {
             gatt.stopAlert();
-        }else if (mPlayer.isPlaying()){
-            mPlayer.stop();
-            mPlayer.reset();
+        } else if (isSound()) {
+            stopSound();
         } else {
             AssetFileDescriptor afd = null;
             try {
                 afd = getAssets().openFd("alarm.mp3");
-                mPlayer.reset();
-                mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-                mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                mPlayer.prepare();
-                mPlayer.start();
+                mPlayerButton.reset();
+                mPlayerButton.setLooping(false);
+                mPlayerButton.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                mPlayerButton.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mPlayerButton.prepare();
+                mPlayerButton.start();
             } catch (IOException e) {
                 ITagApplication.handleError(e);
             } finally {
@@ -214,6 +239,15 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                 }
             }
         }
+    }
+
+    public boolean isSound() {
+        return mPlayerButton.isPlaying();
+    }
+
+    public void stopSound() {
+        mPlayerButton.stop();
+        mPlayerButton.reset();
     }
 
     @Override

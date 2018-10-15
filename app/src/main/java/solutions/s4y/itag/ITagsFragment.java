@@ -24,7 +24,6 @@ import solutions.s4y.itag.ble.ITagsService;
  * A simple {@link Fragment} subclass.
  */
 public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener {
-    private static final String LT = ITagsFragment.class.getName();
 
     public ITagsFragment() {
         // Required empty public constructor
@@ -52,19 +51,26 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         btnColor.setTag(device);
         final View btnSetName = itagLayout.findViewById(R.id.btn_set_name);
         btnSetName.setTag(device);
+        final ImageView btnAlert = itagLayout.findViewById(R.id.btn_alert);
+        btnAlert.setImageResource(device.linked ? R.drawable.alert : R.drawable.noalert);
+        btnAlert.setTag(device);
 
         MainActivity mainActivity = (MainActivity) getActivity();
-        int statusId = R.drawable.bt_setup;
+        int statusId = R.drawable.bt_disabled;
         Animation animShake = null;
         if (mainActivity.mITagsServiceBound) {
             ITagsService service = mainActivity.mITagsService;
             ITagGatt gatt = service.getGatt(device.addr, false);
-            if (gatt.isConnecting() || gatt.isTransmitting()) {
+            if (gatt.isConnecting()) {
+                statusId = R.drawable.bt_connecting;
+            } else if (gatt.isTransmitting()) {
                 statusId = R.drawable.bt_call;
+            } else if (gatt.isError()) {
+                statusId = R.drawable.bt_setup;
             } else if (gatt.isConnected()) {
                 statusId = R.drawable.bt;
             }
-            if (gatt.isAlert()) {
+            if (gatt.isAlert() || (gatt.isError() && service.isSound())) {
                 animShake = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
         }

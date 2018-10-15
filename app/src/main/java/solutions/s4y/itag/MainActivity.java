@@ -142,11 +142,11 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
     @Override
     protected void onPause() {
-        if (ITagsDb.getDevices(this).size()>0){
+        if (ITagsDb.getDevices(this).size() > 0) {
             if (mITagsServiceBound) {
                 mITagsService.addToForeground();
             }
-        }else{
+        } else {
             ITagsService.stop(this);
         }
         unbindService(mConnection);
@@ -198,10 +198,12 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             return;
         }
         ITagGatt gatt = mITagsService.getGatt(device.addr, true);
-        if (gatt.isAlert()){
+        if (gatt.isAlert()) {
             gatt.stopAlert();
-        }else{
-            Toast.makeText(this,R.string.help_longpress,Toast.LENGTH_SHORT).show();
+        } else if (mITagsServiceBound && mITagsService.isSound()){
+            mITagsService.stopSound();
+        } else {
+            Toast.makeText(this, R.string.help_longpress, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -251,6 +253,13 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             return true;
         });
         popupMenu.show();
+    }
+
+    public void onAlert(View sender) {
+        ITagDevice device = (ITagDevice) sender.getTag();
+        device.linked=!device.linked;
+        ITagsDb.save(MainActivity.this);
+        ITagsDb.notifyChange();
     }
 
     public void onEnableBLEClick(View ignored) {

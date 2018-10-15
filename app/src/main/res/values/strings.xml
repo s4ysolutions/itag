@@ -12,6 +12,7 @@
     <string name="confirm_title">Confirm</string>
     <string name="confirm_forget">The device will be forgotten, are you sure? You will be able to reconnect this device and remember it in any moment though.\n\nForget?</string>
     <string name="change_name">Set iTag\'s name</string>
+    <string name="manage_alert">Enable/disable Alert on disconnect</string>
 
     <string name="scanning">Scanning for iTags&#8230;</string>
     <string name="scanning_new">Scanning for new iTags&#8230;</string>

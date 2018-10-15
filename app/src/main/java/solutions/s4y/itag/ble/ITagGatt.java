@@ -48,7 +48,7 @@ public class ITagGatt {
             UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
             */
 
-    private final String mAddr;
+    public final String mAddr;
     private BluetoothDevice mDevice;
     private BluetoothGatt mGatt;
     private boolean mIsError;
@@ -138,9 +138,12 @@ public class ITagGatt {
                 }
             } else {
                 if (BuildConfig.DEBUG) {
-                    Log.d(T, "GattCallback.onServicesDiscovered: not GATT_SUCCESS");
+                    Log.d(T, "GattCallback.onConnectionStateChange: not GATT_SUCCESS");
                 }
-                ITagApplication.handleError(new Exception("onServicesDiscovered failed: code=" + status));
+                // 8 to be know as disconnection status
+                if (status!= 8) {
+                    ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state="+newState));
+                }
                 mIsError = true;
                 notifyITagChanged();
             }
@@ -192,6 +195,7 @@ public class ITagGatt {
                         }
                     }
                 }
+                mIsError=false; // we need to reset error because of auto connect
                 mIsConnecting = false;
                 mIsConnected = true;
                 notifyITagChanged();
@@ -231,6 +235,8 @@ public class ITagGatt {
             }
             notifyITagClicked();
         }
+
+
     };
 
     private void endConnection() {
@@ -369,6 +375,12 @@ public class ITagGatt {
 
     public boolean isConnecting() {
         return mIsConnecting;
+    }
+
+    public boolean isError() {
+        // without mIsConnected mIsError may overwrite other statuse
+        // but error may happen beyond connected state boundaries
+        return /* mIsConnected && */ mIsError;
     }
 
     public boolean isConnected() {

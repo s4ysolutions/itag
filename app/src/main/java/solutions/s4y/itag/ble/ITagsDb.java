@@ -64,7 +64,7 @@ public class ITagsDb {
         }
     }
 
-    static private ITagDevice findByAddr(@NotNull final String addr) {
+    static public ITagDevice findByAddr(@NotNull final String addr) {
         for (ITagDevice d : devices) {
             if (d.addr.equals(addr)) return d;
         }
