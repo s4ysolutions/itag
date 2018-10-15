@@ -7,8 +7,6 @@ android {
         applicationId "solutions.s4y.itag"
         minSdkVersion 18
         targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
