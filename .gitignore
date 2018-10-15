@@ -11,3 +11,4 @@
 /app/release
 .idea/caches
 .idea/assetWizardSettings.xml
+app/google-services.json
