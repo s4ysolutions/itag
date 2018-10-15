@@ -162,6 +162,7 @@ public class ITagsDb {
             }
         } catch (NullPointerException ignored) {
             try {
+                //noinspection ResultOfMethodCallIgnored
                 getDbFile(context, "db.old").delete();
             } catch (IOException e) {
                 e.printStackTrace();

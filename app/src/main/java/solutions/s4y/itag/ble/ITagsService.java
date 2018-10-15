@@ -36,7 +36,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
     private HashMap<String, ITagGatt> mGatts = new HashMap<>(4);
 
-
     public class GattBinder extends Binder {
         public ITagsService getService() {
             return ITagsService.this;
@@ -69,6 +68,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             Log.d(T, "onCreate");
         }
         ITagGatt.addOnITagChangeListener(this);
+        ITagsDb.addListener(this);
     }
 
     @Override
@@ -77,6 +77,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             Log.d(T, "onDestroy");
         }
         ITagGatt.removeOnITagChangeListener(this);
+        ITagsDb.removeListener(this);
         for (ITagGatt gatt : mGatts.values()) {
             gatt.disconnect();
             gatt.close();
@@ -150,7 +151,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         if (ITagsDb.getDevices(context).size() > 0) {
             Intent intent = new Intent(context, ITagsService.class);
             if (foreground) {
-                intent.putExtra(RUN_IN_FOREGROUND,true);
+                intent.putExtra(RUN_IN_FOREGROUND, true);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(intent);
                 } else {
@@ -183,19 +184,24 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
     }
 
+    private final MediaPlayer mPlayer=new MediaPlayer();
+
     @Override
     public void onITagClicked(@NotNull ITagGatt gatt) {
         if (gatt.isAlert()) {
             gatt.stopAlert();
-        }else {
+        }else if (mPlayer.isPlaying()){
+            mPlayer.stop();
+            mPlayer.reset();
+        } else {
             AssetFileDescriptor afd = null;
             try {
                 afd = getAssets().openFd("alarm.mp3");
-                MediaPlayer player = new MediaPlayer();
-                player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-                player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                player.prepare();
-                player.start();
+                mPlayer.reset();
+                mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mPlayer.prepare();
+                mPlayer.start();
             } catch (IOException e) {
                 ITagApplication.handleError(e);
             } finally {
@@ -223,7 +229,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     @Override
     public void onDbRemove(ITagDevice device) {
         ITagGatt toRemove = mGatts.get(device.addr);
-        if (toRemove!=null) {
+        if (toRemove != null) {
             toRemove.disconnect();
         }
         mGatts.remove(device.addr);

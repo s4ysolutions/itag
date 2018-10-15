@@ -1,7 +1,5 @@
 package solutions.s4y.itag;
 
-
-import android.bluetooth.BluetoothClass;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
