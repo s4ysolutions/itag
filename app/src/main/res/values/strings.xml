@@ -8,7 +8,7 @@
     <string name="hello_disabled_ble_fragment">Hello disabled BLE fragment</string>
 
     <string name="request_permission_title">Permission required</string>
-    <string name="request_location_permission">Starting from Android 6.0 Marhmallow the system requires location permission in order to scan for Bluetooth LE devices. This application is not using this information in any way.</string>
+    <string name="request_location_permission">Starting from Android 6.0 Marhmallow the system requires location permission in order to scan for Bluetooth LE devices.\\niTag One is not using location information in any way.\\nYou will have to restart scann process after the giving the access.</string>
     <string name="confirm_title">Confirm</string>
     <string name="confirm_forget">The device will be forgotten, are you sure? You will be able to reconnect this device and remember it in any moment though.\n\nForget?</string>
     <string name="change_name">Set iTag\'s name</string>

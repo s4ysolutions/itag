@@ -14,13 +14,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-
-import com.crashlytics.android.Crashlytics;
 
 import solutions.s4y.itag.ble.ITagGatt;
 import solutions.s4y.itag.ble.ITagsDb;
@@ -283,9 +280,11 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         SetNameDialogFragment.device = device;
         new SetNameDialogFragment().show(getFragmentManager(), "setname");
     }
-
+/*
+1. do not want to use appcompat
+2. v28 of appcompat is not compatible with com.google.firebase:firebase-core:16.0.4
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onRequestPermissionsResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
@@ -293,7 +292,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                     setupContent();
                     break;
                 case REQUEST_ENABLE_LOCATION:
-                    if (mBluetoothAdapter != null) {
+                    if (LeScanner.isScanRequestAbortedBecauseOfPermission && mBluetoothAdapter != null) {
                         LeScanner.startScan(mBluetoothAdapter, this);
                     }
                     break;
@@ -301,7 +300,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
 
     }
-
+*/
     @Override
     public void onStartScan() {
         setupContent();

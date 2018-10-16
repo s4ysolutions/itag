@@ -115,8 +115,11 @@ public final class LeScanner {
         }
     };
 
+    public static boolean isScanRequestAbortedBecauseOfPermission;
+
     @TargetApi(Build.VERSION_CODES.M)
     static public void startScan(final BluetoothAdapter bluetoothAdapter, MainActivity activity) {
+        isScanRequestAbortedBecauseOfPermission=false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (activity.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 if (activity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -128,6 +131,7 @@ public final class LeScanner {
                             .show();
                     return;
                 } else {
+                    isScanRequestAbortedBecauseOfPermission=true;
                     activity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
                     return;
                 }
