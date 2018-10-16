@@ -128,6 +128,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
     };
 
+    private boolean mIsServiceStartedUnbind;
     @Override
     protected void onResume() {
         super.onResume();
@@ -137,14 +138,18 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         LeScanner.addListener(this);
         ITagsDb.addListener(this);
         // run the service on the activity start if there are remebered itags
-        ITagsService.start(this);
+        mIsServiceStartedUnbind=ITagsService.start(this);
     }
 
     @Override
     protected void onPause() {
         if (ITagsDb.getDevices(this).size() > 0) {
-            if (mITagsServiceBound) {
-                mITagsService.addToForeground();
+            if (!mIsServiceStartedUnbind) {
+                ITagsService.start(this, true);
+            }else {
+                if (mITagsServiceBound) {
+                    mITagsService.addToForeground();
+                }
             }
         } else {
             ITagsService.stop(this);

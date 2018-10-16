@@ -147,7 +147,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
-    public static void start(Context context, boolean foreground) {
+    public static boolean start(Context context, boolean foreground) {
         if (ITagsDb.getDevices(context).size() > 0) {
             Intent intent = new Intent(context, ITagsService.class);
             if (foreground) {
@@ -160,12 +160,13 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             } else {
                 context.startService(intent);
             }
+            return true;
         }
-
+        return false;
     }
 
-    public static void start(Context context) {
-        start(context, false);
+    public static boolean start(Context context) {
+        return start(context, false);
     }
 
     public static void startInForeground(Context context) {
