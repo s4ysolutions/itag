@@ -14,6 +14,10 @@
         android:orientation="horizontal"
         tools:ignore="UseCompoundDrawables">
 
+        <Space
+            android:layout_width="48dp"
+            android:layout_height="wrap_content" />
+
         <TextView
             android:id="@+id/text_name"
             style="@android:style/TextAppearance.DialogWindowTitle"
