@@ -19,6 +19,8 @@ import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
 
 public class ITagsDb {
+    private static final String DB_FILE_NAME="dbv1";
+    private static final String DB_OLD_FILE_NAME="dboldv1";
     public interface DbListener {
         void onDbChange();
         void onDbAdd(ITagDevice device);
@@ -64,13 +66,14 @@ public class ITagsDb {
         }
     }
 
-    static public ITagDevice findByAddr(@NotNull final String addr) {
+    static ITagDevice findByAddr(@NotNull final String addr) {
         for (ITagDevice d : devices) {
             if (d.addr.equals(addr)) return d;
         }
         return null;
     }
 
+    @NotNull
     static private File getDbFile(
             @NotNull final Context context,
             @NotNull final String name) throws IOException {
@@ -85,7 +88,22 @@ public class ITagsDb {
             @NotNull final String fileName,
             @NotNull final List<ITagDevice> devices) {
         devices.clear();
-        try (FileInputStream fis = new FileInputStream(getDbFile(context, fileName))) {
+
+        File file;
+
+        try {
+            file = getDbFile(context, fileName);
+        } catch (IOException e) {
+            ITagApplication.handleError(e);
+            e.printStackTrace();
+            return;
+        }
+
+        long l=file.length();
+        if (l==0)
+            return;
+
+        try (FileInputStream fis = new FileInputStream(file)) {
             ObjectInputStream ois = new ObjectInputStream(fis);
             Object read = ois.readObject();
             if (read instanceof List) {
@@ -110,12 +128,12 @@ public class ITagsDb {
     }
 
     static private void load(@NotNull final Context context) {
-        loadFromFile(context, "db", devices);
+        loadFromFile(context, DB_FILE_NAME, devices);
     }
 
     private static List<ITagDevice> loadOldDevices(@NotNull final Context context) {
         final List<ITagDevice> devices = new ArrayList<>(16);
-        loadFromFile(context, "db.old", devices);
+        loadFromFile(context, DB_OLD_FILE_NAME, devices);
         return devices;
     }
 
@@ -163,14 +181,14 @@ public class ITagsDb {
         } catch (NullPointerException ignored) {
             try {
                 //noinspection ResultOfMethodCallIgnored
-                getDbFile(context, "db.old").delete();
+                getDbFile(context, DB_OLD_FILE_NAME).delete();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             return;
         }
 
-        try (FileOutputStream fos = new FileOutputStream(getDbFile(context, "db.old"))) {
+        try (FileOutputStream fos = new FileOutputStream(getDbFile(context, DB_OLD_FILE_NAME))) {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(composeDevices  );
             oos.close();
@@ -184,7 +202,7 @@ public class ITagsDb {
     }
 
     public static void save(@NotNull final Context context) {
-        try (FileOutputStream fos = new FileOutputStream(getDbFile(context, "db"))) {
+        try (FileOutputStream fos = new FileOutputStream(getDbFile(context, DB_FILE_NAME))) {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(devices);
             oos.close();
