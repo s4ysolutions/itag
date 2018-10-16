@@ -65,6 +65,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
     private enum FragmentType {
         OTHER,
+        ITAGS,
         SCANNER
     }
 
@@ -81,15 +82,19 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                 mSelectedFragment = FragmentType.SCANNER;
             }
         } else {
-            mSelectedFragment = FragmentType.OTHER;
             setupProgressBar();
             if (mBluetoothAdapter == null) {
                 fragment = new NoBLEFragment();
+                mSelectedFragment = FragmentType.OTHER;
             } else {
                 if (mBluetoothAdapter.isEnabled()) {
-                    fragment = new ITagsFragment();
+                    if (mSelectedFragment != FragmentType.ITAGS) {
+                        fragment = new ITagsFragment();
+                        mSelectedFragment = FragmentType.ITAGS;
+                    }
                 } else {
                     fragment = new DisabledBLEFragment();
+                    mSelectedFragment = FragmentType.OTHER;
                 }
             }
         }

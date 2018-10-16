@@ -2,6 +2,7 @@ package solutions.s4y.itag;
 
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,7 @@ import solutions.s4y.itag.ble.ITagsService;
  * A simple {@link Fragment} subclass.
  */
 public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener {
+    private static final String LT=ITagsFragment.class.getName();
 
     public ITagsFragment() {
         // Required empty public constructor
@@ -159,8 +161,11 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
 
     // TODO: ugly
     private void startRssi() {
-        stopRssi();
         MainActivity mainActivity = (MainActivity) getActivity();
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "startRssi, bound="+(mainActivity!=null && mainActivity.mITagsServiceBound));
+        }
+        stopRssi();
         if (mainActivity!=null && mainActivity.mITagsServiceBound) {
             mIsRssiStarted = true;
             ITagsService service = mainActivity.mITagsService;
@@ -173,6 +178,9 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     }
 
     private void stopRssi() {
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "stopRssi");
+        }
         for (ITagGatt gatt : mRssiGatt) {
             gatt.stopListenRssi();
         }
@@ -183,6 +191,9 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     @Override
     public void onResume() {
         super.onResume();
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "onResume");
+        }
         startRssi();
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
         ITagsDb.addListener(this);
@@ -191,6 +202,9 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
 
     @Override
     public void onPause() {
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "onPause");
+        }
         ITagGatt.removeOnITagChangeListener(this);
         ITagsDb.removeListener(this);
         stopRssi();
@@ -216,6 +230,9 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     public void onITagChange(@NotNull ITagGatt gatt) {
         getActivity().runOnUiThread(() -> {
             // handle cases like "onBound", connect, etc
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "onITagChange mIsRssiStarted="+mIsRssiStarted+" addr="+gatt.mAddr);
+            }
             if (!mIsRssiStarted) {
                 startRssi();
             }

@@ -48,7 +48,7 @@ public class ITagGatt {
             UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
             */
 
-    final String mAddr;
+    public final String mAddr;
     private BluetoothDevice mDevice;
     private BluetoothGatt mGatt;
     private boolean mIsError;
