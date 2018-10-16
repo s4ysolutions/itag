@@ -41,19 +41,18 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
             tv = convertView.findViewById(R.id.text_addr);
             tv.setText(addr);
 
-            ProgressBar pb = convertView.findViewById(R.id.pb_rssi);
             tv = convertView.findViewById(R.id.text_rssi);
 
+            RssiView rssiView = convertView.findViewById(R.id.rssi);
             for (LeScanResult result : LeScanner.results) {
                 if (addr.equals(result.device.getAddress())) {
                     int rssi = result.rssi;
+                    rssiView.setRssi(rssi);
                     tv.setText(String.format(getString(R.string.rssi), rssi));
-                    pb.setIndeterminate(false);
-                    pb.setMax(120);
-                    pb.setProgress(120 + rssi);
                     break;
                 }
             }
+
 
             ImageView btn = convertView.findViewById(R.id.btn_connect);
             btn.setTag(r.device);
