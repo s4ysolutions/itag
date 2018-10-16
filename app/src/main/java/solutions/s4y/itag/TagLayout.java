@@ -36,4 +36,5 @@ public final class TagLayout extends FrameLayout {
         assert inflater != null;
         inflater.inflate(R.layout.itag, this);
     }
+
 }

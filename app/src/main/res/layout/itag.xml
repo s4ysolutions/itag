@@ -64,6 +64,12 @@
         android:paddingTop="4dp"
         android:paddingBottom="4dp">
 
+        <solutions.s4y.itag.RssiView
+            android:id="@+id/rssi"
+            android:layout_width="8dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="4dp" />
+
         <Space
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

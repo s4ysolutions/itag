@@ -12,6 +12,8 @@ import android.widget.TextView;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import solutions.s4y.itag.ble.ITagGatt;
@@ -58,6 +60,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         MainActivity mainActivity = (MainActivity) getActivity();
         int statusId = R.drawable.bt_disabled;
         Animation animShake = null;
+        RssiView rssiView = itagLayout.findViewById(R.id.rssi);
         if (mainActivity.mITagsServiceBound) {
             ITagsService service = mainActivity.mITagsService;
             ITagGatt gatt = service.getGatt(device.addr, false);
@@ -73,6 +76,9 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
             if (gatt.isAlert() || (gatt.isError() && service.isSound())) {
                 animShake = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
+            rssiView.setRssi(gatt.mRssi);
+        } else {
+            rssiView.setRssi(-1000);
         }
 
         int imageId;
@@ -147,9 +153,37 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         return inflater.inflate(R.layout.fragment_itags, container, false);
     }
 
+    private final List<ITagGatt> mRssiGatt = new ArrayList<>(8);
+
+    private boolean mIsRssiStarted;
+
+    // TODO: ugly
+    private void startRssi() {
+        stopRssi();
+        MainActivity mainActivity = (MainActivity) getActivity();
+        if (mainActivity!=null && mainActivity.mITagsServiceBound) {
+            mIsRssiStarted = true;
+            ITagsService service = mainActivity.mITagsService;
+            for (ITagDevice device : ITagsDb.getDevices(getActivity())) {
+                ITagGatt gatt = service.getGatt(device.addr, true);
+                gatt.startListenRssi();
+                mRssiGatt.add(gatt);
+            }
+        }
+    }
+
+    private void stopRssi() {
+        for (ITagGatt gatt : mRssiGatt) {
+            gatt.stopListenRssi();
+        }
+        mIsRssiStarted = false;
+        mRssiGatt.clear();
+    }
+
     @Override
     public void onResume() {
         super.onResume();
+        startRssi();
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
         ITagsDb.addListener(this);
         ITagGatt.addOnITagChangeListener(this);
@@ -159,6 +193,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     public void onPause() {
         ITagGatt.removeOnITagChangeListener(this);
         ITagsDb.removeListener(this);
+        stopRssi();
         super.onPause();
     }
 
@@ -179,7 +214,15 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
 
     @Override
     public void onITagChange(@NotNull ITagGatt gatt) {
-        getActivity().runOnUiThread(() -> setupTags((ViewGroup) Objects.requireNonNull(getView())));
+        getActivity().runOnUiThread(() -> {
+            // handle cases like "onBound", connect, etc
+            if (!mIsRssiStarted) {
+                startRssi();
+            }
+            View view = getView();
+            if (view != null)
+                setupTags((ViewGroup) view);
+        });
     }
 
     @Override
