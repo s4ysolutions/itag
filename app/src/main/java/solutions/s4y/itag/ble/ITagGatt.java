@@ -48,7 +48,7 @@ public class ITagGatt {
             UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
             */
 
-    public final String mAddr;
+    final String mAddr;
     private BluetoothDevice mDevice;
     private BluetoothGatt mGatt;
     private boolean mIsError;
@@ -60,7 +60,6 @@ public class ITagGatt {
     private boolean mIsAlertStoping;
 
     private BluetoothGattService mServiceImmediateAlert;
-    private BluetoothGattCharacteristic mCharacteristicFindMe;
 
     public interface ITagChangeListener {
         void onITagChange(@NotNull final ITagGatt gatt);
@@ -179,8 +178,8 @@ public class ITagGatt {
                         if (BuildConfig.DEBUG) {
                             Log.d(T, "GattCallback.onServicesDiscovered, iterated service is FIND_ME_SERVICE");
                         }
-                        mCharacteristicFindMe = service.getCharacteristics().get(0);
-                        setCharacteristicNotification(gatt, mCharacteristicFindMe);
+                        BluetoothGattCharacteristic characteristicFindMe = service.getCharacteristics().get(0);
+                        setCharacteristicNotification(gatt, characteristicFindMe);
                     } else if (LINK_LOSS_SERVICE.equals(service.getUuid())) {
                         if (BuildConfig.DEBUG) {
                             Log.d(T, "GattCallback.onServicesDiscovered, iterated service is LINK_LOSS_SERVICE");
@@ -251,23 +250,22 @@ public class ITagGatt {
         mIsTransmitting = false;
     }
 
-    private void writeCharacteristic(
+    private void writeCharacteristicAlertLevel(
             @NotNull final BluetoothGattService service,
-            @NotNull final UUID characteristicUUID,
             int value
     ) {
         if (service.getCharacteristics() == null || service.getCharacteristics().size() == 0) {
             ITagApplication
                     .handleError(
                             new Exception(
-                                    "DeviceGatt.writeCharacteristic, no characteristic="
-                                            + characteristicUUID));
+                                    "DeviceGatt.writeCharacteristicAlertLevel, no characteristic="
+                                            + ITagGatt.ALERT_LEVEL_CHARACTERISTIC));
             return;
         }
         final BluetoothGattCharacteristic characteristic = service.getCharacteristics().get(0);
         characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
         Log.d(T,
-                "writeCharacteristic: service=" + service.getUuid() +
+                "writeCharacteristicAlertLevel: service=" + service.getUuid() +
                         " characteristic=" + characteristic.getUuid() +
                         " value desired=" + value +
                         " value =" + (characteristic.getValue() != null && characteristic.getValue().length > 0 ? characteristic.getValue()[0] : "N/A")
@@ -275,26 +273,6 @@ public class ITagGatt {
         mGatt.writeCharacteristic(characteristic);
         mIsTransmitting = true;
         notifyITagChanged();
-    }
-
-    private boolean readCharacteristic(
-            @NotNull final BluetoothGattService service,
-            @NotNull final UUID characteristicUUID
-    ) {
-        if (service.getCharacteristics() == null || service.getCharacteristics().size() == 0) {
-            ITagApplication
-                    .handleError(
-                            new Exception(
-                                    "DeviceGatt.readCharacteristic, no characteristic="
-                                            + characteristicUUID));
-            return false;
-        }
-        final BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicUUID);
-        Log.d(T,
-                "getCharacteristic: service=" + service.getUuid() +
-                        " characteristic=" + characteristic.getUuid()
-        );
-        return mGatt.readCharacteristic(characteristic);
     }
 
     void connect(@NotNull final Context contex) {
@@ -356,7 +334,7 @@ public class ITagGatt {
         mIsAlertStarting=true;
         mIsAlert=false;
         mIsAlertStoping=false;
-        writeCharacteristic(mServiceImmediateAlert, ALERT_LEVEL_CHARACTERISTIC, HIGH_ALERT);
+        writeCharacteristicAlertLevel(mServiceImmediateAlert, HIGH_ALERT);
     }
 
     public void stopAlert() {
@@ -370,7 +348,7 @@ public class ITagGatt {
         }
 
         mIsAlertStoping=true;
-        writeCharacteristic(mServiceImmediateAlert, ALERT_LEVEL_CHARACTERISTIC, NO_ALERT);
+        writeCharacteristicAlertLevel(mServiceImmediateAlert, NO_ALERT);
     }
 
     public boolean isConnecting() {
