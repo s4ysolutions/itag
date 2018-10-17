@@ -67,6 +67,7 @@ public class ITagGatt {
 
     public interface ITagChangeListener {
         void onITagChange(@NonNull final ITagGatt gatt);
+        void onITagRssi(@NonNull final ITagGatt gatt, int rssi);
         void onITagClicked(@NonNull final ITagGatt gatt);
     }
 
@@ -100,6 +101,12 @@ public class ITagGatt {
     private void notifyITagClicked() {
         for (ITagChangeListener listener : mITagChangeListeners) {
             listener.onITagClicked(this);
+        }
+    }
+
+    private void notifyITagRssi(int rssi) {
+        for (ITagChangeListener listener : mITagChangeListeners) {
+            listener.onITagRssi(this, rssi);
         }
     }
 
@@ -245,7 +252,7 @@ public class ITagGatt {
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             Log.d(LT,"onReadRemoteRssi, addr="+mAddr+" rssi="+rssi);
             mRssi=rssi;
-            notifyITagChanged();
+            notifyITagRssi(rssi);
         }
     };
 

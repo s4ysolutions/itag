@@ -14,6 +14,7 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
@@ -211,7 +212,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
-
     @Override
     public void onITagClicked(@NotNull ITagGatt gatt) {
         if (gatt.isAlert()) {
@@ -240,6 +240,12 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                 }
             }
         }
+    }
+
+
+    @Override
+    public void onITagRssi(@NonNull ITagGatt gatt, int rssi) {
+
     }
 
     public boolean isSound() {

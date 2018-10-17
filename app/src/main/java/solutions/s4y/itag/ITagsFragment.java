@@ -2,6 +2,7 @@ package solutions.s4y.itag;
 
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -240,6 +241,13 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
             if (view != null)
                 setupTags((ViewGroup) view);
         });
+    }
+
+    @Override
+    public void onITagRssi(@NonNull ITagGatt gatt, int rssi) {
+        final View view = getView();
+        if (view != null)
+            getActivity().runOnUiThread(() -> setupTags((ViewGroup) view));
     }
 
     @Override
