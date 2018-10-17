@@ -242,11 +242,15 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             return;
         }
         ITagGatt gatt = mITagsService.getGatt(device.addr, true);
+        boolean needNotify=true;
         if (gatt.isAlert()) {
             gatt.stopAlert();
-        } else if (mITagsServiceBound && mITagsService.isSound()){
+            needNotify=false;
+        }
+        if (mITagsServiceBound && mITagsService.isSound()){
             mITagsService.stopSound();
-        } else {
+        }
+        if (needNotify ){
             Toast.makeText(this, R.string.help_longpress, Toast.LENGTH_SHORT).show();
         }
     }
@@ -304,7 +308,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         device.linked=!device.linked;
         ITagsDb.save(MainActivity.this);
         ITagsDb.notifyChange();
-        if (mITagsServiceBound && mITagsService.isSound()){
+        if (mITagsServiceBound && mITagsService.isSound() && !device.linked){
             mITagsService.stopSound();
         }
     }

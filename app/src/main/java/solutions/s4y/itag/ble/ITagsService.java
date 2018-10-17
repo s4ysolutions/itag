@@ -20,7 +20,11 @@ import android.util.Log;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
@@ -180,35 +184,75 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
-    private final MediaPlayer mPlayerButton = new MediaPlayer();
+    private final MediaPlayer mPlayer = new MediaPlayer();
+    Set<String> mSoundingITags = new HashSet<>(4);
+
+    public void stopSound(){
+        mSoundingITags.clear();
+        mPlayer.stop();
+        mPlayer.reset();
+    }
+
+    private void startSoundDisconnected(String addr){
+        stopSound();
+        AssetFileDescriptor afd = null;
+        try {
+            afd = getAssets().openFd("lost.mp3");
+            mPlayer.reset();
+            mPlayer.setLooping(true);
+            mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mPlayer.prepare();
+            mPlayer.start();
+            mSoundingITags.add(addr);
+        } catch (IOException e) {
+            ITagApplication.handleError(e);
+        } finally {
+            if (afd != null) {
+                try {
+                    afd.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void startSoundClick(String addr) {
+        AssetFileDescriptor afd = null;
+        stopSound();
+        try {
+            afd = getAssets().openFd("alarm.mp3");
+            mPlayer.reset();
+            mPlayer.setLooping(false);
+            mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mPlayer.prepare();
+            mPlayer.start();
+            mSoundingITags.add(addr);
+        } catch (IOException e) {
+            ITagApplication.handleError(e);
+        } finally {
+            if (afd != null) {
+                try {
+                    afd.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     @Override
     public void onITagChange(@NotNull ITagGatt gatt) {
         ITagDevice device = ITagsDb.findByAddr(gatt.mAddr);
+        // Sounds if disconnected
         if (gatt.isError() && device != null && device.linked) {
-            AssetFileDescriptor afd = null;
-            try {
-                afd = getAssets().openFd("lost.mp3");
-                mPlayerButton.reset();
-                mPlayerButton.setLooping(true);
-                mPlayerButton.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-                mPlayerButton.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                mPlayerButton.prepare();
-                mPlayerButton.start();
-            } catch (IOException e) {
-                ITagApplication.handleError(e);
-            } finally {
-                if (afd != null) {
-                    try {
-                        afd.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            startSoundDisconnected(gatt.mAddr);
         } else {
-            mPlayerButton.stop();
-            mPlayerButton.reset();
+            if (isSound(gatt.mAddr)) {
+                stopSound();
+            }
         }
     }
 
@@ -216,55 +260,29 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     public void onITagClicked(@NotNull ITagGatt gatt) {
         if (gatt.isAlert()) {
             gatt.stopAlert();
-        } else if (isSound()) {
-            stopSound();
         }
+        stopSound();
     }
-
 
     @Override
     public void onITagDoubleClicked(@NonNull ITagGatt gatt) {
         if (gatt.isAlert()) {
             gatt.stopAlert();
-        } else if (isSound()) {
-            stopSound();
-        } else {
-            AssetFileDescriptor afd = null;
-            try {
-                afd = getAssets().openFd("alarm.mp3");
-                mPlayerButton.reset();
-                mPlayerButton.setLooping(false);
-                mPlayerButton.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-                mPlayerButton.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                mPlayerButton.prepare();
-                mPlayerButton.start();
-            } catch (IOException e) {
-                ITagApplication.handleError(e);
-            } finally {
-                if (afd != null) {
-                    try {
-                        afd.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
         }
+        startSoundClick(gatt.mAddr);
     }
-
 
     @Override
     public void onITagRssi(@NonNull ITagGatt gatt, int rssi) {
 
     }
 
-    public boolean isSound() {
-        return mPlayerButton.isPlaying();
+    public boolean isSound(String addr) {
+        return mPlayer.isPlaying() && mSoundingITags.contains(addr);
     }
 
-    public void stopSound() {
-        mPlayerButton.stop();
-        mPlayerButton.reset();
+    public boolean isSound() {
+        return mPlayer.isPlaying();
     }
 
     @Override
