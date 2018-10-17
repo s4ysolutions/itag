@@ -299,11 +299,14 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         popupMenu.show();
     }
 
-    public void onAlert(View sender) {
+    public void onLink(View sender) {
         ITagDevice device = (ITagDevice) sender.getTag();
         device.linked=!device.linked;
         ITagsDb.save(MainActivity.this);
         ITagsDb.notifyChange();
+        if (mITagsServiceBound && mITagsService.isSound()){
+            mITagsService.stopSound();
+        }
     }
 
     public void onEnableBLEClick(View ignored) {
