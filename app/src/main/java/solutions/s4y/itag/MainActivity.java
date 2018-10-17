@@ -14,10 +14,14 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import solutions.s4y.itag.ble.ITagGatt;
 import solutions.s4y.itag.ble.ITagsDb;
@@ -32,6 +36,37 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     public BluetoothAdapter mBluetoothAdapter;
     public ITagsService mITagsService;
     public boolean mITagsServiceBound;
+
+    public interface ServiceBoundListener {
+        void onBoundingChanged(@NonNull final MainActivity activity);
+    }
+
+    private static final List<ServiceBoundListener> mServiceBoundListeners =
+            new ArrayList<>(2);
+
+    public static void addServiceBoundListener(ServiceBoundListener listener) {
+        if (BuildConfig.DEBUG) {
+            if (mServiceBoundListeners.contains(listener)) {
+                ITagApplication.handleError(new Error("Add duplicate ITagChangeListener listener"));
+            }
+        }
+        mServiceBoundListeners.add(listener);
+    }
+
+    public static void removeServiceBoundListener(ServiceBoundListener listener) {
+        if (BuildConfig.DEBUG) {
+            if (!mServiceBoundListeners.contains(listener)) {
+                ITagApplication.handleError(new Error("Remove nonexisting ITagChangeListener listener"));
+            }
+        }
+        mServiceBoundListeners.remove(listener);
+    }
+
+    private void notifyServiceBoundChanged() {
+        for (ServiceBoundListener listener : mServiceBoundListeners) {
+            listener.onBoundingChanged(this);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,11 +157,13 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             mITagsService.connect();
             mITagsService.removeFromForeground();
             setupContent();
+            notifyServiceBoundChanged();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             mITagsServiceBound = false;
+            notifyServiceBoundChanged();
         }
     };
 

@@ -29,7 +29,7 @@ import solutions.s4y.itag.R;
 
 public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
     private static final int FOREGROUND_ID = 1;
-    private static final String CHANNEL_ID = "itag0";
+    private static final String CHANNEL_ID = "itag1";
     private static final String RUN_IN_FOREGROUND = "run_in_foreground";
     private boolean mChannelCreated;
 
@@ -135,7 +135,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         if (!mChannelCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.app_name);
 //            String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_LOW;
+            int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             //          channel.setDescription(description);
             channel.setSound(null, null);

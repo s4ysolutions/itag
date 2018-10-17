@@ -27,7 +27,7 @@ import solutions.s4y.itag.ble.ITagsService;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener {
+public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener, MainActivity.ServiceBoundListener {
     private static final String LT = ITagsFragment.class.getName();
 
     public ITagsFragment() {
@@ -199,6 +199,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         }
         startRssi();
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
+        MainActivity.addServiceBoundListener(this);
         ITagsDb.addListener(this);
         ITagGatt.addOnITagChangeListener(this);
     }
@@ -210,6 +211,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         }
         ITagGatt.removeOnITagChangeListener(this);
         ITagsDb.removeListener(this);
+        MainActivity.removeServiceBoundListener(this);
         stopRssi();
         super.onPause();
     }
@@ -255,5 +257,15 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     @Override
     public void onITagClicked(@NotNull ITagGatt gatt) {
 
+    }
+
+    @Override
+    public void onBoundingChanged(@NonNull MainActivity activity) {
+        if (activity.mITagsServiceBound) {
+            startRssi(); // nothing bad in extra call
+        }
+        final View view = getView();
+        if (view != null)
+            setupTags((ViewGroup) view);
     }
 }
