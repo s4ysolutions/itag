@@ -23,6 +23,8 @@ import solutions.s4y.itag.ITagApplication;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 public class ITagGatt {
+    private static final int DOUBLE_TAG_CLICK_DELAY=300;
+
     private static final String LT = ITagGatt.class.getName();
 
     private static final int NO_ALERT = 0x00;
@@ -64,11 +66,11 @@ public class ITagGatt {
 
     private BluetoothGattService mServiceImmediateAlert;
 
-
     public interface ITagChangeListener {
         void onITagChange(@NonNull final ITagGatt gatt);
         void onITagRssi(@NonNull final ITagGatt gatt, int rssi);
         void onITagClicked(@NonNull final ITagGatt gatt);
+        void onITagDoubleClicked(@NonNull final ITagGatt gatt);
     }
 
     private static final List<ITagChangeListener> mITagChangeListeners =
@@ -101,6 +103,12 @@ public class ITagGatt {
     private void notifyITagClicked() {
         for (ITagChangeListener listener : mITagChangeListeners) {
             listener.onITagClicked(this);
+        }
+    }
+
+    private void notifyITagDoubleClicked() {
+        for (ITagChangeListener listener : mITagChangeListeners) {
+            listener.onITagDoubleClicked(this);
         }
     }
 
@@ -240,14 +248,30 @@ public class ITagGatt {
             notifyITagChanged();
         }
 
+        private int mClicksCount=0;
+
+        private Runnable mWaitForDoubleClick = () -> {
+            mClicksCount=0;
+            notifyITagClicked();
+        };
+
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "GattCallback.onCharacteristicChanged: addr=" + gatt.getDevice().getAddress()
                 +" characteristic="+characteristic.getUuid()+" value="+characteristic.getStringValue(0));
             }
-            notifyITagClicked();
+
+            if (mClicksCount==0) {
+                mClicksCount++;
+                mHandler.postDelayed(mWaitForDoubleClick, DOUBLE_TAG_CLICK_DELAY);
+            }else if (mClicksCount==1) {
+                mHandler.removeCallbacks(mWaitForDoubleClick);
+                mClicksCount=0;
+                notifyITagDoubleClicked();
+            }
         }
+
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             Log.d(LT,"onReadRemoteRssi, addr="+mAddr+" rssi="+rssi);

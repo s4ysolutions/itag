@@ -260,6 +260,12 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     }
 
     @Override
+    public void onITagDoubleClicked(@NonNull ITagGatt gatt) {
+
+    }
+
+
+    @Override
     public void onBoundingChanged(@NonNull MainActivity activity) {
         if (activity.mITagsServiceBound) {
             startRssi(); // nothing bad in extra call

@@ -218,6 +218,16 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             gatt.stopAlert();
         } else if (isSound()) {
             stopSound();
+        }
+    }
+
+
+    @Override
+    public void onITagDoubleClicked(@NonNull ITagGatt gatt) {
+        if (gatt.isAlert()) {
+            gatt.stopAlert();
+        } else if (isSound()) {
+            stopSound();
         } else {
             AssetFileDescriptor afd = null;
             try {
