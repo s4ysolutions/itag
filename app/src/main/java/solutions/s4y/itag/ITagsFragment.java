@@ -171,9 +171,11 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
             mIsRssiStarted = true;
             ITagsService service = mainActivity.mITagsService;
             for (ITagDevice device : ITagsDb.getDevices(getActivity())) {
-                ITagGatt gatt = service.getGatt(device.addr, true);
-                gatt.startListenRssi();
-                mRssiGatt.add(gatt);
+                ITagGatt gatt = service.getGatt(device.addr, false);
+                if (gatt.isConnected()) {
+                    gatt.startListenRssi();
+                    mRssiGatt.add(gatt);
+                }// wait for ITagChange and start listen then
             }
         }
     }
