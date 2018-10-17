@@ -6,10 +6,12 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
-public final class TagLayout extends FrameLayout {
+public final class TagLayout extends FrameLayout{
     public TagLayout(@NonNull Context context) {
         super(context);
         setup();
@@ -36,5 +38,6 @@ public final class TagLayout extends FrameLayout {
         assert inflater != null;
         inflater.inflate(R.layout.itag, this);
     }
+
 
 }

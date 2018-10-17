@@ -255,6 +255,10 @@ public class ITagGatt {
     }
 
     private void reset() {
+        if (mGatt!=null) {
+            mGatt.close();
+        }
+        mGatt=null;
         mIsConnected = false;
         mDevice = null;
         mIsError = false;
@@ -289,7 +293,7 @@ public class ITagGatt {
         notifyITagChanged();
     }
 
-    void connect(@NonNull final Context contex) {
+    public void connect(@NonNull final Context contex) {
         if (BuildConfig.DEBUG) {
             if (mGatt != null) {
                 ITagApplication.handleError(new Exception("DeviceGatt.connect: mGatt!=null"));
@@ -350,7 +354,7 @@ public class ITagGatt {
         mGatt.close();
     }
 
-    void disconnect() {
+    public void disconnect() {
         if (BuildConfig.DEBUG) {
             if (mGatt == null) {
                 ITagApplication.handleError(new Exception("DeviceGatt.disconnect: mGatt==null"));

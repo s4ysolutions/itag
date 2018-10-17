@@ -24,6 +24,9 @@
     <string name="forget">Forget device</string>
     <string name="itag">Connected iTag</string>
 
+    <string name="connect">iTag will connect</string>
+    <string name="disconnect">iTag will be disconnected</string>
+
     <string name="rssi">Signal strength: %d</string>
     <string name="rssi_get">Getting signal strength</string>
 
