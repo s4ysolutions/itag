@@ -148,7 +148,7 @@ public class ITagGatt {
                 }
             } else {
                 if (BuildConfig.DEBUG) {
-                    Log.d(LT, "GattCallback.onConnectionStateChange: not GATT_SUCCESS");
+                    Log.d(LT, "GattCallback.onConnectionStateChange: not GATT_SUCCESS, status="+status);
                 }
                 // 8 to be know as disconnection status
                 if (status!= 8) {
