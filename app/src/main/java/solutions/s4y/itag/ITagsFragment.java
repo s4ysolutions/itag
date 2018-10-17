@@ -27,7 +27,7 @@ import solutions.s4y.itag.ble.ITagsService;
  * A simple {@link Fragment} subclass.
  */
 public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener {
-    private static final String LT=ITagsFragment.class.getName();
+    private static final String LT = ITagsFragment.class.getName();
 
     public ITagsFragment() {
         // Required empty public constructor
@@ -63,6 +63,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         int statusId = R.drawable.bt_disabled;
         Animation animShake = null;
         RssiView rssiView = itagLayout.findViewById(R.id.rssi);
+        int rssi = -1000;
         if (mainActivity.mITagsServiceBound) {
             ITagsService service = mainActivity.mITagsService;
             ITagGatt gatt = service.getGatt(device.addr, false);
@@ -74,14 +75,13 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
                 statusId = R.drawable.bt_setup;
             } else if (gatt.isConnected()) {
                 statusId = R.drawable.bt;
+                rssi = gatt.mRssi;
             }
             if (gatt.isAlert() || (gatt.isError() && service.isSound())) {
                 animShake = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
-            rssiView.setRssi(gatt.mRssi);
-        } else {
-            rssiView.setRssi(-1000);
         }
+        rssiView.setRssi(rssi);
 
         int imageId;
         switch (device.color) {
@@ -163,10 +163,10 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     private void startRssi() {
         MainActivity mainActivity = (MainActivity) getActivity();
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "startRssi, bound="+(mainActivity!=null && mainActivity.mITagsServiceBound));
+            Log.d(LT, "startRssi, bound=" + (mainActivity != null && mainActivity.mITagsServiceBound));
         }
         stopRssi();
-        if (mainActivity!=null && mainActivity.mITagsServiceBound) {
+        if (mainActivity != null && mainActivity.mITagsServiceBound) {
             mIsRssiStarted = true;
             ITagsService service = mainActivity.mITagsService;
             for (ITagDevice device : ITagsDb.getDevices(getActivity())) {
@@ -231,7 +231,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         getActivity().runOnUiThread(() -> {
             // handle cases like "onBound", connect, etc
             if (BuildConfig.DEBUG) {
-                Log.d(LT, "onITagChange mIsRssiStarted="+mIsRssiStarted+" addr="+gatt.mAddr);
+                Log.d(LT, "onITagChange mIsRssiStarted=" + mIsRssiStarted + " addr=" + gatt.mAddr);
             }
             if (!mIsRssiStarted) {
                 startRssi();
