@@ -32,8 +32,10 @@ import solutions.s4y.itag.R;
 public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
     private static final int FOREGROUND_ID = 1;
     private static final String CHANNEL_ID = "itag3";
+    private static final String CHANNEL_DISCONNECT_ID = "ditag1";
     private static final String RUN_IN_FOREGROUND = "run_in_foreground";
     private boolean mChannelCreated;
+    private boolean mChannelDisconnectedCreated;
 
     private static final String T = ITagsService.class.getName();
 
@@ -138,10 +140,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     private void createNotificationChannel() {
         if (!mChannelCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.app_name);
-//            String description = getString(R.string.channel_description);
             int importance = NotificationManager.IMPORTANCE_MIN;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            //          channel.setDescription(description);
             channel.setSound(null, null);
             channel.setShowBadge(false);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
@@ -191,6 +191,22 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         mSoundingITags.clear();
         mPlayer.stop();
         mPlayer.reset();
+    }
+
+    private void createDisconnectNotificationChannel() {
+        if (!mChannelDisconnectedCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.app_name);
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_DISCONNECT_ID, name, importance);
+            channel.setSound(null, null);
+            channel.setShowBadge(false);
+            channel.enableVibration(true);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+                mChannelDisconnectedCreated = true;
+            }
+        }
     }
 
     private void startSoundDisconnected(String addr) {
@@ -249,6 +265,32 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         // Sounds if disconnected
         if (gatt.isError() && device != null && device.linked) {
             startSoundDisconnected(gatt.mAddr);
+            Notification.Builder builder = new Notification.Builder(this);
+            builder
+                    .setTicker(String.format(getString(R.string.notify_disconnect), device.name))
+                    .setSmallIcon(R.drawable.app)
+                    .setContentTitle(String.format(getString(R.string.notify_disconnect), device.name))
+                    .setContentText(getString(R.string.click_to_silent))
+                    .setAutoCancel(true);
+            Intent intent = new Intent(this, MainActivity.class);
+            TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+            stackBuilder.addParentStack(MainActivity.class);
+            stackBuilder.addNextIntent(intent);
+            PendingIntent pendingIntent =
+                    stackBuilder.getPendingIntent(
+                            0,
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                    );
+            builder.setContentIntent(pendingIntent);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createDisconnectNotificationChannel();
+                builder.setChannelId(CHANNEL_DISCONNECT_ID);
+            }
+            Notification notification = builder.build();
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (notificationManager != null) {
+                notificationManager.notify(0, notification);
+            }
         } else {
             if (isSound(gatt.mAddr)) {
                 stopSound();
