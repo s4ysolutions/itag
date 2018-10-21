@@ -61,6 +61,7 @@ public class ITagGatt {
     private boolean mIsStartingITagFind;
     private boolean mIsStoppingITagFind;
     public int mRssi;
+    private int mDevicesCount;
 
     private final Handler mHandler = new Handler();
 
@@ -339,11 +340,16 @@ public class ITagGatt {
                 ITagApplication.handleError(new Exception("DeviceGatt.connect: mIsConnecting"));
             }
         }
+        if (mGatt != null) {
+            mGatt.disconnect();
+            mGatt.close();
+        }
         reset();
         mIsConnecting = true;
         notifyITagChanged();
         mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mAddr);
         mGatt = mDevice.connectGatt(contex, true, mCallback);
+        mDevicesCount = ITagsDb.getDevices(contex).size();
     }
 
     private static final int RSSI_INTERVAL_MS = 1000;
@@ -351,7 +357,7 @@ public class ITagGatt {
         @Override
         public void run() {
             mGatt.readRemoteRssi();
-            mHandler.postDelayed(this, RSSI_INTERVAL_MS);
+            mHandler.postDelayed(this, RSSI_INTERVAL_MS * (mDevicesCount == 0 ? 1 : mDevicesCount));
         }
     };
 

@@ -1,6 +1,7 @@
 package solutions.s4y.itag;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.os.Build;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 
 import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagGatt;
+import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.ITagsService;
 
 public class ITagImageView extends ImageView implements GestureDetector.OnGestureListener  {
@@ -97,9 +99,17 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
             if (mainActivity!=null && mainActivity.mITagsServiceBound){
                 ITagsService service=mainActivity.mITagsService;
                 ITagGatt gatt = service.getGatt(device.addr, false);
-                if (gatt.isConnected()) {
-                    gatt.disconnect();
-                    Toast.makeText(getContext(), R.string.disconnect,Toast.LENGTH_SHORT).show();
+                if (gatt.isConnected() || gatt.isConnecting()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                    builder.setMessage(R.string.confirm_disconnect)
+                            .setTitle(R.string.confirm_title)
+                            .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                                gatt.disconnect();
+                                Toast.makeText(getContext(), R.string.disconnect,Toast.LENGTH_SHORT).show();
+                            })
+                            .setNegativeButton(android.R.string.no, (dialog, which) -> dialog.cancel())
+                            .show();
+
                 }else{
                     gatt.connect(service);
                     Toast.makeText(getContext(), R.string.connect,Toast.LENGTH_SHORT).show();

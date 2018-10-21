@@ -8,9 +8,10 @@
     <string name="hello_disabled_ble_fragment">Hello disabled BLE fragment</string>
 
     <string name="request_permission_title">Permission required</string>
-    <string name="request_location_permission">Starting from Android 6.0 Marhmallow the system requires location permission in order to scan for Bluetooth LE devices.\\niTag One is not using location information in any way.\\nYou will have to restart scann process after the giving the access.</string>
+    <string name="request_location_permission">Starting from Android 6.0 Marhmallow the system requires location permission in order to scan for Bluetooth LE devices.\niTag One is not using location information in any way.\\nYou will have to restart scann process after the giving the access.</string>
     <string name="confirm_title">Confirm</string>
     <string name="confirm_forget">The device will be forgotten, are you sure? You will be able to reconnect this device and remember it in any moment though.\n\nForget?</string>
+    <string name="confirm_disconnect">Flinging with your finger you requested iTag to be disconnected.\nThis is not dangerous, the iTag will not be forgotten and you will be able to connect it back with the same side-to-side fling.\n\nDo you really want disconnect iTag?</string>
     <string name="change_name">Set iTag\'s name</string>
     <string name="manage_alert">Enable/disable Alert on disconnect</string>
 
