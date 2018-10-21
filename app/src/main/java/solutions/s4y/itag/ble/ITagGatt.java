@@ -426,7 +426,7 @@ public class ITagGatt {
         writeCharacteristicAlertLevel(mServiceImmediateAlert, HIGH_ALERT);
     }
 
-    public void stopFindPhone() {
+    public void stopFindITag() {
         if (BuildConfig.DEBUG) {
             Log.d(LT, "stop find iTag");
         }
@@ -458,7 +458,7 @@ public class ITagGatt {
         return mIsTransmitting;
     }
 
-    public boolean isFindingPhone() {
+    public boolean isFindingITag() {
         return mIsFindingITag || mIsStartingITagFind || mIsStoppingITagFind;
     }
 

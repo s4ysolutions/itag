@@ -14,7 +14,6 @@ import android.widget.Toast;
 
 import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagGatt;
-import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.ITagsService;
 
 public class ITagImageView extends ImageView implements GestureDetector.OnGestureListener  {
@@ -82,8 +81,8 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
                 ITagsService service = mainActivity.mITagsService;
                 final ITagDevice device = (ITagDevice) getTag();
                 ITagGatt gatt = service.getGatt(device.addr, true);
-                if (gatt.isFindingPhone()) {
-                    gatt.stopFindPhone();
+                if (gatt.isFindingITag()) {
+                    gatt.stopFindITag();
                 } else {
                     gatt.findITag();
                 }

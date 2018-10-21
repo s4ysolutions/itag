@@ -29,6 +29,16 @@ import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
 
+/*
+
+        void onITagFindingPhone(@NonNull final ITagGatt gatt, boolean on);
+        private void notifyITagFindingPhone(boolean on) {
+            for (ITagChangeListener listener : mITagChangeListeners) {
+                listener.onITagFindingPhone(this, on);
+            }
+        }
+
+ */
 public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
     private static final int FOREGROUND_ID = 1;
     private static final String CHANNEL_ID = "itag3";
@@ -300,16 +310,16 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
     @Override
     public void onITagClicked(@NotNull ITagGatt gatt) {
-        if (gatt.isFindingPhone()) {
-            gatt.stopFindPhone();
+        if (gatt.isFindingITag()) {
+            gatt.stopFindITag();
         }
         stopSound();
     }
 
     @Override
     public void onITagDoubleClicked(@NonNull ITagGatt gatt) {
-        if (gatt.isFindingPhone()) {
-            gatt.stopFindPhone();
+        if (gatt.isFindingITag()) {
+            gatt.stopFindITag();
         }
         startFindPhone(gatt.mAddr);
     }
