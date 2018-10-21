@@ -23,7 +23,7 @@ import solutions.s4y.itag.ITagApplication;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 public class ITagGatt {
-    private static final int DOUBLE_TAG_CLICK_DELAY=300;
+    private static final int DOUBLE_TAG_CLICK_DELAY = 300;
 
     private static final String LT = ITagGatt.class.getName();
 
@@ -57,9 +57,9 @@ public class ITagGatt {
     private boolean mIsConnected;
     private boolean mIsConnecting;
     private boolean mIsTransmitting;
-    private boolean mIsAlert;
-    private boolean mIsAlertStarting;
-    private boolean mIsAlertStoping;
+    private boolean mIsFindingITag;
+    private boolean mIsStartingITagFind;
+    private boolean mIsStoppingITagFind;
     public int mRssi;
 
     private final Handler mHandler = new Handler();
@@ -68,8 +68,11 @@ public class ITagGatt {
 
     public interface ITagChangeListener {
         void onITagChange(@NonNull final ITagGatt gatt);
+
         void onITagRssi(@NonNull final ITagGatt gatt, int rssi);
+
         void onITagClicked(@NonNull final ITagGatt gatt);
+
         void onITagDoubleClicked(@NonNull final ITagGatt gatt);
     }
 
@@ -156,11 +159,11 @@ public class ITagGatt {
                 }
             } else {
                 if (BuildConfig.DEBUG) {
-                    Log.d(LT, "GattCallback.onConnectionStateChange: not GATT_SUCCESS, status="+status);
+                    Log.d(LT, "GattCallback.onConnectionStateChange: not GATT_SUCCESS, status=" + status);
                 }
                 // 8 to be know as disconnection status
-                if (status!= 8) {
-                    ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state="+newState));
+                if (status != 8) {
+                    ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
                 }
                 mIsError = true;
                 notifyITagChanged();
@@ -213,7 +216,7 @@ public class ITagGatt {
                         }
                     }
                 }
-                mIsError=false; // we need to reset error because of auto connect
+                mIsError = false; // we need to reset error because of auto connect
                 mIsConnecting = false;
                 mIsConnected = true;
                 if (mIsRssi) {
@@ -235,23 +238,23 @@ public class ITagGatt {
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "GattCallback.onCharacteristicWrite: addr=" + gatt.getDevice().getAddress()
-                        +" characteristic="+characteristic.getUuid()+" value="+characteristic.getStringValue(0));
+                        + " characteristic=" + characteristic.getUuid() + " value=" + characteristic.getStringValue(0));
             }
             mIsTransmitting = false;
-            if (mIsAlertStarting) {
-                mIsAlertStarting=false;
-                mIsAlert=true;
-            }else if (mIsAlertStoping) {
-                mIsAlertStoping=false;
-                mIsAlert=false;
+            if (mIsStartingITagFind) {
+                mIsStartingITagFind = false;
+                mIsFindingITag = true;
+            } else if (mIsStoppingITagFind) {
+                mIsStoppingITagFind = false;
+                mIsFindingITag = false;
             }
             notifyITagChanged();
         }
 
-        private int mClicksCount=0;
+        private int mClicksCount = 0;
 
         private Runnable mWaitForDoubleClick = () -> {
-            mClicksCount=0;
+            mClicksCount = 0;
             notifyITagClicked();
         };
 
@@ -259,23 +262,23 @@ public class ITagGatt {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "GattCallback.onCharacteristicChanged: addr=" + gatt.getDevice().getAddress()
-                +" characteristic="+characteristic.getUuid()+" value="+characteristic.getStringValue(0));
+                        + " characteristic=" + characteristic.getUuid() + " value=" + characteristic.getStringValue(0));
             }
 
-            if (mClicksCount==0) {
+            if (mClicksCount == 0) {
                 mClicksCount++;
                 mHandler.postDelayed(mWaitForDoubleClick, DOUBLE_TAG_CLICK_DELAY);
-            }else if (mClicksCount==1) {
+            } else if (mClicksCount == 1) {
                 mHandler.removeCallbacks(mWaitForDoubleClick);
-                mClicksCount=0;
+                mClicksCount = 0;
                 notifyITagDoubleClicked();
             }
         }
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-            Log.d(LT,"onReadRemoteRssi, addr="+mAddr+" rssi="+rssi);
-            mRssi=rssi;
+            Log.d(LT, "onReadRemoteRssi, addr=" + mAddr + " rssi=" + rssi);
+            mRssi = rssi;
             notifyITagRssi(rssi);
         }
     };
@@ -286,15 +289,15 @@ public class ITagGatt {
     }
 
     private void reset() {
-        if (mGatt!=null) {
+        if (mGatt != null) {
             mGatt.close();
         }
-        mGatt=null;
+        mGatt = null;
         mIsConnected = false;
         mDevice = null;
         mIsError = false;
         mIsTransmitting = false;
-        mRssi=-1000;
+        mRssi = -1000;
     }
 
     private void writeCharacteristicAlertLevel(
@@ -353,9 +356,10 @@ public class ITagGatt {
     };
 
     private boolean mIsRssi;
+
     public void startListenRssi() {
         stopListenRssi();
-        mIsRssi=true;
+        mIsRssi = true;
         if (isConnected()) {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "startListenRssi, addr=" + mAddr);
@@ -365,7 +369,7 @@ public class ITagGatt {
     }
 
     public void stopListenRssi() {
-        mIsRssi=false;
+        mIsRssi = false;
         if (BuildConfig.DEBUG) {
             Log.d(LT, "stopListenRssi, addr=" + mAddr);
         }
@@ -399,9 +403,9 @@ public class ITagGatt {
         endConnection();
     }
 
-    public void alert() {
+    public void findITag() {
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "alert15sec");
+            Log.d(LT, "find iTag for 15sec");
         }
 
         // TODO: handle not connected
@@ -410,15 +414,15 @@ public class ITagGatt {
             return;
         }
 
-        mIsAlertStarting=true;
-        mIsAlert=false;
-        mIsAlertStoping=false;
+        mIsStartingITagFind = true;
+        mIsFindingITag = false;
+        mIsStoppingITagFind = false;
         writeCharacteristicAlertLevel(mServiceImmediateAlert, HIGH_ALERT);
     }
 
-    public void stopAlert() {
+    public void stopFindPhone() {
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "alert15sec");
+            Log.d(LT, "stop find iTag");
         }
 
         if (!mIsConnected) {
@@ -426,7 +430,7 @@ public class ITagGatt {
             return;
         }
 
-        mIsAlertStoping=true;
+        mIsStoppingITagFind = true;
         writeCharacteristicAlertLevel(mServiceImmediateAlert, NO_ALERT);
     }
 
@@ -448,8 +452,8 @@ public class ITagGatt {
         return mIsTransmitting;
     }
 
-    public boolean isAlert() {
-        return mIsAlert || mIsAlertStarting || mIsAlertStoping;
+    public boolean isFindingPhone() {
+        return mIsFindingITag || mIsStartingITagFind || mIsStoppingITagFind;
     }
 
     ITagGatt(String addr) {

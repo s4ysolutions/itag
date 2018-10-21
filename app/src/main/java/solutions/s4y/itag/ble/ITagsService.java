@@ -20,10 +20,8 @@ import android.util.Log;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import solutions.s4y.itag.BuildConfig;
@@ -218,7 +216,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
-    private void startSoundClick(String addr) {
+    private void startFindPhone(String addr) {
         AssetFileDescriptor afd = null;
         stopSound();
         try {
@@ -258,18 +256,18 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
     @Override
     public void onITagClicked(@NotNull ITagGatt gatt) {
-        if (gatt.isAlert()) {
-            gatt.stopAlert();
+        if (gatt.isFindingPhone()) {
+            gatt.stopFindPhone();
         }
         stopSound();
     }
 
     @Override
     public void onITagDoubleClicked(@NonNull ITagGatt gatt) {
-        if (gatt.isAlert()) {
-            gatt.stopAlert();
+        if (gatt.isFindingPhone()) {
+            gatt.stopFindPhone();
         }
-        startSoundClick(gatt.mAddr);
+        startFindPhone(gatt.mAddr);
     }
 
     @Override

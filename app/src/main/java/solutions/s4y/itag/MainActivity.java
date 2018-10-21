@@ -243,8 +243,8 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
         ITagGatt gatt = mITagsService.getGatt(device.addr, true);
         boolean needNotify=true;
-        if (gatt.isAlert()) {
-            gatt.stopAlert();
+        if (gatt.isFindingPhone()) {
+            gatt.stopFindPhone();
             needNotify=false;
         }
         if (mITagsServiceBound && mITagsService.isSound()){

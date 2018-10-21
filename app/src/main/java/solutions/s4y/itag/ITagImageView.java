@@ -49,7 +49,6 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
 
     @Override
     public void onShowPress(MotionEvent e) {
-
     }
 
     @Override
@@ -62,11 +61,6 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
         return false;
     }
 
-    @Override
-    public void onLongPress(MotionEvent e) {
-
-    }
-
     private MainActivity getActivity() {
         Context context = getContext();
         while (context instanceof ContextWrapper) {
@@ -76,6 +70,23 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
             context = ((ContextWrapper)context).getBaseContext();
         }
         return null;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+        MainActivity mainActivity=getActivity();
+        if (mainActivity != null) {
+            if (mainActivity.mITagsServiceBound) {
+                ITagsService service = mainActivity.mITagsService;
+                final ITagDevice device = (ITagDevice) getTag();
+                ITagGatt gatt = service.getGatt(device.addr, true);
+                if (gatt.isFindingPhone()) {
+                    gatt.stopFindPhone();
+                } else {
+                    gatt.findITag();
+                }
+            }
+        }
     }
 
     @Override

@@ -34,21 +34,22 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         // Required empty public constructor
     }
 
-    private final View.OnLongClickListener mOnLongClickListener = v -> {
-        ITagDevice device = (ITagDevice) v.getTag();
-        MainActivity mainActivity = (MainActivity) getActivity();
-        if (mainActivity.mITagsServiceBound) {
-            ITagsService service = mainActivity.mITagsService;
-            ITagGatt gatt = service.getGatt(device.addr, true);
-            if (gatt.isAlert()) {
-                gatt.stopAlert();
-            } else {
-                gatt.alert();
+    /*
+        private final View.OnLongClickListener mOnLongClickListener = v -> {
+            ITagDevice device = (ITagDevice) v.getTag();
+            MainActivity mainActivity = (MainActivity) getActivity();
+            if (mainActivity.mITagsServiceBound) {
+                ITagsService service = mainActivity.mITagsService;
+                ITagGatt gatt = service.getGatt(device.addr, true);
+                if (gatt.isFindingPhone()) {
+                    gatt.stopFindPhone();
+                } else {
+                    gatt.findITag();
+                }
             }
-        }
-        return true;
-    };
-
+            return true;
+        };
+    */
     private void setupTag(final ITagDevice device, final View itagLayout) {
         final View btnForget = itagLayout.findViewById(R.id.btn_forget);
         btnForget.setTag(device);
@@ -78,7 +79,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
                 statusId = R.drawable.bt;
                 rssi = gatt.mRssi;
             }
-            if (service.isSound(device.addr)) {
+            if (gatt.isFindingPhone() || service.isSound(device.addr)) {
                 animShake = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
         }
@@ -103,7 +104,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         }
 
         final ImageView imageITag = itagLayout.findViewById(R.id.image_itag);
-        imageITag.setOnLongClickListener(mOnLongClickListener);
+        // imageITag.setOnLongClickListener(mOnLongClickListener);
         imageITag.setImageResource(imageId);
         imageITag.setTag(device);
         if (animShake == null) {
@@ -256,12 +257,16 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
 
     @Override
     public void onITagClicked(@NotNull ITagGatt gatt) {
-
+        View view = getView();
+        if (view != null)
+            getActivity().runOnUiThread(() -> setupTags((ViewGroup) view));
     }
 
     @Override
     public void onITagDoubleClicked(@NonNull ITagGatt gatt) {
-
+        View view = getView();
+        if (view != null)
+            getActivity().runOnUiThread(() -> setupTags((ViewGroup) view));
     }
 
 
