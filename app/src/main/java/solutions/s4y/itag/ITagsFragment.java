@@ -33,7 +33,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     public ITagsFragment() {
         // Required empty public constructor
     }
-    
+
     private void setupTag(final ITagDevice device, final View itagLayout) {
         final View btnForget = itagLayout.findViewById(R.id.btn_forget);
         btnForget.setTag(device);
@@ -63,7 +63,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
                 statusId = R.drawable.bt;
                 rssi = gatt.mRssi;
             }
-            if (gatt.isFindingITag() /*|| service.isSound(device.addr)*/) {
+            if (gatt.isFindingITag() || gatt.isFindingPhone()) {
                 animShake = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
         }
@@ -241,13 +241,14 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
 
     @Override
     public void onITagClicked(@NotNull ITagGatt gatt) {
-        View view = getView();
-        if (view != null)
-            getActivity().runOnUiThread(() -> setupTags((ViewGroup) view));
     }
 
     @Override
     public void onITagDoubleClicked(@NonNull ITagGatt gatt) {
+    }
+
+    @Override
+    public void onITagFindingPhone(@NonNull ITagGatt gatt, boolean on) {
         View view = getView();
         if (view != null)
             getActivity().runOnUiThread(() -> setupTags((ViewGroup) view));

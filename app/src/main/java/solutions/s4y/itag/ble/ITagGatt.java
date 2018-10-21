@@ -75,6 +75,9 @@ public class ITagGatt {
         void onITagClicked(@NonNull final ITagGatt gatt);
 
         void onITagDoubleClicked(@NonNull final ITagGatt gatt);
+
+        void onITagFindingPhone(@NonNull final ITagGatt gatt, boolean on);
+
     }
 
     private static final List<ITagChangeListener> mITagChangeListeners =
@@ -119,6 +122,12 @@ public class ITagGatt {
     private void notifyITagRssi(int rssi) {
         for (ITagChangeListener listener : mITagChangeListeners) {
             listener.onITagRssi(this, rssi);
+        }
+    }
+
+    private void notifyITagFindingPhone(boolean on) {
+        for (ITagChangeListener listener : mITagChangeListeners) {
+            listener.onITagFindingPhone(this, on);
         }
     }
 
@@ -298,6 +307,10 @@ public class ITagGatt {
         mDevice = null;
         mIsError = false;
         mIsTransmitting = false;
+        mIsFindingPhone = false;
+        mIsFindingITag = false;
+        mIsStartingITagFind = false;
+        mIsStoppingITagFind = false;
         mRssi = -1000;
     }
 
@@ -465,4 +478,22 @@ public class ITagGatt {
     ITagGatt(String addr) {
         mAddr = addr;
     }
+
+    private boolean mIsFindingPhone;
+
+    public void startFindPhone() {
+        mIsFindingPhone=true;
+        notifyITagFindingPhone(true);
+    }
+
+    public void stopFindPhone() {
+        mIsFindingPhone=false;
+        notifyITagFindingPhone(false);
+    }
+
+    public boolean isFindingPhone() {
+        return mIsFindingPhone;
+    }
+
+
 }
