@@ -41,7 +41,7 @@
     <string name="service_in_background">Double click iTag\'s button to find the phone</string>
     <string name="service_description">Long press iTag\'s image to make it to ring.</string>
 
-    <string name="notify_disconnect">iTag %s disconnected</string>
+    <string name="notify_disconnect">%s disconnected</string>
     <string name="click_to_silent">Click to pop up iTag One</string>
 
     <string name="help_longpress">Long Press to Find the iTag</string>

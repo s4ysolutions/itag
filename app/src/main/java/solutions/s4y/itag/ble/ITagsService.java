@@ -268,7 +268,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             startSoundDisconnected(gatt.mAddr);
             Notification.Builder builder = new Notification.Builder(this);
             builder
-                    .setTicker(String.format(getString(R.string.notify_disconnect), device.name))
+                    .setTicker(String.format(getString(R.string.notify_disconnect),
+                            device.name==null || "".equals(device.name) ? "iTag": device.name))
                     .setSmallIcon(R.drawable.app)
                     .setContentTitle(String.format(getString(R.string.notify_disconnect), device.name))
                     .setContentText(getString(R.string.click_to_silent))
