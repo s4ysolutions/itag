@@ -31,7 +31,7 @@ import solutions.s4y.itag.R;
 
 public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
     private static final int FOREGROUND_ID = 1;
-    private static final String CHANNEL_ID = "itag1";
+    private static final String CHANNEL_ID = "itag3";
     private static final String RUN_IN_FOREGROUND = "run_in_foreground";
     private boolean mChannelCreated;
 
@@ -109,8 +109,10 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     public void addToForeground() {
         Notification.Builder builder = new Notification.Builder(this);
         builder
+                .setTicker(null)
                 .setSmallIcon(R.drawable.app)
-                .setContentTitle(getString(R.string.service_in_background));
+                .setContentTitle(getString(R.string.service_in_background))
+                .setContentText(getString(R.string.service_description));
         Intent intent = new Intent(this, MainActivity.class);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         stackBuilder.addParentStack(MainActivity.class);
@@ -137,7 +139,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         if (!mChannelCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.app_name);
 //            String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_HIGH;
+            int importance = NotificationManager.IMPORTANCE_MIN;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             //          channel.setDescription(description);
             channel.setSound(null, null);
@@ -185,13 +187,13 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     private final MediaPlayer mPlayer = new MediaPlayer();
     Set<String> mSoundingITags = new HashSet<>(4);
 
-    public void stopSound(){
+    public void stopSound() {
         mSoundingITags.clear();
         mPlayer.stop();
         mPlayer.reset();
     }
 
-    private void startSoundDisconnected(String addr){
+    private void startSoundDisconnected(String addr) {
         stopSound();
         AssetFileDescriptor afd = null;
         try {

@@ -38,7 +38,8 @@
     <string name="blue">Blue</string>
 
     <string name="channel_description"/>
-    <string name="service_in_background">iTag Anti-Lost Feature is Activated</string>
+    <string name="service_in_background">Double click iTag\'s button to find the phone</string>
+    <string name="service_description">Long press iTag\'s image to make it to ring.</string>
 
     <string name="help_longpress">Long Press to Find the iTag</string>
 
