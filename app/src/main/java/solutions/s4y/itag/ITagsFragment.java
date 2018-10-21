@@ -63,7 +63,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
                 statusId = R.drawable.bt;
                 rssi = gatt.mRssi;
             }
-            if (gatt.isFindingITag() || gatt.isFindingPhone()) {
+            if (gatt.isFindingITag() || gatt.isFindingPhone() || !gatt.isConnected() && device.linked) {
                 animShake = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
         }
