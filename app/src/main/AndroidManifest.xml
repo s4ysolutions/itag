@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="solutions.s4y.itag"
-    android:versionCode="12"
-    android:versionName="1.0-beta12"
+    android:versionCode="13"
+    android:versionName="1.0-beta13"
     >
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
