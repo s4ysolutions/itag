@@ -433,6 +433,12 @@ public class ITagGatt {
             return;
         }
 
+        if (mServiceImmediateAlert == null) {
+            // TODO: replace with string resource
+            ITagApplication.handleError(new Exception("The connected device does not seem to be iTag, sorry"));
+            return;
+        }
+
         mIsStartingITagFind = true;
         mIsFindingITag = false;
         mIsStoppingITagFind = false;
@@ -446,6 +452,12 @@ public class ITagGatt {
 
         if (!mIsConnected) {
             ITagApplication.handleError(new Exception("Not connected"));
+            return;
+        }
+
+        if (mServiceImmediateAlert == null) {
+            // TODO: replace with string resource
+            ITagApplication.handleError(new Exception("The connected device does not seem to be iTag, sorry"));
             return;
         }
 
