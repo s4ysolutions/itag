@@ -418,7 +418,8 @@ public class ITagGatt {
             }
         }
         stopListenRssi();
-        mGatt.disconnect();
+        if (mGatt!=null) // https://github.com/s4ysolutions/itag/issues/12
+            mGatt.disconnect();
         endConnection();
     }
 
