@@ -393,7 +393,9 @@ public class ITagGatt {
     private Runnable mRssiRunable = new Runnable() {
         @Override
         public void run() {
-            mGatt.readRemoteRssi();
+            if (mGatt!=null) { // https://github.com/s4ysolutions/itag/issues/14
+                mGatt.readRemoteRssi();
+            }
             mHandler.postDelayed(this, RSSI_INTERVAL_MS * (mDevicesCount == 0 ? 1 : mDevicesCount));
         }
     };
