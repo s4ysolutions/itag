@@ -31,7 +31,6 @@ import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
 
 public class MainActivity extends Activity implements LeScanner.LeScannerListener, ITagsDb.DbListener {
-    static public final int REQUEST_ENABLE_BT = 1;
     static public final int REQUEST_ENABLE_LOCATION = 2;
     public BluetoothAdapter mBluetoothAdapter;
     public ITagsService mITagsService;
@@ -133,7 +132,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                     }
                 } else {
                     if (mEnableAttempts < 3) {
-                    //    mBluetoothAdapter.enable();
+                        mBluetoothAdapter.enable();
                         mEnableAttempts++;
                         if (mEnableAttempts==1) {
                             Toast.makeText(this, R.string.try_enable_bt,Toast.LENGTH_LONG).show();
@@ -393,19 +392,10 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     public void onDbRemove(ITagDevice device) {
 
     }
-/*
-    public void onEnableBLEClick(View ignored) {
-        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, MainActivity.REQUEST_ENABLE_BT);
-    }
-*/
+
     public void onOpenBTSettings(View ignored) {
-        final Intent intent = new Intent(Intent.ACTION_MAIN, null);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        final ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.bluetooth.BluetoothSettings");
-        intent.setComponent(cn);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity( intent);
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivity(enableBtIntent);
     }
 
 }
