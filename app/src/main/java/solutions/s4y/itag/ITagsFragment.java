@@ -1,5 +1,6 @@
 package solutions.s4y.itag;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.annotation.NonNull;
@@ -109,6 +110,9 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     }
 
     private void setupTags(ViewGroup root) {
+        Activity activity = getActivity();
+        if (activity==null) return; //
+
         View tagsLayout = root.findViewById(R.id.tags);
         int index = -1;
         if (tagsLayout != null) {
@@ -117,7 +121,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         }
         final int s = ITagsDb.getDevices(getActivity()).size();
         final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
-        tagsLayout = getActivity().getLayoutInflater().inflate(rid, root, false);
+        tagsLayout = activity.getLayoutInflater().inflate(rid, root, false);
         root.addView(tagsLayout, index);
         if (s > 0) {
             setupTag(ITagsDb.getDevices(getActivity()).get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
