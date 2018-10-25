@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -20,6 +21,7 @@ import java.util.UUID;
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
 
+import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 public class ITagGatt {
@@ -62,6 +64,8 @@ public class ITagGatt {
     private boolean mIsStoppingITagFind;
     public int mRssi;
     private int mDevicesCount;
+    // for sake of reconnect on status = 133
+    private Context mContext;
 
     private final Handler mHandler = new Handler();
 
@@ -159,6 +163,8 @@ public class ITagGatt {
                                 "will gatt.discoverServices");
                     }
                     gatt.discoverServices();
+                    // fre resource
+                    mContext = null;
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     if (BuildConfig.DEBUG) {
                         Log.d(LT,
@@ -173,7 +179,13 @@ public class ITagGatt {
                 }
                 // 8 to be know as disconnection status
                 if (status != 8) {
-                    ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
+                    if (status == 133 && mContext != null) {
+                        mHandler.postDelayed(() -> connect(mContext, true), 100);
+                        // free resource AND avoid endless iteration
+                        mContext=null;
+                    } else {
+                        ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
+                    }
                 }
                 mIsError = true;
                 notifyITagChanged();
@@ -342,6 +354,10 @@ public class ITagGatt {
     }
 
     public void connect(@NonNull final Context contex) {
+        connect(contex, false);
+    }
+
+    private void connect(@NonNull final Context contex, boolean workaraund133) {
         if (BuildConfig.DEBUG) {
             if (mGatt != null) {
                 ITagApplication.handleError(new Exception("DeviceGatt.connect: mGatt!=null"));
@@ -359,9 +375,17 @@ public class ITagGatt {
         }
         reset();
         mIsConnecting = true;
+        if (!workaraund133) { // avoid endless iteration
+            mContext=contex;
+        }
         notifyITagChanged();
         mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mAddr);
-        mGatt = mDevice.connectGatt(contex, true, mCallback);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && workaraund133) {
+            ITagApplication.handleError(new Exception("The device seems to have a problem. Anti lost feature may fail."));
+            mGatt = mDevice.connectGatt(contex, false, mCallback, TRANSPORT_LE);
+        } else {
+            mGatt = mDevice.connectGatt(contex, true, mCallback);
+        }
         mDevicesCount = ITagsDb.getDevices(contex).size();
     }
 
@@ -418,7 +442,7 @@ public class ITagGatt {
             }
         }
         stopListenRssi();
-        if (mGatt!=null) // https://github.com/s4ysolutions/itag/issues/12
+        if (mGatt != null) // https://github.com/s4ysolutions/itag/issues/12
             mGatt.disconnect();
         endConnection();
     }
@@ -494,13 +518,13 @@ public class ITagGatt {
 
     private boolean mIsFindingPhone;
 
-    public void startFindPhone() {
-        mIsFindingPhone=true;
+    void startFindPhone() {
+        mIsFindingPhone = true;
         notifyITagFindingPhone(true);
     }
 
-    public void stopFindPhone() {
-        mIsFindingPhone=false;
+    void stopFindPhone() {
+        mIsFindingPhone = false;
         notifyITagFindingPhone(false);
     }
 

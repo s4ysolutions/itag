@@ -24,6 +24,7 @@ public final class LeScanner {
     static public boolean isScanning;
     static public int tick;
     static public final List<LeScanResult> results = new ArrayList<>(4);
+    private static final Handler sHandler = new Handler();
 
     public interface LeScannerListener {
         void onStartScan();
@@ -110,7 +111,13 @@ public final class LeScanner {
             }
 
             if (needNotify) {
-                notifyNewDeviceScanned(result);
+                // https://github.com/s4ysolutions/itag/issues/9
+                sHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        notifyNewDeviceScanned(result);
+                    }
+                },600);
             }
         }
     };
