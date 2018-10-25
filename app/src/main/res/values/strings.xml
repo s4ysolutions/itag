@@ -3,7 +3,7 @@
     <string name="empty" />
 
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_no_ble_fragment">Hello no BLE fragment</string>
+    <string name="hello_no_ble_fragment">Your device has no Bloutooth adapter</string>
     <string name="hello_ble_fragment">Hello BLE fragment</string>
     <string name="hello_disabled_ble_fragment">Hello disabled BLE fragment</string>
 
@@ -47,4 +47,9 @@
     <string name="help_longpress">Long Press to Find the iTag</string>
 
     <string name="help_scan">You have no iTag devices connected yet.\n\nClick "Scan" button above to start searching.</string>
+
+    <string name="try_enable_bt">Bluetooth is turning on</string>
+    <string name="try_enable_bt_failed">You need to Enable Bluetooth manually in the Device Settings.</string>
+    <string name="open_bt_settings">Open Bluetooth Settings</string>
+
 </resources>

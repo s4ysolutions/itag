@@ -106,12 +106,15 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
     private FragmentType mSelectedFragment;
 
+    private int mEnableAttempts = 0;
+
     private void setupContent() {
         final FragmentManager fragmentManager = getFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         Fragment fragment = null;
         if (LeScanner.isScanning) {
             setupProgressBar();
+            mEnableAttempts = 0;
             if (mSelectedFragment != FragmentType.SCANNER) {
                 fragment = new LeScanFragment();
                 mSelectedFragment = FragmentType.SCANNER;
@@ -123,13 +126,23 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                 mSelectedFragment = FragmentType.OTHER;
             } else {
                 if (mBluetoothAdapter.isEnabled()) {
+                    mEnableAttempts = 0;
                     if (mSelectedFragment != FragmentType.ITAGS) {
                         fragment = new ITagsFragment();
                         mSelectedFragment = FragmentType.ITAGS;
                     }
                 } else {
-                    fragment = new DisabledBLEFragment();
-                    mSelectedFragment = FragmentType.OTHER;
+                    if (mEnableAttempts < 3) {
+                    //    mBluetoothAdapter.enable();
+                        mEnableAttempts++;
+                        if (mEnableAttempts==1) {
+                            Toast.makeText(this, R.string.try_enable_bt,Toast.LENGTH_LONG).show();
+                        }
+                        setupContent();
+                    }else {
+                        fragment = new DisabledBLEFragment();
+                        mSelectedFragment = FragmentType.OTHER;
+                    }
                 }
             }
         }
@@ -313,11 +326,6 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
     }
 
-    public void onEnableBLEClick(View ignored) {
-        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, MainActivity.REQUEST_ENABLE_BT);
-    }
-
 
     public void onSetName(View sender) {
         final ITagDevice device = (ITagDevice) sender.getTag();
@@ -384,6 +392,20 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     @Override
     public void onDbRemove(ITagDevice device) {
 
+    }
+/*
+    public void onEnableBLEClick(View ignored) {
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, MainActivity.REQUEST_ENABLE_BT);
+    }
+*/
+    public void onOpenBTSettings(View ignored) {
+        final Intent intent = new Intent(Intent.ACTION_MAIN, null);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        final ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.bluetooth.BluetoothSettings");
+        intent.setComponent(cn);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity( intent);
     }
 
 }
