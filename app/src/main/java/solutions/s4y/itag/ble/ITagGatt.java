@@ -154,6 +154,9 @@ public class ITagGatt {
                                 " state=" + newState);
             }
 
+            // the callback is for no connection state changes only
+            mHandler.removeCallbacks(mForceDisconnect);
+
             if (status == GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     if (BuildConfig.DEBUG) {
@@ -181,13 +184,16 @@ public class ITagGatt {
                 if (status != 8) {
                     if (status == 133 && mContext != null) {
                         mHandler.postDelayed(() -> connect(mContext, true), 100);
-                        // free resource AND avoid endless iteration
-                        mContext=null;
+                        // free resource AND avoid endless iteration. Hacky a bit
+                        mContext = null;
                     } else {
                         ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
+                        mIsError = true;
                     }
+                }else{
+                    mIsError = false;
+                    mIsConnected = false;
                 }
-                mIsError = true;
                 notifyITagChanged();
             }
         }
@@ -316,6 +322,7 @@ public class ITagGatt {
         }
         mGatt = null;
         mIsConnected = false;
+        mIsConnecting = false;
         mDevice = null;
         mIsError = false;
         mIsTransmitting = false;
@@ -376,7 +383,7 @@ public class ITagGatt {
         reset();
         mIsConnecting = true;
         if (!workaraund133) { // avoid endless iteration
-            mContext=contex;
+            mContext = contex;
         }
         notifyITagChanged();
         mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mAddr);
@@ -393,7 +400,7 @@ public class ITagGatt {
     private Runnable mRssiRunable = new Runnable() {
         @Override
         public void run() {
-            if (mGatt!=null) { // https://github.com/s4ysolutions/itag/issues/14
+            if (mGatt != null) { // https://github.com/s4ysolutions/itag/issues/14
                 mGatt.readRemoteRssi();
             }
             mHandler.postDelayed(this, RSSI_INTERVAL_MS * (mDevicesCount == 0 ? 1 : mDevicesCount));
@@ -434,19 +441,30 @@ public class ITagGatt {
         mGatt.close();
     }
 
+    private Runnable mForceDisconnect = new Runnable() {
+        @Override
+        public void run() {
+            endConnection();
+        }
+    };
+
     public void disconnect() {
         if (BuildConfig.DEBUG) {
             if (mGatt == null) {
                 ITagApplication.handleError(new Exception("DeviceGatt.disconnect: mGatt==null"));
             }
-            if (!mIsConnected) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connect: !mIsConnected"));
+            if (!mIsConnected && !mIsConnecting) {
+                ITagApplication.handleError(new Exception("DeviceGatt.connect: !mIsConnected && !mIsConnecting"));
             }
         }
         stopListenRssi();
-        if (mGatt != null) // https://github.com/s4ysolutions/itag/issues/12
+        if (mGatt != null) {// https://github.com/s4ysolutions/itag/issues/12
             mGatt.disconnect();
-        endConnection();
+            mHandler.removeCallbacks(mForceDisconnect);
+            mHandler.postDelayed(mForceDisconnect, 3000);
+        } else {
+            endConnection();
+        }
     }
 
     public void findITag() {
