@@ -160,10 +160,11 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
     }
 
+    @NonNull
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className,
-                                       IBinder binder) {
+                                       @NonNull IBinder binder) {
             mITagsService = ((ITagsService.GattBinder) binder).getService();
             mITagsServiceBound = true;
             mITagsService.connect();
@@ -211,7 +212,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         super.onPause();
     }
 
-    public void onRemember(View sender) {
+    public void onRemember(@NonNull View sender) {
         BluetoothDevice device = (BluetoothDevice) sender.getTag();
         if (device == null) {
             ITagApplication.handleError(new Exception("No BLE device"));
@@ -229,7 +230,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
     }
 
-    public void onForget(View sender) {
+    public void onForget(@NonNull View sender) {
         ITagDevice device = (ITagDevice) sender.getTag();
         if (device == null) {
             ITagApplication.handleError(new Exception("No device"));
@@ -245,7 +246,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
     }
 
-    public void onITagClick(View sender) {
+    public void onITagClick(@NonNull View sender) {
         if (!mITagsServiceBound)
             return;
         ITagDevice device = (ITagDevice) sender.getTag();
@@ -282,7 +283,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
     }
 
-    public void onChangeColor(View sender) {
+    public void onChangeColor(@NonNull View sender) {
         final ITagDevice device = (ITagDevice) sender.getTag();
         if (device == null) {
             ITagApplication.handleError(new Exception("No device"));
@@ -310,23 +311,28 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             }
             ITagsDb.save(MainActivity.this);
             ITagsDb.notifyChange();
+            ITagApplication.faColorITag();
             return true;
         });
         popupMenu.show();
     }
 
-    public void onLink(View sender) {
+    public void onLink(@NonNull View sender) {
         ITagDevice device = (ITagDevice) sender.getTag();
         device.linked=!device.linked;
         ITagsDb.save(MainActivity.this);
         ITagsDb.notifyChange();
+        if (device.linked)
+            ITagApplication.faUnmuteTag();
+        else
+            ITagApplication.faMuteTag();
         if (mITagsServiceBound && mITagsService.isSound() && !device.linked){
             mITagsService.stopSound();
         }
     }
 
 
-    public void onSetName(View sender) {
+    public void onSetName(@NonNull View sender) {
         final ITagDevice device = (ITagDevice) sender.getTag();
         if (device == null) {
             ITagApplication.handleError(new Exception("No device"));

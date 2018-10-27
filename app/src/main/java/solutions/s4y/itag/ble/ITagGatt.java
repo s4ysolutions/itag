@@ -12,6 +12,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -53,7 +54,9 @@ public class ITagGatt {
             */
 
     public final String mAddr;
+    @Nullable
     private BluetoothDevice mDevice;
+    @Nullable
     private BluetoothGatt mGatt;
     private boolean mIsError;
     private boolean mIsConnected;
@@ -65,6 +68,7 @@ public class ITagGatt {
     public int mRssi;
     private int mDevicesCount;
     // for sake of reconnect on status = 133
+    @Nullable
     private Context mContext;
 
     private final Handler mHandler = new Handler();
@@ -135,7 +139,7 @@ public class ITagGatt {
         }
     }
 
-    private void setCharacteristicNotification(BluetoothGatt bluetoothgatt, BluetoothGattCharacteristic bluetoothgattcharacteristic) {
+    private void setCharacteristicNotification(BluetoothGatt bluetoothgatt, @NonNull BluetoothGattCharacteristic bluetoothgattcharacteristic) {
         bluetoothgatt.setCharacteristicNotification(bluetoothgattcharacteristic, true);
         BluetoothGattDescriptor descriptor = bluetoothgattcharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG);
         if (descriptor != null) {
@@ -144,9 +148,10 @@ public class ITagGatt {
         }
     }
 
+    @Nullable
     private final BluetoothGattCallback mCallback = new BluetoothGattCallback() {
         @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+        public void onConnectionStateChange(@NonNull BluetoothGatt gatt, int status, int newState) {
             if (BuildConfig.DEBUG) {
                 Log.d(LT,
                         "GattCallback.onConnectionStateChange: addr=" + gatt.getDevice().getAddress() +
@@ -195,11 +200,12 @@ public class ITagGatt {
                     mIsConnected = false;
                 }
                 notifyITagChanged();
+                ITagApplication.faITagLost(mIsError);
             }
         }
 
         @Override
-        public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
+        public void onServicesDiscovered(@NonNull final BluetoothGatt gatt, int status) {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "GattCallback.onServicesDiscovered: addr=" + gatt.getDevice().getAddress());
             }
@@ -263,7 +269,7 @@ public class ITagGatt {
         }
 
         @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+        public void onCharacteristicWrite(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic, int status) {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "GattCallback.onCharacteristicWrite: addr=" + gatt.getDevice().getAddress()
                         + " characteristic=" + characteristic.getUuid() + " value=" + characteristic.getStringValue(0));
@@ -277,17 +283,19 @@ public class ITagGatt {
                 mIsFindingITag = false;
             }
             notifyITagChanged();
+            ITagApplication.faITagFound();
         }
 
         private int mClicksCount = 0;
 
+        @NonNull
         private Runnable mWaitForDoubleClick = () -> {
             mClicksCount = 0;
             notifyITagClicked();
         };
 
         @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        public void onCharacteristicChanged(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic) {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "GattCallback.onCharacteristicChanged: addr=" + gatt.getDevice().getAddress()
                         + " characteristic=" + characteristic.getUuid() + " value=" + characteristic.getStringValue(0));
@@ -300,6 +308,7 @@ public class ITagGatt {
                 mHandler.removeCallbacks(mWaitForDoubleClick);
                 mClicksCount = 0;
                 notifyITagDoubleClicked();
+                ITagApplication.faFindPhone();
             }
         }
 
@@ -397,6 +406,7 @@ public class ITagGatt {
     }
 
     private static final int RSSI_INTERVAL_MS = 1000;
+    @NonNull
     private Runnable mRssiRunable = new Runnable() {
         @Override
         public void run() {
@@ -441,12 +451,7 @@ public class ITagGatt {
         mGatt.close();
     }
 
-    private Runnable mForceDisconnect = new Runnable() {
-        @Override
-        public void run() {
-            endConnection();
-        }
-    };
+    private Runnable mForceDisconnect = this::endConnection;
 
     public void disconnect() {
         if (BuildConfig.DEBUG) {
@@ -481,6 +486,7 @@ public class ITagGatt {
         if (mServiceImmediateAlert == null) {
             // TODO: replace with string resource
             ITagApplication.handleError(new Exception("The connected device does not seem to be iTag, sorry"));
+            ITagApplication.faNotITag();
             return;
         }
 
@@ -488,6 +494,7 @@ public class ITagGatt {
         mIsFindingITag = false;
         mIsStoppingITagFind = false;
         writeCharacteristicAlertLevel(mServiceImmediateAlert, HIGH_ALERT);
+        ITagApplication.faFindITag();
     }
 
     public void stopFindITag() {

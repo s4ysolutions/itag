@@ -2,6 +2,7 @@ package solutions.s4y.itag.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -131,6 +132,7 @@ public class ITagsDb {
         loadFromFile(context, DB_FILE_NAME, devices);
     }
 
+    @NonNull
     private static List<ITagDevice> loadOldDevices(@NotNull final Context context) {
         final List<ITagDevice> devices = new ArrayList<>(16);
         loadFromFile(context, DB_OLD_FILE_NAME, devices);
@@ -224,6 +226,7 @@ public class ITagsDb {
             save(context);
             notifyAdd(d);
             notifyChange();
+            ITagApplication.faRememberITag();
         }
     }
 
@@ -234,6 +237,7 @@ public class ITagsDb {
             save(context);
             notifyRemove(device);
             notifyChange();
+            ITagApplication.faForgetITag();
         }
     }
 
@@ -245,7 +249,7 @@ public class ITagsDb {
         return findByAddr(device.addr) != null;
     }
 
-    static public List<ITagDevice> getDevices(Context context){
+    static public List<ITagDevice> getDevices(@NonNull Context context){
         if (devices==null){
             devices = new ArrayList<>(4);
             load(context);

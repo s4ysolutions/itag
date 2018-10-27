@@ -26,6 +26,6 @@ public final class ITagDevice implements Serializable {
         this.addr = device.getAddress();
         this.color=oldDevice==null?Color.WHITE:oldDevice.color;
         this.name=oldDevice==null?"":oldDevice.name;
-        this.linked=oldDevice==null?false:oldDevice.linked;
+        this.linked= oldDevice != null && oldDevice.linked;
     }
 }

@@ -3,6 +3,8 @@ package solutions.s4y.itag;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,8 +27,9 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
             super(getActivity(), R.layout.fragment_le_scan_item, LeScanner.results);
         }
 
+        @NonNull
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(int position, @Nullable View convertView, ViewGroup parent) {
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_le_scan_item, parent, false);
             }
@@ -70,7 +73,7 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_le_scan, container, false);
@@ -82,6 +85,7 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
     @Override
     public void onResume() {
         super.onResume();
+        ITagApplication.faScanView(ITagsDb.getDevices(getActivity()).size()>0);
         updateResultsList();
         LeScanner.addListener(this);
     }

@@ -26,6 +26,7 @@ public class SetNameDialogFragment extends DialogFragment {
                     device.name=textName.getText().toString();
                     ITagsDb.save(getActivity());
                     ITagsDb.notifyChange();
+                    ITagApplication.faNameITag();
                     // dialog.dismiss();
                 })
                 .setNegativeButton(android.R.string.cancel, (dialog, id) -> {

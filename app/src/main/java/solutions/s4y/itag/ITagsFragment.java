@@ -35,7 +35,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         // Required empty public constructor
     }
 
-    private void setupTag(final ITagDevice device, final View itagLayout) {
+    private void setupTag(@NonNull final ITagDevice device, final View itagLayout) {
         final View btnForget = itagLayout.findViewById(R.id.btn_forget);
         btnForget.setTag(device);
         final View btnColor = itagLayout.findViewById(R.id.btn_color);
@@ -109,7 +109,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         textName.setText(device.name);
     }
 
-    private void setupTags(ViewGroup root) {
+    private void setupTags(@NonNull ViewGroup root) {
         Activity activity = getActivity();
         if (activity==null) return; //
 
@@ -138,7 +138,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
 
@@ -186,6 +186,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         if (BuildConfig.DEBUG) {
             Log.d(LT, "onResume");
         }
+        ITagApplication.faITagsView(ITagsDb.getDevices(getActivity()).size());
         startRssi();
         setupTags((ViewGroup) Objects.requireNonNull(getView()));
         MainActivity.addServiceBoundListener(this);

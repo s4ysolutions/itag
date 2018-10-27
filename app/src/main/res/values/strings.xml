@@ -4,8 +4,6 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_no_ble_fragment">Your device has no Bloutooth adapter</string>
-    <string name="hello_ble_fragment">Hello BLE fragment</string>
-    <string name="hello_disabled_ble_fragment">Hello disabled BLE fragment</string>
 
     <string name="request_permission_title">Permission required</string>
     <string name="request_location_permission">Starting from Android 6.0 Marhmallow the system requires location permission in order to scan for Bluetooth LE devices.\niTag One is not using location information in any way.\\nYou will have to restart scann process after the giving the access.</string>
@@ -29,7 +27,6 @@
     <string name="disconnect">iTag will be disconnected</string>
 
     <string name="rssi">Signal strength: %d</string>
-    <string name="rssi_get">Getting signal strength</string>
 
     <string name="white">White</string>
     <string name="black">Black</string>
@@ -37,7 +34,6 @@
     <string name="green">Green</string>
     <string name="blue">Blue</string>
 
-    <string name="channel_description"/>
     <string name="service_in_background">Double click iTag\'s button to find the phone</string>
     <string name="service_description">Long press iTag\'s image to make it to ring.</string>
 

@@ -105,13 +105,14 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
                             .setPositiveButton(android.R.string.yes, (dialog, which) -> {
                                 gatt.disconnect();
                                 Toast.makeText(getContext(), R.string.disconnect,Toast.LENGTH_SHORT).show();
+                                ITagApplication.faITagDisconnected();
                             })
                             .setNegativeButton(android.R.string.no, (dialog, which) -> dialog.cancel())
                             .show();
-
                 }else{
                     gatt.connect(service);
                     Toast.makeText(getContext(), R.string.connect,Toast.LENGTH_SHORT).show();
+                    ITagApplication.faITagConnected();
                 }
             }
         }

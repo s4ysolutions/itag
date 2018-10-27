@@ -8,6 +8,8 @@ import android.bluetooth.BluetoothDevice;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,56 +79,56 @@ public final class LeScanner {
         }
     }
 
+    @NonNull
     private static BluetoothAdapter.LeScanCallback sLeScanCallback = new BluetoothAdapter.LeScanCallback() {
         final private Map<String, Long> mUpdates= new HashMap<>(8);
         @Override
-        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            LeScanResult result = new LeScanResult(device, rssi, scanRecord);
-            if (ITagsDb.has(device)) return;
-            if (result.device.getAddress() == null) return;
-            String addr = result.device.getAddress();
-            if (addr == null) return;
-            LeScanResult existing=null;
-            for(LeScanResult r: results) {
-                if (addr.equals(r.device.getAddress())){
-                    existing=r;
-                    break;
-                }
-            }
-            boolean needNotify;
-            long now = System.currentTimeMillis();
-            if (existing==null) {
-                needNotify=true;
-                results.add(result);
-                mUpdates.put(addr, now);
-            }else {
-                Long lastUpdate=mUpdates.get(addr);
-                if (lastUpdate==null || now > lastUpdate+1000) {
-                    needNotify=true;
-                    existing.rssi = result.rssi;
-                    mUpdates.put(addr, now);
-                }else{
-                    needNotify=false;
-                }
-            }
-
-            if (needNotify) {
-                // https://github.com/s4ysolutions/itag/issues/9
-                sHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        notifyNewDeviceScanned(result);
+        public void onLeScan(@NonNull BluetoothDevice device, int rssi, byte[] scanRecord) {
+ // run on main thread to do not mess liveview
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(() -> {
+                LeScanResult result = new LeScanResult(device, rssi, scanRecord);
+                if (ITagsDb.has(device)) return;
+                if (result.device.getAddress() == null) return;
+                String addr = result.device.getAddress();
+                if (addr == null) return;
+                LeScanResult existing=null;
+                for(LeScanResult r: results) {
+                    if (addr.equals(r.device.getAddress())){
+                        existing=r;
+                        break;
                     }
-                },600);
-            }
+                }
+                boolean needNotify;
+                long now = System.currentTimeMillis();
+                if (existing==null) {
+                    needNotify=true;
+                    results.add(result);
+                    mUpdates.put(addr, now);
+                }else {
+                    Long lastUpdate=mUpdates.get(addr);
+                    if (lastUpdate==null || now > lastUpdate+1000) {
+                        needNotify=true;
+                        existing.rssi = result.rssi;
+                        mUpdates.put(addr, now);
+                    }else{
+                        needNotify=false;
+                    }
+                }
+
+                if (needNotify) {
+                    // https://github.com/s4ysolutions/itag/issues/9
+                    sHandler.postDelayed(() -> notifyNewDeviceScanned(result),600);
+                }
+            });
         }
     };
 
-    public static boolean isScanRequestAbortedBecauseOfPermission;
+    // public static boolean isScanRequestAbortedBecauseOfPermission;
 
     @TargetApi(Build.VERSION_CODES.M)
-    static public void startScan(final BluetoothAdapter bluetoothAdapter, MainActivity activity) {
-        isScanRequestAbortedBecauseOfPermission=false;
+    static public void startScan(@NonNull final BluetoothAdapter bluetoothAdapter, @NonNull MainActivity activity) {
+        // isScanRequestAbortedBecauseOfPermission=false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (activity.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 if (activity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -138,7 +140,7 @@ public final class LeScanner {
                             .show();
                     return;
                 } else {
-                    isScanRequestAbortedBecauseOfPermission=true;
+                    // isScanRequestAbortedBecauseOfPermission=true;
                     activity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
                     return;
                 }
@@ -163,9 +165,7 @@ public final class LeScanner {
         };
         handler.postDelayed(run1sec,1000);
 
-        handler.postDelayed(() -> {
-            stopScan(bluetoothAdapter);
-        }, TIMEOUT * 1000);
+        handler.postDelayed(() -> stopScan(bluetoothAdapter), TIMEOUT * 1000);
 
 
         bluetoothAdapter.startLeScan(sLeScanCallback);

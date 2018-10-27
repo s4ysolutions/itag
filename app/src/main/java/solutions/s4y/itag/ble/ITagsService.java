@@ -40,21 +40,24 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
     private static final String T = ITagsService.class.getName();
 
+    @NonNull
     private HashMap<String, ITagGatt> mGatts = new HashMap<>(4);
 
     public class GattBinder extends Binder {
+        @NonNull
         public ITagsService getService() {
             return ITagsService.this;
         }
     }
 
+    @NonNull
     private IBinder mBinder = new GattBinder();
 
     public ITagsService() {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand(@NonNull Intent intent, int flags, int startId) {
         if (intent.getBooleanExtra(RUN_IN_FOREGROUND, false)) {
             addToForeground();
         }
@@ -153,7 +156,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
-    public static boolean start(Context context, boolean foreground) {
+    public static boolean start(@NonNull Context context, boolean foreground) {
         if (ITagsDb.getDevices(context).size() > 0) {
             Intent intent = new Intent(context, ITagsService.class);
             if (foreground) {
@@ -171,21 +174,22 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         return false;
     }
 
-    public static boolean start(Context context) {
+    public static boolean start(@NonNull Context context) {
         return start(context, false);
     }
 
-    public static void startInForeground(Context context) {
+    public static void startInForeground(@NonNull Context context) {
         start(context, true);
     }
 
-    public static void stop(Context context) {
+    public static void stop(@NonNull Context context) {
         if (ITagsDb.getDevices(context).size() == 0) {
             context.stopService(new Intent(context, ITagsService.class));
         }
     }
 
     private final MediaPlayer mPlayer = new MediaPlayer();
+    @NonNull
     Set<String> mSoundingITags = new HashSet<>(4);
 
     public void stopSound() {
@@ -342,12 +346,12 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     }
 
     @Override
-    public void onDbAdd(ITagDevice device) {
+    public void onDbAdd(@NonNull ITagDevice device) {
         getGatt(device.addr, true);
     }
 
     @Override
-    public void onDbRemove(ITagDevice device) {
+    public void onDbRemove(@NonNull ITagDevice device) {
         ITagGatt toRemove = mGatts.get(device.addr);
         if (toRemove != null) {
             if (toRemove.isConnected() || toRemove.isConnecting()) {
