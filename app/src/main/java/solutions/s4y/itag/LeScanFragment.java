@@ -85,7 +85,7 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
     @Override
     public void onResume() {
         super.onResume();
-        ITagApplication.faScanView(ITagsDb.getDevices(getActivity()).size()>0);
+        ITagApplication.faScanView(ITagsDb.getDevices(getActivity()).size() > 0);
         updateResultsList();
         LeScanner.addListener(this);
     }
@@ -97,21 +97,23 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
     }
 
     private void updateResultsList() {
-        View root = getView();
-        if (root==null) return;
-        final ListView listView = root.findViewById(R.id.results_list);
-        final Adapter adapter = ((Adapter) (listView.getAdapter()));
-        final int index = listView.getFirstVisiblePosition();
-        adapter.notifyDataSetChanged();
-        listView.smoothScrollToPosition(index);
-        final TextView tv = root.findViewById(R.id.text_scanning);
-        if (LeScanner.results.size() > 0) {
-            tv.setText(R.string.scanning_more);
-        } else if (ITagsDb.getDevices(getActivity()).size() > 0) {
-            tv.setText(R.string.scanning_new);
-        } else {
-            tv.setText(R.string.scanning);
-        }
+        getActivity().runOnUiThread(() -> {
+            View root = getView();
+            if (root == null) return;
+            final ListView listView = root.findViewById(R.id.results_list);
+            final Adapter adapter = ((Adapter) (listView.getAdapter()));
+            final int index = listView.getFirstVisiblePosition();
+            adapter.notifyDataSetChanged();
+            listView.smoothScrollToPosition(index);
+            final TextView tv = root.findViewById(R.id.text_scanning);
+            if (LeScanner.results.size() > 0) {
+                tv.setText(R.string.scanning_more);
+            } else if (ITagsDb.getDevices(getActivity()).size() > 0) {
+                tv.setText(R.string.scanning_new);
+            } else {
+                tv.setText(R.string.scanning);
+            }
+        });
     }
 
     @Override
