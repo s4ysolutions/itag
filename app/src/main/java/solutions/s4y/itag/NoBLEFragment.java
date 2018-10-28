@@ -28,8 +28,8 @@ public class NoBLEFragment extends Fragment {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onResume() {
+        super.onResume();
         ITagApplication.faNoBluetooth();
     }
 }
