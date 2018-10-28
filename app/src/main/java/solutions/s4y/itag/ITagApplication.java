@@ -122,6 +122,10 @@ public final class ITagApplication extends Application {
         fa("itag_itag_found");
     }
 
+    static public void faITagFindStopped() {
+        fa("itag_itag_find_stopped");
+    }
+
     static public void faITagLost(boolean error) {
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "itag_itag_lost_error");

@@ -15,6 +15,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -274,16 +276,27 @@ public class ITagGatt {
                 Log.d(LT, "GattCallback.onCharacteristicWrite: addr=" + gatt.getDevice().getAddress()
                         + " characteristic=" + characteristic.getUuid() + " value=" + characteristic.getStringValue(0));
             }
+            final int value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0);
             mIsTransmitting = false;
             if (mIsStartingITagFind) {
+                if (value == NO_ALERT) {
+                    Crashlytics.logException(new Exception("onCharacteristicWrite mIsStartingITagFind but value=0"));
+                }
                 mIsStartingITagFind = false;
                 mIsFindingITag = true;
             } else if (mIsStoppingITagFind) {
+                if (value != NO_ALERT) {
+                    Crashlytics.logException(new Exception("onCharacteristicWrite mIsStoppingITagFind but value!=0"));
+                }
                 mIsStoppingITagFind = false;
                 mIsFindingITag = false;
             }
             notifyITagChanged();
-            ITagApplication.faITagFound();
+            if (value==0) {
+                ITagApplication.faITagFindStopped();
+            }else{
+                ITagApplication.faITagFound();
+            }
         }
 
         private int mClicksCount = 0;
