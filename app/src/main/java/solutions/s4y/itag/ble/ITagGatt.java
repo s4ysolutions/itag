@@ -165,6 +165,7 @@ public class ITagGatt {
             mHandler.removeCallbacks(mForceDisconnect);
 
             if (status == GATT_SUCCESS) {
+                mIsError = false;
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     if (BuildConfig.DEBUG) {
                         Log.d(LT,
@@ -190,6 +191,7 @@ public class ITagGatt {
                 // 8 to be know as disconnection status
                 if (status != 8) {
                     if (status == 133 && mContext != null) {
+                        mIsError = false;
                         mHandler.postDelayed(() -> connect(mContext, true), 100);
                         // free resource AND avoid endless iteration. Hacky a bit
                         mContext = null;
