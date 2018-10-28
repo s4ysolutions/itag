@@ -51,7 +51,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         Animation animShake = null;
         RssiView rssiView = itagLayout.findViewById(R.id.rssi);
         int rssi = -1000;
-        if (mainActivity.mITagsServiceBound) {
+        if (mainActivity.mITagsServiceBound && mainActivity.mBluetoothAdapter.enable()) {
             ITagsService service = mainActivity.mITagsService;
             ITagGatt gatt = service.getGatt(device.addr, false);
             if (gatt.isConnecting()) {

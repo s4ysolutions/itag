@@ -12,9 +12,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
@@ -35,6 +37,8 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     public BluetoothAdapter mBluetoothAdapter;
     public ITagsService mITagsService;
     public boolean mITagsServiceBound;
+
+    private static final String LT = ITagsService.class.getName();
 
     public interface ServiceBoundListener {
         void onBoundingChanged(@NonNull final MainActivity activity);
@@ -107,6 +111,18 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
     private int mEnableAttempts = 0;
 
+    private boolean isFirstLaunch() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        return sharedPref.getBoolean("first", true);
+    }
+
+    private void setNotFirstLaunch() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor ed=sharedPref.edit();
+        ed.putBoolean("first", false);
+        ed.apply();
+    }
+
     private void setupContent() {
         final FragmentManager fragmentManager = getFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -125,20 +141,33 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                 mSelectedFragment = FragmentType.OTHER;
             } else {
                 if (mBluetoothAdapter.isEnabled()) {
+                    setNotFirstLaunch();
                     mEnableAttempts = 0;
                     if (mSelectedFragment != FragmentType.ITAGS) {
                         fragment = new ITagsFragment();
                         mSelectedFragment = FragmentType.ITAGS;
                     }
                 } else {
-                    if (mEnableAttempts < 3) {
+                    if (mEnableAttempts < 3 && isFirstLaunch()) {
                         mBluetoothAdapter.enable();
                         mEnableAttempts++;
-                        if (mEnableAttempts==1) {
-                            Toast.makeText(this, R.string.try_enable_bt,Toast.LENGTH_LONG).show();
+                        if (BuildConfig.DEBUG) {
+                            Log.d(LT, "setupContent BT disabled, enable attempt=" + mEnableAttempts);
+                        }
+                        if (mEnableAttempts == 1) {
+                            Toast.makeText(this, R.string.try_enable_bt, Toast.LENGTH_LONG).show();
+                        }
+                        try {
+                            // A bit against rules but ok in this situation
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
                         setupContent();
-                    }else {
+                    } else {
+                        if (BuildConfig.DEBUG) {
+                            Log.d(LT, "setupContent BT disabled, auto enable failed");
+                        }
                         fragment = new DisabledBLEFragment();
                         mSelectedFragment = FragmentType.OTHER;
                     }
@@ -181,6 +210,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     };
 
     private boolean mIsServiceStartedUnbind;
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -190,7 +220,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         LeScanner.addListener(this);
         ITagsDb.addListener(this);
         // run the service on the activity start if there are remebered itags
-        mIsServiceStartedUnbind=ITagsService.start(this);
+        mIsServiceStartedUnbind = ITagsService.start(this);
     }
 
     @Override
@@ -198,7 +228,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         if (ITagsDb.getDevices(this).size() > 0) {
             if (!mIsServiceStartedUnbind) {
                 ITagsService.start(this, true);
-            }else {
+            } else {
                 if (mITagsServiceBound) {
                     mITagsService.addToForeground();
                 }
@@ -255,15 +285,15 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             return;
         }
         ITagGatt gatt = mITagsService.getGatt(device.addr, true);
-        boolean needNotify=true;
+        boolean needNotify = true;
         if (gatt.isFindingITag()) {
             gatt.stopFindITag();
-            needNotify=false;
+            needNotify = false;
         }
-        if (mITagsServiceBound && mITagsService.isSound()){
+        if (mITagsServiceBound && mITagsService.isSound()) {
             mITagsService.stopSound();
         }
-        if (needNotify ){
+        if (needNotify) {
             Toast.makeText(this, R.string.help_longpress, Toast.LENGTH_SHORT).show();
         }
     }
@@ -319,14 +349,14 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
     public void onLink(@NonNull View sender) {
         ITagDevice device = (ITagDevice) sender.getTag();
-        device.linked=!device.linked;
+        device.linked = !device.linked;
         ITagsDb.save(MainActivity.this);
         ITagsDb.notifyChange();
         if (device.linked)
             ITagApplication.faUnmuteTag();
         else
             ITagApplication.faMuteTag();
-        if (mITagsServiceBound && mITagsService.isSound() && !device.linked){
+        if (mITagsServiceBound && mITagsService.isSound() && !device.linked) {
             mITagsService.stopSound();
         }
     }
@@ -342,27 +372,28 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         SetNameDialogFragment.device = device;
         new SetNameDialogFragment().show(getFragmentManager(), "setname");
     }
-/*
-1. do not want to use appcompat
-2. v28 of appcompat is not compatible with com.google.firebase:firebase-core:16.0.4
-    @Override
-    protected void onRequestPermissionsResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            switch (requestCode) {
-                case REQUEST_ENABLE_BT:
-                    setupContent();
-                    break;
-                case REQUEST_ENABLE_LOCATION:
-                    if (LeScanner.isScanRequestAbortedBecauseOfPermission && mBluetoothAdapter != null) {
-                        LeScanner.startScan(mBluetoothAdapter, this);
-                    }
-                    break;
-            }
-        }
 
-    }
-*/
+    /*
+    1. do not want to use appcompat
+    2. v28 of appcompat is not compatible with com.google.firebase:firebase-core:16.0.4
+        @Override
+        protected void onRequestPermissionsResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+            if (resultCode == RESULT_OK) {
+                switch (requestCode) {
+                    case REQUEST_ENABLE_BT:
+                        setupContent();
+                        break;
+                    case REQUEST_ENABLE_LOCATION:
+                        if (LeScanner.isScanRequestAbortedBecauseOfPermission && mBluetoothAdapter != null) {
+                            LeScanner.startScan(mBluetoothAdapter, this);
+                        }
+                        break;
+                }
+            }
+
+        }
+    */
     @Override
     public void onStartScan() {
         setupContent();
