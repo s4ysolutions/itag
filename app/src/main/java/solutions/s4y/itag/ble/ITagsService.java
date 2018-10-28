@@ -6,8 +6,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.TaskStackBuilder;
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -38,7 +41,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     private boolean mChannelCreated;
     private boolean mChannelDisconnectedCreated;
 
-    private static final String T = ITagsService.class.getName();
+    private static final String LT = ITagsService.class.getName();
 
     @NonNull
     private HashMap<String, ITagGatt> mGatts = new HashMap<>(4);
@@ -52,6 +55,30 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
     @NonNull
     private IBinder mBinder = new GattBinder();
+
+    private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, @NonNull Intent intent) {
+            if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
+                final int bluetoothState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
+                Log.d(LT, "bluetooth change state: " + bluetoothState);
+                if (bluetoothState == BluetoothAdapter.STATE_ON) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d(LT, "ACTION_STATE_CHANGED STATE_ON");
+                    }
+                    connect();
+                } else if (bluetoothState == BluetoothAdapter.STATE_OFF) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d(LT, "ACTION_STATE_CHANGED STATE_OFF");
+                    }
+                    for (ITagGatt gatt : mGatts.values()) {
+                        if (gatt != null)
+                            gatt.disconnect();
+                    }
+                }
+            }
+        }
+    };
 
     public ITagsService() {
     }
@@ -74,17 +101,23 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     public void onCreate() {
         super.onCreate();
         if (BuildConfig.DEBUG) {
-            Log.d(T, "onCreate");
+            Log.d(LT, "onCreate");
         }
         ITagGatt.addOnITagChangeListener(this);
         ITagsDb.addListener(this);
+
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        this.registerReceiver(mBluetoothReceiver, filter);
+        connect();
     }
 
     @Override
     public void onDestroy() {
         if (BuildConfig.DEBUG) {
-            Log.d(T, "onDestroy");
+            Log.d(LT, "onDestroy");
         }
+
+        this.unregisterReceiver(mBluetoothReceiver);
         ITagGatt.removeOnITagChangeListener(this);
         ITagsDb.removeListener(this);
         for (ITagGatt gatt : mGatts.values()) {
@@ -101,7 +134,12 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         if (gatt == null) {
             gatt = new ITagGatt(addr);
             mGatts.put(addr, gatt);
-            if (connect) gatt.connect(this);
+
+        }
+        if (connect) {
+            if (!gatt.isConnected() && !gatt.isConnecting()) {
+                gatt.connect(this);
+            }
         }
         return gatt;
     }
