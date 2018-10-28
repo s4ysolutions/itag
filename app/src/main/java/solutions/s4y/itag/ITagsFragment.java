@@ -13,6 +13,8 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -47,26 +49,33 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         btnAlert.setTag(device);
 
         MainActivity mainActivity = (MainActivity) getActivity();
-        int statusId = R.drawable.bt_disabled;
+        int statusDrawableId = R.drawable.bt_disabled;
+        int statusTextId = R.string.bt_disabled;
         Animation animShake = null;
         RssiView rssiView = itagLayout.findViewById(R.id.rssi);
         int rssi = -1000;
         if (mainActivity.mITagsServiceBound && mainActivity.mBluetoothAdapter.enable()) {
             ITagsService service = mainActivity.mITagsService;
             ITagGatt gatt = service.getGatt(device.addr, false);
-            if (gatt.isConnecting()) {
-                statusId = R.drawable.bt_connecting;
+            if (gatt.isError()) {
+                statusDrawableId = R.drawable.bt_setup;
+                statusTextId = R.string.bt_setup;
+            } else if (gatt.isConnecting()) {
+                statusDrawableId = R.drawable.bt_connecting;
+                statusTextId = R.string.bt_connecting;
             } else if (gatt.isTransmitting()) {
-                statusId = R.drawable.bt_call;
-            } else if (gatt.isError()) {
-                statusId = R.drawable.bt_setup;
+                statusDrawableId = R.drawable.bt_call;
+                statusTextId = R.string.bt_call;
             } else if (gatt.isConnected()) {
-                statusId = R.drawable.bt;
+                statusDrawableId = R.drawable.bt;
+                statusTextId = R.string.bt;
                 rssi = gatt.mRssi;
+            } else {
+                statusTextId = R.string.bt_unk;
             }
             if (gatt.isFindingITag() ||
                     gatt.isFindingPhone() ||
-                    !gatt.isConnected() && device.linked && mainActivity.mITagsServiceBound) {
+                    gatt.isError() && device.linked && mainActivity.mITagsServiceBound) {
                 animShake = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
         }
@@ -104,11 +113,14 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         }
 
         final ImageView imgStatus = itagLayout.findViewById(R.id.bt_status);
-        imgStatus.setImageResource(statusId);
+        imgStatus.setImageResource(statusDrawableId);
 
         final TextView textName = itagLayout.findViewById(R.id.text_name);
 //        textName.setText(device.name!=null && device.name.length()>0 ?device.name:device.addr);
         textName.setText(device.name);
+
+        final TextView textStatus = itagLayout.findViewById(R.id.text_status);
+        textStatus.setText(statusTextId);
     }
 
     private void setupTags(@NonNull ViewGroup root) {

@@ -284,6 +284,8 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             ITagApplication.handleError(new Exception("No device"));
             return;
         }
+        // NOTE: will reconnect if not connected
+        //       ergo error reset here
         ITagGatt gatt = mITagsService.getGatt(device.addr, true);
         boolean needNotify = true;
         if (gatt.isFindingITag()) {

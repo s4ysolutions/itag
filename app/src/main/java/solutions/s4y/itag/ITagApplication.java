@@ -25,7 +25,7 @@ public final class ITagApplication extends Application {
         context = this;
     }
 
-    static public void handleError(@NonNull Throwable th) {
+    static public void handleError(@NonNull Throwable th, boolean toast) {
         new Handler(Looper.getMainLooper()).post(() -> {
             if (context == null) {
                 Log.e(LT, "Attempt to handle error before application created", th);
@@ -36,6 +36,10 @@ public final class ITagApplication extends Application {
                 Crashlytics.logException(th);
             }
         });
+    }
+
+    static public void handleError(@NonNull Throwable th) {
+        handleError(th, BuildConfig.DEBUG);
     }
 
     private static FirebaseAnalytics sFirebaseAnalytics;

@@ -95,7 +95,7 @@ public class ITagsDb {
         try {
             file = getDbFile(context, fileName);
         } catch (IOException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
             e.printStackTrace();
             return;
         }
@@ -117,13 +117,13 @@ public class ITagsDb {
             }
             ois.close();
         } catch (FileNotFoundException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
             e.printStackTrace();
         } catch (IOException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
             e.printStackTrace();
         }
     }
@@ -195,10 +195,10 @@ public class ITagsDb {
             oos.writeObject(composeDevices  );
             oos.close();
         } catch (FileNotFoundException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
             e.printStackTrace();
         } catch (IOException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
             e.printStackTrace();
         }
     }
@@ -210,10 +210,10 @@ public class ITagsDb {
             oos.close();
             updateOld(context);
         } catch (FileNotFoundException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
             e.printStackTrace();
         } catch (IOException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
             e.printStackTrace();
         }
     }

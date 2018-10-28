@@ -46,6 +46,13 @@
 
     <string name="try_enable_bt">Bluetooth is turning on</string>
     <string name="try_enable_bt_failed">You need to Enable Bluetooth manually in the Device Settings.</string>
-    <string name="open_bt_settings">Open Bluetooth Settings</string>
+    <string name="open_bt_settings">Turn on Bluetooth</string>
+
+    <string name="bt_disabled">off</string>
+    <string name="bt_connecting">hooking</string>
+    <string name="bt_setup">lost</string>
+    <string name="bt_call">yelling</string>
+    <string name="bt">near by</string>
+    <string name="bt_unk">faint</string>
 
 </resources>

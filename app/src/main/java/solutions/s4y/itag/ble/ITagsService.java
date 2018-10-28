@@ -16,6 +16,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -66,7 +67,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                     if (BuildConfig.DEBUG) {
                         Log.d(LT, "ACTION_STATE_CHANGED STATE_ON");
                     }
-                    connect();
+                    new Handler().postDelayed(() -> connect(),1000);
                 } else if (bluetoothState == BluetoothAdapter.STATE_OFF) {
                     if (BuildConfig.DEBUG) {
                         Log.d(LT, "ACTION_STATE_CHANGED STATE_OFF");
@@ -265,7 +266,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             mPlayer.start();
             mSoundingITags.add(addr);
         } catch (IOException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
         } finally {
             if (afd != null) {
                 try {
@@ -290,7 +291,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             mPlayer.start();
             mSoundingITags.add(addr);
         } catch (IOException e) {
-            ITagApplication.handleError(e);
+            ITagApplication.handleError(e, true);
         } finally {
             if (afd != null) {
                 try {

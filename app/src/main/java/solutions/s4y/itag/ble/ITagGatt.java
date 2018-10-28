@@ -165,6 +165,8 @@ public class ITagGatt {
             mHandler.removeCallbacks(mForceDisconnect);
 
             if (status == GATT_SUCCESS) {
+                // keep context only for very first connect, see 133 status code
+                mContext = null;
                 mIsError = false;
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     if (BuildConfig.DEBUG) {
@@ -188,23 +190,21 @@ public class ITagGatt {
                 if (BuildConfig.DEBUG) {
                     Log.d(LT, "GattCallback.onConnectionStateChange: not GATT_SUCCESS, status=" + status);
                 }
-                // 8 to be know as disconnection status
-                if (status != 8) {
-                    if (status == 133 && mContext != null) {
-                        mIsError = false;
-                        mHandler.postDelayed(() -> connect(mContext, true), 100);
-                        // free resource AND avoid endless iteration. Hacky a bit
-                        mContext = null;
-                    } else {
-                        ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
-                        mIsError = true;
-                    }
-                }else{
+                // unknown error (133) during connection (mContext!=null)
+                if (status == 133 && mContext != null) {
                     mIsError = false;
-                    mIsConnected = false;
+                    mHandler.postDelayed(() -> connect(mContext, true), 100);
+                } else {
+                    mIsError = true;
+                    notifyITagChanged();
+                    ITagApplication.faITagLost(mIsError);
+                    // 8 is confirmed status iTag has lost
+                    if (status != 8 ){
+                        ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
+                    }
                 }
-                notifyITagChanged();
-                ITagApplication.faITagLost(mIsError);
+                // keep context only for very first connect
+                mContext = null;
             }
         }
 
@@ -537,7 +537,7 @@ public class ITagGatt {
     }
 
     public boolean isError() {
-        // without mIsConnected mIsError may overwrite other statuse
+        // without mIsConnected mIsError may overwrite other statuses
         // but error may happen beyond connected state boundaries
         return /* mIsConnected && */ mIsError;
     }
