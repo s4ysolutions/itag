@@ -13,6 +13,9 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
@@ -24,7 +27,7 @@ import solutions.s4y.itag.ble.LeScanner;
 public class LeScanFragment extends Fragment implements LeScanner.LeScannerListener {
     private class Adapter extends ArrayAdapter<LeScanResult> {
         Adapter() {
-            super(getActivity(), R.layout.fragment_le_scan_item, LeScanner.results);
+            super(getActivity(), R.layout.fragment_le_scan_item, new ArrayList<>(LeScanner.results));
         }
 
         @NonNull
@@ -97,23 +100,25 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
     }
 
     private void updateResultsList() {
-        getActivity().runOnUiThread(() -> {
-            View root = getView();
-            if (root == null) return;
-            final ListView listView = root.findViewById(R.id.results_list);
-            final Adapter adapter = ((Adapter) (listView.getAdapter()));
-            final int index = listView.getFirstVisiblePosition();
-            adapter.notifyDataSetChanged();
-            listView.smoothScrollToPosition(index);
-            final TextView tv = root.findViewById(R.id.text_scanning);
-            if (LeScanner.results.size() > 0) {
-                tv.setText(R.string.scanning_more);
-            } else if (ITagsDb.getDevices(getActivity()).size() > 0) {
-                tv.setText(R.string.scanning_new);
-            } else {
-                tv.setText(R.string.scanning);
-            }
-        });
+        View root = getView();
+        if (root == null) return;
+        final ListView listView = root.findViewById(R.id.results_list);
+        final Adapter adapter = ((Adapter) (listView.getAdapter()));
+        final int index = listView.getFirstVisiblePosition();
+        adapter.clear();
+        for(LeScanResult result: LeScanner.results) {
+            adapter.add(result);
+        }
+        adapter.notifyDataSetChanged();
+        listView.smoothScrollToPosition(index);
+        final TextView tv = root.findViewById(R.id.text_scanning);
+        if (LeScanner.results.size() > 0) {
+            tv.setText(R.string.scanning_more);
+        } else if (ITagsDb.getDevices(getActivity()).size() > 0) {
+            tv.setText(R.string.scanning_new);
+        } else {
+            tv.setText(R.string.scanning);
+        }
     }
 
     @Override
