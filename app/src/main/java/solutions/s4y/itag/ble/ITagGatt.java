@@ -411,13 +411,17 @@ public class ITagGatt {
         }
         notifyITagChanged();
         mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mAddr);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && workaraund133) {
-            ITagApplication.handleError(new Exception("The device seems to have a problem. Anti lost feature may fail."));
-            mGatt = mDevice.connectGatt(contex, false, mCallback, TRANSPORT_LE);
-        } else {
-            mGatt = mDevice.connectGatt(contex, true, mCallback);
+        if (mDevice!=null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && workaraund133) {
+                ITagApplication.handleError(new Exception("The device seems to have a problem. Anti lost feature may fail."));
+                mGatt = mDevice.connectGatt(contex, false, mCallback, TRANSPORT_LE);
+            } else {
+                mGatt = mDevice.connectGatt(contex, true, mCallback);
+            }
+            mDevicesCount = ITagsDb.getDevices(contex).size();
+        }else{
+            ITagApplication.handleError(new Exception("getRemoteDevice "+mAddr+" return null"));
         }
-        mDevicesCount = ITagsDb.getDevices(contex).size();
     }
 
     private static final int RSSI_INTERVAL_MS = 1000;
