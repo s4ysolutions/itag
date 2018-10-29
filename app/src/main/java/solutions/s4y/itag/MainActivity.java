@@ -286,10 +286,14 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
         // NOTE: will reconnect if not connected
         //       ergo error reset here
-        ITagGatt gatt = mITagsService.getGatt(device.addr, true);
+        ITagGatt gatt = mITagsService.getGatt(device.addr, false);
         boolean needNotify = true;
         if (gatt.isFindingITag()) {
             gatt.stopFindITag();
+            needNotify = false;
+        }
+        if (gatt.isError()) {
+            gatt.connect(this);
             needNotify = false;
         }
         if (mITagsServiceBound && mITagsService.isSound()) {
