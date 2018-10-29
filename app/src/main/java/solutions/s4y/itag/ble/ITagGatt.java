@@ -569,7 +569,7 @@ public class ITagGatt {
         notifyITagFindingPhone(true);
     }
 
-    void stopFindPhone() {
+    public void stopFindPhone() {
         mIsFindingPhone = false;
         notifyITagFindingPhone(false);
     }

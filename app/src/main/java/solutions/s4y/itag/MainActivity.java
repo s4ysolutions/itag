@@ -296,6 +296,9 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             gatt.connect(this);
             needNotify = false;
         }
+        if (gatt.isFindingPhone()) {
+            gatt.stopFindPhone();
+        }
         if (mITagsServiceBound && mITagsService.isSound()) {
             mITagsService.stopSound();
         }
