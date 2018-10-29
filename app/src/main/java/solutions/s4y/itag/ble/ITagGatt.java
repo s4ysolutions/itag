@@ -165,7 +165,7 @@ public class ITagGatt {
             mHandler.removeCallbacks(mForceDisconnect);
 
             if (status == GATT_SUCCESS) {
-                // keep context only for very first connect, see 133 status code
+                // keep context only for very first connectAll, see 133 status code
                 mContext = null;
                 mIsError = false;
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
@@ -199,11 +199,11 @@ public class ITagGatt {
                     notifyITagChanged();
                     ITagApplication.faITagLost(mIsError);
                     // 8 is confirmed status iTag has lost
-                    if (status != 8 ){
+                    if (status != 8) {
                         ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
                     }
                 }
-                // keep context only for very first connect
+                // keep context only for very first connectAll
                 mContext = null;
             }
         }
@@ -254,7 +254,7 @@ public class ITagGatt {
                         }
                     }
                 }
-                mIsError = false; // we need to reset error because of auto connect
+                mIsError = false; // we need to reset error because of auto connectAll
                 mIsConnecting = false;
                 mIsConnected = true;
                 if (mIsRssi) {
@@ -278,7 +278,7 @@ public class ITagGatt {
                 Log.d(LT, "GattCallback.onCharacteristicWrite: addr=" + gatt.getDevice().getAddress()
                         + " characteristic=" + characteristic.getUuid() + " value=" + characteristic.getStringValue(0));
             }
-            final int value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0);
+            final int value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             mIsTransmitting = false;
             if (mIsStartingITagFind) {
                 if (value == NO_ALERT) {
@@ -294,9 +294,9 @@ public class ITagGatt {
                 mIsFindingITag = false;
             }
             notifyITagChanged();
-            if (value==0) {
+            if (value == 0) {
                 ITagApplication.faITagFindStopped();
-            }else{
+            } else {
                 ITagApplication.faITagFound();
             }
         }
@@ -391,13 +391,13 @@ public class ITagGatt {
     private void connect(@NonNull final Context contex, boolean workaraund133) {
         if (BuildConfig.DEBUG) {
             if (mGatt != null) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connect: mGatt!=null"));
+                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mGatt!=null"));
             }
             if (mIsConnected) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connect: mIsConnected"));
+                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mIsConnected"));
             }
             if (mIsConnecting) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connect: mIsConnecting"));
+                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mIsConnecting"));
             }
         }
         if (mGatt != null) {
@@ -463,7 +463,7 @@ public class ITagGatt {
                 ITagApplication.handleError(new Exception("DeviceGatt.disconnect: mGatt==null"));
             }
             if (!mIsConnected) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connect: !mIsConnected"));
+                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: !mIsConnected"));
             }
         }
         reset();
@@ -478,7 +478,7 @@ public class ITagGatt {
                 ITagApplication.handleError(new Exception("DeviceGatt.disconnect: mGatt==null"));
             }
             if (!mIsConnected && !mIsConnecting) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connect: !mIsConnected && !mIsConnecting"));
+                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: !mIsConnected && !mIsConnecting"));
             }
         }
         stopListenRssi();

@@ -238,7 +238,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     @Override
     public void onITagChange(@NotNull ITagGatt gatt) {
         getActivity().runOnUiThread(() -> {
-            // handle cases like "onBound", connect, etc
+            // handle cases like "onBound", connectAll, etc
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "onITagChange mIsRssiStarted=" + mIsRssiStarted + " addr=" + gatt.mAddr);
             }

@@ -196,7 +196,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                                        @NonNull IBinder binder) {
             mITagsService = ((ITagsService.GattBinder) binder).getService();
             mITagsServiceBound = true;
-            mITagsService.connect();
+//            mITagsService.connectAll();
             mITagsService.removeFromForeground();
             setupContent();
             notifyServiceBoundChanged();

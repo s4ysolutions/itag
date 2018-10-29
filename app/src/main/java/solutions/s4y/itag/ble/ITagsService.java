@@ -67,7 +67,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                     if (BuildConfig.DEBUG) {
                         Log.d(LT, "ACTION_STATE_CHANGED STATE_ON");
                     }
-                    new Handler().postDelayed(() -> connect(),1000);
+                    new Handler().postDelayed(() -> connectAll(),1000);
                 } else if (bluetoothState == BluetoothAdapter.STATE_OFF) {
                     if (BuildConfig.DEBUG) {
                         Log.d(LT, "ACTION_STATE_CHANGED STATE_OFF");
@@ -94,7 +94,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
     @Override
     public IBinder onBind(Intent intent) {
-        connect();
+        // connectAll();
         return mBinder;
     }
 
@@ -109,7 +109,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         this.registerReceiver(mBluetoothReceiver, filter);
-        connect();
+        connectAll();
     }
 
     @Override
@@ -145,7 +145,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         return gatt;
     }
 
-    public void connect() {
+    public void connectAll() {
         for (ITagDevice device : ITagsDb.getDevices(this)) {
             getGatt(device.addr, true);
         }
