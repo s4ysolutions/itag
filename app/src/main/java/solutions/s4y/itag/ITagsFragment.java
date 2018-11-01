@@ -13,25 +13,28 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.crashlytics.android.Crashlytics;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import solutions.s4y.itag.ble.ITagGatt;
 import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagsService;
+import solutions.s4y.itag.history.HistoryRecord;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener, MainActivity.ServiceBoundListener {
+public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener, MainActivity.ServiceBoundListener, HistoryRecord.HistoryRecordListener {
     private static final String LT = ITagsFragment.class.getName();
+    private Animation mLocationAnimation;
+    private Animation mITagAnimation;
+
 
     public ITagsFragment() {
         // Required empty public constructor
@@ -76,7 +79,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
             if (gatt.isFindingITag() ||
                     gatt.isFindingPhone() ||
                     gatt.isError() && device.linked && mainActivity.mITagsServiceBound) {
-                animShake = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
+                animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
         }
         rssiView.setRssi(rssi);
@@ -121,6 +124,20 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
 
         final TextView textStatus = itagLayout.findViewById(R.id.text_status);
         textStatus.setText(statusTextId);
+
+        final ImageView imageLocation = itagLayout.findViewById(R.id.location);
+        imageLocation.setTag(device);
+
+        Map<String, HistoryRecord> records = HistoryRecord.getHistoryRecords(getActivity());
+
+        if (records.get(device.addr) == null) {
+            mLocationAnimation.cancel();
+            imageLocation.setVisibility(View.GONE);
+        } else {
+            imageLocation.startAnimation(mLocationAnimation);
+            imageLocation.setVisibility(View.VISIBLE);
+        }
+
     }
 
     private void setupTags(@NonNull ViewGroup root) {
@@ -155,6 +172,9 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+
+        mLocationAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shadow_location);
+        mITagAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
 
         return inflater.inflate(R.layout.fragment_itags, container, false);
     }
@@ -206,6 +226,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         MainActivity.addServiceBoundListener(this);
         ITagsDb.addListener(this);
         ITagGatt.addOnITagChangeListener(this);
+        HistoryRecord.addListener(this);
     }
 
     @Override
@@ -213,6 +234,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         if (BuildConfig.DEBUG) {
             Log.d(LT, "onPause");
         }
+        HistoryRecord.removeListener(this);
         ITagGatt.removeOnITagChangeListener(this);
         ITagsDb.removeListener(this);
         MainActivity.removeServiceBoundListener(this);
@@ -282,5 +304,13 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         final View view = getView();
         if (view != null)
             setupTags((ViewGroup) view);
+    }
+
+    @Override
+    public void onHistoryRecordChange() {
+
+        final View view = getView();
+        if (view != null)
+            getActivity().runOnUiThread(() -> setupTags((ViewGroup) view));
     }
 }

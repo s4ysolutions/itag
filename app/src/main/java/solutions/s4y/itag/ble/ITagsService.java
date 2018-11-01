@@ -32,6 +32,7 @@ import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
+import solutions.s4y.itag.history.HistoryRecord;
 
 
 public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
@@ -67,7 +68,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                     if (BuildConfig.DEBUG) {
                         Log.d(LT, "ACTION_STATE_CHANGED STATE_ON");
                     }
-                    new Handler().postDelayed(() -> connectAll(),1000);
+                    new Handler().postDelayed(() -> connectAll(), 1000);
                 } else if (bluetoothState == BluetoothAdapter.STATE_OFF) {
                     if (BuildConfig.DEBUG) {
                         Log.d(LT, "ACTION_STATE_CHANGED STATE_OFF");
@@ -307,36 +308,43 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     public void onITagChange(@NotNull ITagGatt gatt) {
         ITagDevice device = ITagsDb.findByAddr(gatt.mAddr);
         // Sounds if disconnected
-        if (gatt.isError() && device != null && device.linked) {
-            startSoundDisconnected(gatt.mAddr);
-            Notification.Builder builder = new Notification.Builder(this);
-            builder
-                    .setTicker(String.format(getString(R.string.notify_disconnect),
-                            device.name == null || "".equals(device.name) ? "iTag" : device.name))
-                    .setSmallIcon(R.drawable.app)
-                    .setContentTitle(String.format(getString(R.string.notify_disconnect), device.name))
-                    .setContentText(getString(R.string.click_to_silent))
-                    .setAutoCancel(true);
-            Intent intent = new Intent(this, MainActivity.class);
-            TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-            stackBuilder.addParentStack(MainActivity.class);
-            stackBuilder.addNextIntent(intent);
-            PendingIntent pendingIntent =
-                    stackBuilder.getPendingIntent(
-                            0,
-                            PendingIntent.FLAG_UPDATE_CURRENT
-                    );
-            builder.setContentIntent(pendingIntent);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                createDisconnectNotificationChannel();
-                builder.setChannelId(CHANNEL_DISCONNECT_ID);
-            }
-            Notification notification = builder.build();
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (notificationManager != null) {
-                notificationManager.notify(0, notification);
+        if (gatt.isError() && device != null) {
+
+            HistoryRecord.add(ITagsService.this, gatt.mAddr);
+            if (device.linked) {
+                startSoundDisconnected(gatt.mAddr);
+                Notification.Builder builder = new Notification.Builder(this);
+                builder
+                        .setTicker(String.format(getString(R.string.notify_disconnect),
+                                device.name == null || "".equals(device.name) ? "iTag" : device.name))
+                        .setSmallIcon(R.drawable.app)
+                        .setContentTitle(String.format(getString(R.string.notify_disconnect), device.name))
+                        .setContentText(getString(R.string.click_to_silent))
+                        .setAutoCancel(true);
+                Intent intent = new Intent(this, MainActivity.class);
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+                stackBuilder.addParentStack(MainActivity.class);
+                stackBuilder.addNextIntent(intent);
+                PendingIntent pendingIntent =
+                        stackBuilder.getPendingIntent(
+                                0,
+                                PendingIntent.FLAG_UPDATE_CURRENT
+                        );
+                builder.setContentIntent(pendingIntent);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    createDisconnectNotificationChannel();
+                    builder.setChannelId(CHANNEL_DISCONNECT_ID);
+                }
+                Notification notification = builder.build();
+                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (notificationManager != null) {
+                    notificationManager.notify(0, notification);
+                }
             }
         } else {
+            if (gatt.mIsConnected) {
+                HistoryRecord.clear(this, gatt.mAddr);
+            }
             if (isSound(gatt.mAddr)) {
                 stopSound();
             }

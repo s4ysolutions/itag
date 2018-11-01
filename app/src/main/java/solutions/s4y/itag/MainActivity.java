@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import solutions.s4y.itag.ble.ITagGatt;
 import solutions.s4y.itag.ble.ITagsDb;
@@ -31,6 +33,7 @@ import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagsService;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
+import solutions.s4y.itag.history.HistoryRecord;
 
 public class MainActivity extends Activity implements LeScanner.LeScannerListener, ITagsDb.DbListener {
     static public final int REQUEST_ENABLE_LOCATION = 2;
@@ -118,7 +121,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
     private void setNotFirstLaunch() {
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor ed=sharedPref.edit();
+        SharedPreferences.Editor ed = sharedPref.edit();
         ed.putBoolean("first", false);
         ed.apply();
     }
@@ -273,6 +276,27 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                     .setPositiveButton(android.R.string.yes, (dialog, which) -> ITagsDb.forget(this, device))
                     .setNegativeButton(android.R.string.no, (dialog, which) -> dialog.cancel())
                     .show();
+        }
+    }
+
+    public void onLocationClick(@NonNull View sender) {
+        ITagDevice device = (ITagDevice) sender.getTag();
+        if (device == null) {
+            ITagApplication.handleError(new Exception("No device"));
+            return;
+        }
+
+        HistoryRecord record = HistoryRecord.getHistoryRecords(this).get(device.addr);
+        if (record != null) {
+            String uri = String.format(
+                    Locale.ENGLISH, "geo:%f,%f?q=%f,%f(%s)",
+                    record.latitude,
+                    record.longitude,
+                    record.latitude,
+                    record.longitude,
+                    getString(R.string.last_seen));
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            startActivity(intent);
         }
     }
 
@@ -443,5 +467,4 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivity(enableBtIntent);
     }
-
 }

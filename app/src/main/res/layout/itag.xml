@@ -54,19 +54,47 @@
         </LinearLayout>
 
     </LinearLayout>
-
-    <solutions.s4y.itag.ITagImageView
-        android:id="@+id/image_itag"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_gravity="center_horizontal"
         android:layout_weight="1"
+        >
+
+    <solutions.s4y.itag.ITagImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/image_itag"
         android:contentDescription="@string/itag"
         android:longClickable="true"
         android:onClick="onITagClick"
         android:padding="8dp"
         android:scaleType="fitCenter"
         android:src="@drawable/itag_white" />
+
+        <ImageView
+            android:id="@+id/location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:contentDescription="@string/empty"
+            android:onClick="onLocationClick"
+            android:src="@drawable/location"
+            tools:ignore="RtlHardcoded" />
+
+        <solutions.s4y.itag.RssiView
+            android:id="@+id/rssi"
+            android:layout_width="8dp"
+            android:layout_height="64dp"
+            android:layout_gravity="bottom|right"
+            android:layout_marginTop="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginBottom="8dp"
+            tools:ignore="RtlHardcoded" />
+
+    </FrameLayout>
+
 
     <LinearLayout
         style="?android:attr/actionBarStyle"
@@ -75,13 +103,6 @@
         android:orientation="horizontal"
         android:paddingTop="4dp"
         android:paddingBottom="4dp">
-
-        <solutions.s4y.itag.RssiView
-            android:id="@+id/rssi"
-            android:layout_width="8dp"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="4dp"
-            tools:ignore="RtlHardcoded" />
 
         <Space
             android:layout_width="wrap_content"

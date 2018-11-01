@@ -38,7 +38,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'org.jetbrains:annotations:15.0'
-    implementation 'com.android.support:support-annotations:28.0.0-alpha1'
+    implementation 'com.android.support:support-annotations:28.0.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

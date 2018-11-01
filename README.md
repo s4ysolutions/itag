@@ -36,6 +36,7 @@ One may wonder why it is necessary to double click the device in order to search
 * RSSI indicators shows signal strength and make provide rough idea about how far the lost device is
 * Label the device
 * Set device color
+* Show last seen position on Google Map
 
 ## Price
 
@@ -46,5 +47,3 @@ Moreover the application is open source and nobody is prevented from use it with
 ## Privace Policy
 
 We gather info about the possible crashes and misbehaviour and send it to Google servers. We got technical info like phone model but we got no personal info like a number, account or IMEI.
-While the app requests location permission we do not issue even one request to get your position and do not transmit it over internet. The permission is necessary to let the iTag devices to be connected.
-It is possible though we will add "last seen location" feature some day and thus the geo location will be acquired then.

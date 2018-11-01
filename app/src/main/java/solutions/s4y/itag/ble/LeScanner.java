@@ -130,18 +130,18 @@ public final class LeScanner {
     static public void startScan(@NonNull final BluetoothAdapter bluetoothAdapter, @NonNull MainActivity activity) {
         // isScanRequestAbortedBecauseOfPermission=false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (activity.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                if (activity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            if (activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (activity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                     builder.setMessage(R.string.request_location_permission)
                             .setTitle(R.string.request_permission_title)
-                            .setPositiveButton(android.R.string.ok, (dialog, which) -> activity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
+                            .setPositiveButton(android.R.string.ok, (dialog, which) -> activity.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
                             .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
                             .show();
                     return;
                 } else {
                     // isScanRequestAbortedBecauseOfPermission=true;
-                    activity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
+                    activity.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
                     return;
                 }
             }

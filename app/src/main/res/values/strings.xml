@@ -54,5 +54,6 @@
     <string name="bt_call">yelling</string>
     <string name="bt">near by</string>
     <string name="bt_unk">faint</string>
+    <string name="last_seen">Last+seen+here</string>
 
 </resources>
