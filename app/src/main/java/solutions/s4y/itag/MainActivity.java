@@ -288,6 +288,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
 
         HistoryRecord record = HistoryRecord.getHistoryRecords(this).get(device.addr);
         if (record != null) {
+            ITagApplication.faShowLastLocation();
             String uri = String.format(
                     Locale.ENGLISH, "geo:%f,%f?q=%f,%f(%s)",
                     record.latitude,

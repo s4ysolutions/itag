@@ -150,4 +150,9 @@ public final class ITagApplication extends Application {
     static public void faITagConnected() {
         fa("itag_user_connect");
     }
+
+    static public void faShowLastLocation() {
+        fa("itag_show_last_location");
+    }
+
 }
