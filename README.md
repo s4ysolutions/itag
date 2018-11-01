@@ -28,7 +28,7 @@ One may wonder why it is necessary to double click the device in order to search
 ## Features
 
 * Alarm on a device out of range with the sound and pop up notification
-* Search the things attached to an iTag device (keys, wallet, etc) from the samrthone
+* Search the things attached to an iTag device (keys, wallet, etc) from the smarthone
 * Search a smarthone from any iTag device
 * Up to 4 iTag devices can be remembered
 * iTag image animation to show of which iTag devices is acting
