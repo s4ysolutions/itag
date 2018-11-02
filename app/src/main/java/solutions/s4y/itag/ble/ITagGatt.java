@@ -391,8 +391,8 @@ public class ITagGatt {
 
     private void connect(@NonNull final Context contex, boolean workaraund133) {
         if (BuildConfig.DEBUG) {
-            if (mGatt != null) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mGatt!=null"));
+            if (mGatt != null && !mIsError) {
+                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mGatt!=null && !mIsError"));
             }
             if (mIsConnected) {
                 ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mIsConnected"));
