@@ -473,13 +473,13 @@ public class ITagGatt {
 
     private Runnable mForceDisconnect = this::endConnection;
 
-    public void disconnect() {
+    public void disconnect(boolean force) {
         if (BuildConfig.DEBUG) {
             if (mGatt == null) {
                 ITagApplication.handleError(new Exception("DeviceGatt.disconnect: mGatt==null"));
             }
-            if (!mIsConnected && !mIsConnecting) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: !mIsConnected && !mIsConnecting"));
+            if (!mIsConnected && !mIsConnecting && !force) {
+                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: !mIsConnected && !mIsConnecting&& !force"));
             }
         }
         stopListenRssi();
@@ -490,6 +490,10 @@ public class ITagGatt {
         } else {
             endConnection();
         }
+    }
+
+    public void disconnect() {
+        disconnect(false);
     }
 
     public void findITag() {

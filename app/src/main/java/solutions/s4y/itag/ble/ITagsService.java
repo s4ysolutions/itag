@@ -75,7 +75,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                     }
                     for (ITagGatt gatt : mGatts.values()) {
                         if (gatt != null)
-                            gatt.disconnect();
+                            gatt.disconnect(true);
                     }
                 }
             }
