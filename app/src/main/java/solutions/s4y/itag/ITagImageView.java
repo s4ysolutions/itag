@@ -107,7 +107,7 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
                     builder.setMessage(R.string.confirm_disconnect)
                             .setTitle(R.string.confirm_title)
                             .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                                gatt.disconnect();
+                                gatt.disconnect(true);
                                 Toast.makeText(getContext(), R.string.disconnect,Toast.LENGTH_SHORT).show();
                                 ITagApplication.faITagDisconnected();
                             })
