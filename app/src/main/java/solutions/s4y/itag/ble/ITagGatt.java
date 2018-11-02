@@ -394,8 +394,8 @@ public class ITagGatt {
             if (mGatt != null && !mIsError) {
                 ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mGatt!=null && !mIsError"));
             }
-            if (mIsConnected) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mIsConnected"));
+            if (mIsConnected && !mIsError) {
+                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mIsConnected && !mIsError"));
             }
             if (mIsConnecting) {
                 ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mIsConnecting"));
