@@ -475,8 +475,8 @@ public class ITagGatt {
 
     public void disconnect(boolean force) {
         if (BuildConfig.DEBUG) {
-            if (mGatt == null) {
-                ITagApplication.handleError(new Exception("DeviceGatt.disconnect: mGatt==null"));
+            if (mGatt == null && !force) {
+                ITagApplication.handleError(new Exception("DeviceGatt.disconnect: mGatt==null && !force"));
             }
             if (!mIsConnected && !mIsConnecting && !force) {
                 ITagApplication.handleError(new Exception("DeviceGatt.connectAll: !mIsConnected && !mIsConnecting&& !force"));
