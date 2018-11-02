@@ -84,7 +84,11 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
                 if (gatt.isFindingITag()) {
                     gatt.stopFindITag();
                 } else {
-                    gatt.findITag();
+                    if (gatt.isConnected()) {
+                        gatt.findITag();
+                    }else{
+                        Toast.makeText(getContext(),R.string.not_connected,Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         }

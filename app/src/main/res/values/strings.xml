@@ -56,4 +56,6 @@
     <string name="bt_unk">faint</string>
     <string name="last_seen">Last+seen+here</string>
 
+    <string name="not_connected">Not connected</string>
+
 </resources>
