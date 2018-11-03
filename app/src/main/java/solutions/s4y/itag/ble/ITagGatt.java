@@ -387,11 +387,11 @@ public class ITagGatt {
         notifyITagChanged();
     }
 
-    public void     connect(@NonNull final Context contex) {
+    public void connect(@NonNull final Context contex) {
         connect(contex, false);
     }
 
-    private void connect(@NonNull final Context contex, boolean workaraund133) {
+    private void connect(@NonNull final Context context, boolean workaraund133) {
         if (BuildConfig.DEBUG) {
             if (mGatt != null && !mIsError) {
                 ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mGatt!=null && !mIsError"));
@@ -410,21 +410,29 @@ public class ITagGatt {
         reset();
         mIsConnecting = true;
         if (!workaraund133) { // avoid endless iteration
-            mContext = contex;
+            mContext = context;
         }
         notifyITagChanged();
         mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mAddr);
-        if (mDevice!=null) {
+        if (mDevice != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && workaraund133) {
                 ITagApplication.handleError(new Exception("The device seems to have a problem. Anti lost feature may fail."));
-                Toast.makeText(contex, R.string.status133,Toast.LENGTH_SHORT).show();
-                mGatt = mDevice.connectGatt(contex, false, mCallback, TRANSPORT_LE);
+                if (context == null) {
+                    // must never happen, but see https://github.com/s4ysolutions/itag/issues/32
+                    // 3 lines below is quick fix and investigation tool
+                    ITagApplication.handleError(new Exception("context must not be null"));
+                    Toast.makeText(ITagApplication.context , R.string.status133, Toast.LENGTH_SHORT).show();
+                    mGatt = mDevice.connectGatt(ITagApplication.context, false, mCallback, TRANSPORT_LE);
+                } else {
+                    Toast.makeText(context, R.string.status133, Toast.LENGTH_SHORT).show();
+                    mGatt = mDevice.connectGatt(context, false, mCallback, TRANSPORT_LE);
+                }
             } else {
-                mGatt = mDevice.connectGatt(contex, true, mCallback);
+                mGatt = mDevice.connectGatt(context, true, mCallback);
             }
-            mDevicesCount = ITagsDb.getDevices(contex).size();
-        }else{
-            ITagApplication.handleError(new Exception("getRemoteDevice "+mAddr+" return null"));
+            mDevicesCount = ITagsDb.getDevices(context).size();
+        } else {
+            ITagApplication.handleError(new Exception("getRemoteDevice " + mAddr + " return null"));
         }
     }
 

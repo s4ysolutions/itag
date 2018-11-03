@@ -16,8 +16,9 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 public final class ITagApplication extends Application {
     private final static String LT = ITagApplication.class.getName();
     // context is not used outside Application so there's a hope there will be no memory leak
+    // context is used once in ITagGatt:423 for debug purposes
     @SuppressLint("StaticFieldLeak")
-    private static Context context;
+    public static Context context;
 
     @Override
     public void onCreate() {
