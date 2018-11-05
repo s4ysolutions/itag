@@ -202,8 +202,8 @@ public class ITagGatt {
                     mIsError = true;
                     notifyITagChanged();
                     ITagApplication.faITagLost(mIsError);
-                    // 8 is confirmed status iTag has lost
-                    if (status != 8) {
+                    // 8, 19 and 22 are confirmed statuses iTag has lost
+                    if (status != 8 && status !=22 && status != 19) {
                         ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
                     }
                 }
