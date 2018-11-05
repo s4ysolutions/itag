@@ -196,6 +196,7 @@ public class ITagGatt {
                 // unknown error (133) during connection (mContext!=null)
                 if (status == 133 && mContext != null) {
                     mIsError = false;
+                    ITagApplication.handleError(new Exception("onConnectionStateChange code= 133 will try workaround"));
                     mHandler.postDelayed(() -> connect(mContext, true), 100);
                 } else {
                     mIsError = true;
