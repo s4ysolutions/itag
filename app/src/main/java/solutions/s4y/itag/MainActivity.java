@@ -13,6 +13,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -297,7 +299,17 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
                     record.longitude,
                     getString(R.string.last_seen));
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-            startActivity(intent);
+
+            PackageManager packageManager = getPackageManager();
+            List<ResolveInfo> activities = packageManager.queryIntentActivities(intent, 0);
+            boolean isIntentSafe = activities.size() > 0;
+
+            if (isIntentSafe) {
+                startActivity(intent);
+            }else{
+                ITagApplication.handleError(new Exception("No Activity for geo"));
+                Toast.makeText(this, R.string.no_geo_activity, Toast.LENGTH_LONG).show();
+            }
         }
     }
 

@@ -59,4 +59,6 @@
     <string name="not_connected">Not connected</string>
     <string name="status133">The device seems to have a problem. Anti lost feature may fail.</string>
 
+    <string name="no_geo_activity">It looks like your device does not have any Map location</string>
+
 </resources>
