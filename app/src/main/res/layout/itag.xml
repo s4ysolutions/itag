@@ -16,7 +16,7 @@
         tools:ignore="UseCompoundDrawables">
 
         <Space
-            android:layout_width="48dp"
+            android:layout_width="40sp"
             android:layout_height="wrap_content" />
 
         <TextView
