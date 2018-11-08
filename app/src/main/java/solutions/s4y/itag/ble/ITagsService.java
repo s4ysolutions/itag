@@ -232,10 +232,19 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     @NonNull
     Set<String> mSoundingITags = new HashSet<>(4);
 
+    int mVolumeLevel = -1;
+
     public void stopSound() {
         mSoundingITags.clear();
         mPlayer.stop();
         mPlayer.reset();
+        if (mVolumeLevel >= 0) {
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null) {
+                am.setStreamVolume(AudioManager.STREAM_MUSIC, mVolumeLevel, 0);
+                mVolumeLevel = -1;
+            }
+        }
     }
 
     private void createDisconnectNotificationChannel() {
@@ -259,6 +268,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         AssetFileDescriptor afd = null;
         try {
             afd = getAssets().openFd("lost.mp3");
+            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mPlayer.reset();
             mPlayer.setLooping(true);
             mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
@@ -284,6 +294,14 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         stopSound();
         try {
             afd = getAssets().openFd("alarm.mp3");
+
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null) {
+                mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+                am.setStreamVolume(AudioManager.STREAM_MUSIC, am.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
+            }
+
+            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mPlayer.reset();
             mPlayer.setLooping(false);
             mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
