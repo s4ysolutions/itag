@@ -241,7 +241,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         if (mVolumeLevel >= 0) {
             AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
             if (am != null) {
-                am.setStreamVolume(AudioManager.STREAM_MUSIC, mVolumeLevel, 0);
+                am.setStreamVolume(AudioManager.STREAM_ALARM, mVolumeLevel, 0);
                 mVolumeLevel = -1;
             }
         }
@@ -268,11 +268,18 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         AssetFileDescriptor afd = null;
         try {
             afd = getAssets().openFd("lost.mp3");
-            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null) {
+                mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_ALARM);
+                am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
+            }
+
+            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
             mPlayer.reset();
             mPlayer.setLooping(true);
             mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
             mPlayer.prepare();
             mPlayer.start();
             mSoundingITags.add(addr);
@@ -297,15 +304,15 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
             AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
             if (am != null) {
-                mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_MUSIC);
-                am.setStreamVolume(AudioManager.STREAM_MUSIC, am.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
+                mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_ALARM);
+                am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
             }
 
-            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
             mPlayer.reset();
             mPlayer.setLooping(false);
             mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
             mPlayer.prepare();
             mPlayer.start();
             mSoundingITags.add(addr);
