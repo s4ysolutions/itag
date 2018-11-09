@@ -8,6 +8,7 @@ import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -305,7 +306,11 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
             boolean isIntentSafe = activities.size() > 0;
 
             if (isIntentSafe) {
-                startActivity(intent);
+                try {
+                    startActivity(intent);
+                }catch(ActivityNotFoundException e) {
+                    ITagApplication.handleError(e);
+                    Toast.makeText(this, R.string.no_geo_activity, Toast.LENGTH_LONG).show(); }
             }else{
                 ITagApplication.handleError(new Exception("No Activity for geo"));
                 Toast.makeText(this, R.string.no_geo_activity, Toast.LENGTH_LONG).show();
