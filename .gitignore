@@ -12,3 +12,5 @@
 .idea/caches
 .idea/assetWizardSettings.xml
 app/google-services.json
+Gemfile
+fastlane
