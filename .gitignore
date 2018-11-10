@@ -13,4 +13,5 @@
 .idea/assetWizardSettings.xml
 app/google-services.json
 Gemfile
+Gemfile.lock
 fastlane
