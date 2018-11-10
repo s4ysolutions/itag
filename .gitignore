@@ -12,6 +12,4 @@
 .idea/caches
 .idea/assetWizardSettings.xml
 app/google-services.json
-Gemfile
-Gemfile.lock
-fastlane
+keystore.properties
