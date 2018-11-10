@@ -13,3 +13,12 @@
 .idea/assetWizardSettings.xml
 app/google-services.json
 keystore.properties
+# fastlane specific
+fastlane/report.xml
+# deliver temporary files
+fastlane/Preview.html
+# snapshot generated screenshots
+fastlane/screenshots
+# scan temporary files
+fastlane/test_output
+itag-fastlane-api.json
