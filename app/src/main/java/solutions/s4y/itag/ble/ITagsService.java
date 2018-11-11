@@ -124,7 +124,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         ITagsDb.removeListener(this);
         for (ITagGatt gatt : mGatts.values()) {
             gatt.disconnect();
-            gatt.close();
         }
 
         super.onDestroy();
