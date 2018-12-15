@@ -53,7 +53,14 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
                 if (addr.equals(result.device.getAddress())) {
                     int rssi = result.rssi;
                     rssiView.setRssi(rssi);
-                    tv.setText(String.format(getString(R.string.rssi), rssi));
+                    if (getActivity() != null && isAdded()) {
+                        // issue #38 Fragment not attached to Activity
+                        tv.setText(String.format(getString(R.string.rssi), rssi));
+                    } else if (ITagApplication.context != null) {
+                        tv.setText(String.format(ITagApplication.context.getString(R.string.rssi), rssi));
+                    } else {
+                        tv.setText("");
+                    }
                     break;
                 }
             }
@@ -106,7 +113,7 @@ public class LeScanFragment extends Fragment implements LeScanner.LeScannerListe
         final Adapter adapter = ((Adapter) (listView.getAdapter()));
         final int index = listView.getFirstVisiblePosition();
         adapter.clear();
-        for(LeScanResult result: LeScanner.results) {
+        for (LeScanResult result : LeScanner.results) {
             adapter.add(result);
         }
         adapter.notifyDataSetChanged();
