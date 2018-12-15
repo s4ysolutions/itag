@@ -1,4 +1,6 @@
-beta-35
+beta-36
+Fix crash on android5&6
+Fix crash on scan
 Fix crash on terminate
 previous:
 Fix crash on devices without Google map
@@ -13,7 +15,5 @@ Fix crash during scan
 Improve BT on/off
 Attempt to fix status=133 error
 Handle non iTag devices
-Notify on disconnect
-Notify on background is less annoying
 Make silent on unlink
 Connect/Disconnect by horizontal fling
