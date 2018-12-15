@@ -22,3 +22,4 @@ fastlane/screenshots
 # scan temporary files
 fastlane/test_output
 itag-fastlane-api.json
+session.vim
