@@ -2,13 +2,17 @@ package solutions.s4y.itag;
 
 import android.Manifest;
 import android.app.Application;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.util.Log;
+import android.view.View;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.Assert;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
@@ -36,5 +40,12 @@ public class FixesTest {
         );
         mainActivity = Robolectric.setupActivity(MainActivity.class);
     }
-    
+
+    @Test
+    public void issue38_setupLeScanFragment() {
+        mainActivity.onStartStopScan(null);
+        final FragmentManager fragmentManager = mainActivity.getFragmentManager();
+        Fragment fragment = fragmentManager.findFragmentById(R.id.content);
+        Assert.assertTrue(fragment instanceof LeScanFragment);
+    }
 }
