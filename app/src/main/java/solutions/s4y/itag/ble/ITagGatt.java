@@ -186,8 +186,13 @@ public class ITagGatt {
                         Log.d(LT,
                                 "GattCallback.onConnectionStateChange, STATE_DISCONNECTED");
                     }
-                    mGatt.close();
-                    endConnection();
+                    try {
+                        mGatt.close();
+                    } catch (Exception e) {
+                        ITagApplication.handleError(new Exception("onConnectionStateChange STATE_DISCONNECTED, can't close",e));
+                    } finally {
+                        endConnection();
+                    }
                 }
             } else {
                 if (BuildConfig.DEBUG) {
@@ -203,7 +208,7 @@ public class ITagGatt {
                     notifyITagChanged();
                     ITagApplication.faITagLost(mIsError);
                     // 8, 19 and 22 are confirmed statuses iTag has lost
-                    if (status != 8 && status !=22 && status != 19) {
+                    if (status != 8 && status != 22 && status != 19) {
                         ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
                     }
                 }
@@ -271,7 +276,7 @@ public class ITagGatt {
                 if (BuildConfig.DEBUG) {
                     Log.d(LT, "GattCallback.onServicesDiscovered: not GATT_SUCCESS");
                 }
-                ITagApplication.handleError(new Exception("onServicesDiscovered failed, status="+status));
+                ITagApplication.handleError(new Exception("onServicesDiscovered failed, status=" + status));
                 notifyITagChanged();
             }
         }
@@ -346,7 +351,7 @@ public class ITagGatt {
 
     private void reset() {
         if (mGatt != null) {
-            mGatt.close();
+            mGatt.disconnect();
         }
         mGatt = null;
         mIsConnected = false;
@@ -406,7 +411,6 @@ public class ITagGatt {
         }
         if (mGatt != null) {
             mGatt.disconnect();
-            mGatt.close();
         }
         reset();
         mIsConnecting = true;
@@ -422,7 +426,7 @@ public class ITagGatt {
                     // must never happen, but see https://github.com/s4ysolutions/itag/issues/32
                     // 3 lines below is quick fix and investigation tool
                     ITagApplication.handleError(new Exception("context must not be null"));
-                    Toast.makeText(ITagApplication.context , R.string.status133, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ITagApplication.context, R.string.status133, Toast.LENGTH_SHORT).show();
                     mGatt = mDevice.connectGatt(ITagApplication.context, false, mCallback, TRANSPORT_LE);
                 } else {
                     Toast.makeText(context, R.string.status133, Toast.LENGTH_SHORT).show();
@@ -468,19 +472,6 @@ public class ITagGatt {
             Log.d(LT, "stopListenRssi, addr=" + mAddr);
         }
         mHandler.removeCallbacks(mRssiRunable);
-    }
-
-    void close() {
-        if (BuildConfig.DEBUG) {
-            if (mGatt == null) {
-                ITagApplication.handleError(new Exception("DeviceGatt.disconnect: mGatt==null"));
-            }
-            if (!mIsConnected) {
-                ITagApplication.handleError(new Exception("DeviceGatt.connectAll: !mIsConnected"));
-            }
-        }
-        reset();
-        mGatt.close();
     }
 
     private Runnable mForceDisconnect = this::endConnection;
