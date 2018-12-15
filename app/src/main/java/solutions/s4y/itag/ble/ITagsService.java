@@ -86,8 +86,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     }
 
     @Override
-    public int onStartCommand(@NonNull Intent intent, int flags, int startId) {
-        if (intent.getBooleanExtra(RUN_IN_FOREGROUND, false)) {
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent == null || intent.getBooleanExtra(RUN_IN_FOREGROUND, false)) {
             addToForeground();
         }
         return START_REDELIVER_INTENT;
