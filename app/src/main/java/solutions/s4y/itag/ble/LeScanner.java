@@ -56,25 +56,25 @@ public final class LeScanner {
     }
 
     static private void notifyStart() {
-        for(LeScannerListener listener: mListeners) {
+        for(LeScannerListener listener: new ArrayList<>(mListeners)) {
             listener.onStartScan();
         }
     }
 
     static private void notifyStop() {
-        for(LeScannerListener listener: mListeners) {
+        for(LeScannerListener listener: new ArrayList<>(mListeners)) {
             listener.onStopScan();
         }
     }
 
     static private void notifyTick() {
-        for(LeScannerListener listener: mListeners) {
+        for(LeScannerListener listener: new ArrayList<>(mListeners)) {
             listener.onTick(tick, TIMEOUT);
         }
     }
 
     static private void notifyNewDeviceScanned(LeScanResult result) {
-        for(LeScannerListener listener: mListeners) {
+        for(LeScannerListener listener: new ArrayList<>(mListeners)) {
             listener.onNewDeviceScanned(result);
         }
     }
