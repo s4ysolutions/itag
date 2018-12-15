@@ -26,9 +26,9 @@ Runs all the tests
 fastlane android aab
 ```
 Create bundle
-### android deploy
+### android production
 ```
-fastlane android deploy
+fastlane android production
 ```
 Deploy a new version to the Google Play
 
