@@ -271,7 +271,7 @@ public class ITagGatt {
                 if (BuildConfig.DEBUG) {
                     Log.d(LT, "GattCallback.onServicesDiscovered: not GATT_SUCCESS");
                 }
-                ITagApplication.handleError(new Exception("onServicesDiscovered failed"));
+                ITagApplication.handleError(new Exception("onServicesDiscovered failed, status="+status));
                 notifyITagChanged();
             }
         }
