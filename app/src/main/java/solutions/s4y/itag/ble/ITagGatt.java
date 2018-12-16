@@ -555,7 +555,8 @@ public class ITagGatt {
     }
 
     public boolean isConnected() {
-        return mIsConnected && !mIsError;
+        // mGatt != null is quick dirty solution of issue #42
+        return mGatt!=null && mIsConnected && !mIsError;
     }
 
     public boolean isTransmitting() {
