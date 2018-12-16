@@ -17,7 +17,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,13 +58,11 @@ public final class HistoryRecord implements Serializable {
     }
 
     public String addr;
-    public long ts;
     public Double latitude;
     public Double longitude;
 
     private HistoryRecord(String addr, Location location) {
         this.addr = addr;
-        this.ts = System.currentTimeMillis();
         this.latitude = location.getLatitude();
         this.longitude = location.getLongitude();
     }
@@ -92,6 +89,7 @@ public final class HistoryRecord implements Serializable {
     private static void save(Context context) {
         if (records == null || records.size() == 0) {
             try {
+                //noinspection ResultOfMethodCallIgnored
                 getDbFile(context).delete();
             } catch (IOException e) {
                 e.printStackTrace();
