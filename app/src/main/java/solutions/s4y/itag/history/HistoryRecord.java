@@ -17,6 +17,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +88,7 @@ public final class HistoryRecord implements Serializable {
     }
 
     private static void save(Context context) {
-        if (records == null || records.size() == 0) {
+        if (records == null || records.size() <= 0) {
             try {
                 //noinspection ResultOfMethodCallIgnored
                 getDbFile(context).delete();
