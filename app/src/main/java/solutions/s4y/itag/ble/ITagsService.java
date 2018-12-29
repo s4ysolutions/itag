@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
@@ -152,7 +153,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     }
 
     public void addToForeground() {
-        Notification.Builder builder = new Notification.Builder(this);
+        createNotificationChannel();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         builder
                 .setTicker(null)
                 .setSmallIcon(R.drawable.app)
@@ -168,10 +170,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
         builder.setContentIntent(pendingIntent);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotificationChannel();
-            builder.setChannelId(CHANNEL_ID);
-        }
         Notification notification = builder.build();
         startForeground(FOREGROUND_ID, notification);
     }
@@ -337,7 +335,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             HistoryRecord.add(ITagsService.this, gatt.mAddr);
             if (device.linked) {
                 startSoundDisconnected(gatt.mAddr);
-                Notification.Builder builder = new Notification.Builder(this);
+                createNotificationChannel();
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
                 builder
                         .setTicker(String.format(getString(R.string.notify_disconnect),
                                 device.name == null || "".equals(device.name) ? "iTag" : device.name))
