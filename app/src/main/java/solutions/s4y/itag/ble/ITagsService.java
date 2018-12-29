@@ -36,7 +36,7 @@ import solutions.s4y.itag.R;
 import solutions.s4y.itag.history.HistoryRecord;
 
 
-public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
+public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener, MediaPlayer.OnPreparedListener {
     private static final int FOREGROUND_ID = 1;
     private static final String CHANNEL_ID = "itag3";
     private static final String CHANNEL_DISCONNECT_ID = "ditag1";
@@ -84,6 +84,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     };
 
     public ITagsService() {
+        mPlayer.setOnPreparedListener(this);
     }
 
     @Override
@@ -260,6 +261,10 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
+    public void onPrepared(MediaPlayer player) {
+        player.start();
+    }
+
     private void startSoundDisconnected(String addr) {
         stopSound();
         AssetFileDescriptor afd = null;
@@ -277,8 +282,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             mPlayer.setLooping(true);
             mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
             mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
-            mPlayer.prepare();
-            mPlayer.start();
+            mPlayer.prepareAsync();
+ //           mPlayer.start();
             mSoundingITags.add(addr);
         } catch (IOException e) {
             ITagApplication.handleError(e, true);
@@ -310,8 +315,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             mPlayer.setLooping(false);
             mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
             mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
-            mPlayer.prepare();
-            mPlayer.start();
+            mPlayer.prepareAsync();
             mSoundingITags.add(addr);
         } catch (IOException e) {
             ITagApplication.handleError(e, true);
