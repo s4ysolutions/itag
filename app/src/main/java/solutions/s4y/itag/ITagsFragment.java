@@ -2,8 +2,8 @@ package solutions.s4y.itag;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.app.Fragment;
-import android.support.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;

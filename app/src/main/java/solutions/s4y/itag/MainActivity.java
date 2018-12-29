@@ -1,10 +1,10 @@
 package solutions.s4y.itag;
 
-import android.app.Activity;
+import androidx.fragment.app.FragmentActivity;
 import android.app.AlertDialog;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -19,7 +19,7 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
@@ -38,7 +38,7 @@ import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
 import solutions.s4y.itag.history.HistoryRecord;
 
-public class MainActivity extends Activity implements LeScanner.LeScannerListener, ITagsDb.DbListener {
+public class MainActivity extends FragmentActivity implements LeScanner.LeScannerListener, ITagsDb.DbListener {
     static public final int REQUEST_ENABLE_LOCATION = 2;
     public BluetoothAdapter mBluetoothAdapter;
     public ITagsService mITagsService;
@@ -130,7 +130,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
     }
 
     private void setupContent() {
-        final FragmentManager fragmentManager = getFragmentManager();
+        final FragmentManager fragmentManager = getSupportFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         Fragment fragment = null;
         if (LeScanner.isScanning) {
@@ -421,7 +421,7 @@ public class MainActivity extends Activity implements LeScanner.LeScannerListene
         }
 
         SetNameDialogFragment.device = device;
-        new SetNameDialogFragment().show(getFragmentManager(), "setname");
+        new SetNameDialogFragment().show(getSupportFragmentManager(), "setname");
     }
 
     /*

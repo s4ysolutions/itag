@@ -2,7 +2,7 @@ package solutions.s4y.itag.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.jetbrains.annotations.NotNull;
 
