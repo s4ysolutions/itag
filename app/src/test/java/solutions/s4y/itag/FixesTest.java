@@ -2,13 +2,14 @@ package solutions.s4y.itag;
 
 import android.Manifest;
 import android.app.Application;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +19,9 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowApplication;
 
+import androidx.test.core.app.ApplicationProvider;
 import solutions.s4y.itag.ble.ITagsService;
+import solutions.s4y.itag.ble.LeScanner;
 
 import static org.robolectric.Shadows.shadowOf;
 
@@ -28,7 +31,7 @@ public class FixesTest {
 
     @Before
     public void setupActivity() {
-        Application application = RuntimeEnvironment.application;
+        Application application = ApplicationProvider.getApplicationContext();
         ShadowApplication shadowApplication = shadowOf(application);
         shadowApplication.grantPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION});
         Intent intent = new Intent(application, ITagsService.class);
@@ -41,10 +44,15 @@ public class FixesTest {
         mainActivity = Robolectric.setupActivity(MainActivity.class);
     }
 
+    @AfterClass
+    public static void stopScanning() {
+        LeScanner.isScanning = false;
+    }
+
     @Test
     public void issue38_setupLeScanFragment() {
         mainActivity.onStartStopScan(null);
-        final FragmentManager fragmentManager = mainActivity.getFragmentManager();
+        final FragmentManager fragmentManager = mainActivity.getSupportFragmentManager();
         Fragment fragment = fragmentManager.findFragmentById(R.id.content);
         Assert.assertTrue(fragment instanceof LeScanFragment);
     }
