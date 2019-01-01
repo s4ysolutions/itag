@@ -11,32 +11,25 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.AssetFileDescriptor;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 import solutions.s4y.itag.BuildConfig;
-import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
 import solutions.s4y.itag.history.HistoryRecord;
 
 
-public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener, MediaPlayer.OnPreparedListener {
+public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
     private static final int FOREGROUND_ID = 1;
     private static final String CHANNEL_ID = "itag3";
     private static final String CHANNEL_DISCONNECT_ID = "ditag1";
@@ -82,10 +75,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             }
         }
     };
-
-    public ITagsService() {
-        mPlayer.setOnPreparedListener(this);
-    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -226,25 +215,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
-    private final MediaPlayer mPlayer = new MediaPlayer();
-    @NonNull
-    Set<String> mSoundingITags = new HashSet<>(4);
-
-    int mVolumeLevel = -1;
-
-    public void stopSound() {
-        mSoundingITags.clear();
-        mPlayer.stop();
-        mPlayer.reset();
-        if (mVolumeLevel >= 0) {
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (am != null) {
-                am.setStreamVolume(AudioManager.STREAM_ALARM, mVolumeLevel, 0);
-                mVolumeLevel = -1;
-            }
-        }
-    }
-
     private void createDisconnectNotificationChannel() {
         if (!mChannelDisconnectedCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.app_name);
@@ -261,75 +231,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
-    public void onPrepared(MediaPlayer player) {
-        player.start();
-    }
-
-    private void startSoundDisconnected(String addr) {
-        stopSound();
-        AssetFileDescriptor afd = null;
-        try {
-            afd = getAssets().openFd("lost.mp3");
-
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (am != null) {
-                mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_ALARM);
-                am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
-            }
-
-            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
-            mPlayer.reset();
-            mPlayer.setLooping(true);
-            mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
-            mPlayer.prepareAsync();
- //           mPlayer.start();
-            mSoundingITags.add(addr);
-        } catch (IOException e) {
-            ITagApplication.handleError(e, true);
-        } finally {
-            if (afd != null) {
-                try {
-                    afd.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    private void startFindPhone(String addr) {
-        AssetFileDescriptor afd = null;
-        stopSound();
-        try {
-            afd = getAssets().openFd("alarm.mp3");
-
-            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-            if (am != null) {
-                mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_ALARM);
-                am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
-            }
-
-            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
-            mPlayer.reset();
-            mPlayer.setLooping(false);
-            mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
-            mPlayer.prepareAsync();
-            mSoundingITags.add(addr);
-        } catch (IOException e) {
-            ITagApplication.handleError(e, true);
-        } finally {
-            if (afd != null) {
-                try {
-                    afd.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     @Override
     public void onITagChange(@NotNull ITagGatt gatt) {
         ITagDevice device = ITagsDb.findByAddr(gatt.mAddr);
@@ -338,7 +239,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
             HistoryRecord.add(ITagsService.this, gatt.mAddr);
             if (device.linked) {
-                startSoundDisconnected(gatt.mAddr);
+                MediaPlayerUtils.getInstance().startSoundDisconnected(this, gatt.mAddr);
                 createNotificationChannel();
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
                 builder
@@ -372,8 +273,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             if (gatt.mIsConnected) {
                 HistoryRecord.clear(this, gatt.mAddr);
             }
-            if (isSound(gatt.mAddr)) {
-                stopSound();
+            if (MediaPlayerUtils.getInstance().isSound(gatt.mAddr)) {
+                MediaPlayerUtils.getInstance().stopSound(this);
             }
         }
     }
@@ -384,7 +285,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             gatt.stopFindITag();
         }
         gatt.stopFindPhone();
-        stopSound();
+        MediaPlayerUtils.getInstance().stopSound(this);
     }
 
     @Override
@@ -393,7 +294,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             gatt.stopFindITag();
         }
         gatt.startFindPhone();
-        startFindPhone(gatt.mAddr);
+        MediaPlayerUtils.getInstance().startFindPhone(this, gatt.mAddr);
     }
 
     @Override
@@ -404,14 +305,6 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     @Override
     public void onITagRssi(@NonNull ITagGatt gatt, int rssi) {
 
-    }
-
-    public boolean isSound(String addr) {
-        return mPlayer.isPlaying() && mSoundingITags.contains(addr);
-    }
-
-    public boolean isSound() {
-        return mPlayer.isPlaying();
     }
 
     @Override

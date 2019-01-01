@@ -36,6 +36,7 @@ import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagsService;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
+import solutions.s4y.itag.ble.MediaPlayerUtils;
 import solutions.s4y.itag.history.HistoryRecord;
 
 public class MainActivity extends FragmentActivity implements LeScanner.LeScannerListener, ITagsDb.DbListener {
@@ -341,8 +342,8 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         if (gatt.isFindingPhone()) {
             gatt.stopFindPhone();
         }
-        if (mITagsServiceBound && mITagsService.isSound()) {
-            mITagsService.stopSound();
+        if (mITagsServiceBound && MediaPlayerUtils.getInstance().isSound()) {
+            MediaPlayerUtils.getInstance().stopSound(this);
         }
         if (needNotify) {
             Toast.makeText(this, R.string.help_longpress, Toast.LENGTH_SHORT).show();
@@ -407,8 +408,8 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
             ITagApplication.faUnmuteTag();
         else
             ITagApplication.faMuteTag();
-        if (mITagsServiceBound && mITagsService.isSound() && !device.linked) {
-            mITagsService.stopSound();
+        if (mITagsServiceBound && MediaPlayerUtils.getInstance().isSound() && !device.linked) {
+            MediaPlayerUtils.getInstance().stopSound(this);
         }
     }
 
