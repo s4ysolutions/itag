@@ -1,10 +1,6 @@
 package solutions.s4y.itag;
 
-import androidx.fragment.app.FragmentActivity;
 import android.app.AlertDialog;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -19,7 +15,6 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
@@ -30,9 +25,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagGatt;
 import solutions.s4y.itag.ble.ITagsDb;
-import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagsService;
 import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
@@ -44,7 +44,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
     public BluetoothAdapter mBluetoothAdapter;
     public ITagsService mITagsService;
     public boolean mITagsServiceBound;
-    public static boolean sIsShown=false;
+    public static boolean sIsShown = false;
 
     private static final String LT = ITagsService.class.getName();
 
@@ -296,13 +296,26 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         HistoryRecord record = HistoryRecord.getHistoryRecords(this).get(device.addr);
         if (record != null) {
             ITagApplication.faShowLastLocation();
+            long ts;
+            String unit;
+            long d = (System.currentTimeMillis() - record.ts) / 1000;
+            if (d < 60) {
+                ts = d;
+                unit = getString(R.string.uint_sec);
+            } else if (d < 3600) {
+                ts = d / 60;
+                unit = getString(R.string.uint_min);
+            } else {
+                ts = (d / 3600) + 1;
+                unit = getString(R.string.uint_hour);
+            }
             String uri = String.format(
                     Locale.ENGLISH, "geo:%f,%f?q=%f,%f(%s)",
                     record.latitude,
                     record.longitude,
                     record.latitude,
                     record.longitude,
-                    getString(R.string.last_seen));
+                    String.format(Locale.ENGLISH, getString(R.string.last_seen), ts, unit));
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
 
             PackageManager packageManager = getPackageManager();
@@ -312,10 +325,11 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
             if (isIntentSafe) {
                 try {
                     startActivity(intent);
-                }catch(ActivityNotFoundException e) {
+                } catch (ActivityNotFoundException e) {
                     ITagApplication.handleError(e);
-                    Toast.makeText(this, R.string.no_geo_activity, Toast.LENGTH_LONG).show(); }
-            }else{
+                    Toast.makeText(this, R.string.no_geo_activity, Toast.LENGTH_LONG).show();
+                }
+            } else {
                 ITagApplication.handleError(new Exception("No Activity for geo"));
                 Toast.makeText(this, R.string.no_geo_activity, Toast.LENGTH_LONG).show();
             }

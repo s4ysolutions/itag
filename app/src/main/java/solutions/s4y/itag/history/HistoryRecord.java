@@ -31,6 +31,11 @@ import solutions.s4y.itag.R;
 public final class HistoryRecord implements Serializable {
     private static final long serialVersionUID = 1845673754412L;
 
+    public String addr;
+    public Double latitude;
+    public Double longitude;
+    public long ts;
+
     public interface HistoryRecordListener {
         void onHistoryRecordChange();
     }
@@ -61,14 +66,11 @@ public final class HistoryRecord implements Serializable {
         }
     }
 
-    public String addr;
-    public Double latitude;
-    public Double longitude;
-
     private HistoryRecord(String addr, Location location) {
         this.addr = addr;
         this.latitude = location.getLatitude();
         this.longitude = location.getLongitude();
+        this.ts = location.getTime();
     }
 
     private static final String DB_FILE_NAME = "dbh1";
