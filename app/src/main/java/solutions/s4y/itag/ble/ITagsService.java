@@ -252,6 +252,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                         .setSmallIcon(R.drawable.noalert)
                         .setContentTitle(String.format(getString(R.string.notify_disconnect), device.name))
                         .setContentText(getString(R.string.click_to_silent))
+                        .setPriority(Notification.PRIORITY_MAX)
                         .setAutoCancel(true);
 //                Intent intent = new Intent(this, MainActivity.class);
                 Intent intent = new Intent(this, ITagsService.class);
