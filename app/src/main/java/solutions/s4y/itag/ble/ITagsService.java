@@ -84,6 +84,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
         if (intent != null && intent.getBooleanExtra(STOP_SOUND, false)) {
             MediaPlayerUtils.getInstance().stopSound(this);
+            Intent intentActivity = new Intent(this, MainActivity.class);
+            startActivity(intentActivity);
         }
         return START_REDELIVER_INTENT;
     }
@@ -254,20 +256,9 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                         .setContentText(getString(R.string.click_to_silent))
                         .setPriority(Notification.PRIORITY_MAX)
                         .setAutoCancel(true);
-//                Intent intent = new Intent(this, MainActivity.class);
                 Intent intent = new Intent(this, ITagsService.class);
                 intent.putExtra(STOP_SOUND, true);
                 PendingIntent pendingIntent = PendingIntent.getService(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
-                /*
-                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-                stackBuilder.addParentStack(MainActivity.class);
-                stackBuilder.addNextIntent(intent);
-                PendingIntent pendingIntent =
-                        stackBuilder.getPendingIntent(
-                                0,
-                                PendingIntent.FLAG_UPDATE_CURRENT
-                        );
-                        */
                 builder.setContentIntent(pendingIntent);
                 /*
                 Intent soundIntent = new Intent(this, ITagsService.class);
