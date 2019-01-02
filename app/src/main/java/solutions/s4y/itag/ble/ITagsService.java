@@ -34,6 +34,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     private static final String CHANNEL_ID = "itag3";
     private static final String CHANNEL_DISCONNECT_ID = "ditag1";
     private static final String RUN_IN_FOREGROUND = "run_in_foreground";
+    private static final String STOP_SOUND = "stop_sound";
     private boolean mChannelCreated;
     private boolean mChannelDisconnectedCreated;
 
@@ -80,6 +81,9 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null || intent.getBooleanExtra(RUN_IN_FOREGROUND, false)) {
             addToForeground();
+        }
+        if (intent != null && intent.getBooleanExtra(STOP_SOUND, false)) {
+            MediaPlayerUtils.getInstance().stopSound(this);
         }
         return START_REDELIVER_INTENT;
     }
@@ -245,11 +249,15 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                 builder
                         .setTicker(String.format(getString(R.string.notify_disconnect),
                                 device.name == null || "".equals(device.name) ? "iTag" : device.name))
-                        .setSmallIcon(R.drawable.app)
+                        .setSmallIcon(R.drawable.noalert)
                         .setContentTitle(String.format(getString(R.string.notify_disconnect), device.name))
                         .setContentText(getString(R.string.click_to_silent))
                         .setAutoCancel(true);
-                Intent intent = new Intent(this, MainActivity.class);
+//                Intent intent = new Intent(this, MainActivity.class);
+                Intent intent = new Intent(this, ITagsService.class);
+                intent.putExtra(STOP_SOUND, true);
+                PendingIntent pendingIntent = PendingIntent.getService(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+                /*
                 TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
                 stackBuilder.addParentStack(MainActivity.class);
                 stackBuilder.addNextIntent(intent);
@@ -258,7 +266,17 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                                 0,
                                 PendingIntent.FLAG_UPDATE_CURRENT
                         );
+                        */
                 builder.setContentIntent(pendingIntent);
+                /*
+                Intent soundIntent = new Intent(this, ITagsService.class);
+                soundIntent.putExtra(STOP_SOUND, true);
+                PendingIntent soundPIntent = PendingIntent.getBroadcast(this, 1, soundIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                builder.addAction(
+                        R.drawable.noalert,
+                        getResources().getString(R.string.stop_alarm),
+                        soundPIntent);
+                */
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     createDisconnectNotificationChannel();
                     builder.setChannelId(CHANNEL_DISCONNECT_ID);
