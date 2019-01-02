@@ -44,6 +44,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
     public BluetoothAdapter mBluetoothAdapter;
     public ITagsService mITagsService;
     public boolean mITagsServiceBound;
+    public static boolean sIsShown=false;
 
     private static final String LT = ITagsService.class.getName();
 
@@ -221,6 +222,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
     @Override
     protected void onResume() {
         super.onResume();
+        sIsShown = true;
         setupContent();
         Intent intent = new Intent(this, ITagsService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
@@ -232,6 +234,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
 
     @Override
     protected void onPause() {
+        sIsShown = false;
         if (ITagsDb.getDevices(this).size() > 0) {
             if (!mIsServiceStartedUnbind) {
                 ITagsService.start(this, true);

@@ -84,8 +84,10 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
         if (intent != null && intent.getBooleanExtra(STOP_SOUND, false)) {
             MediaPlayerUtils.getInstance().stopSound(this);
-            Intent intentActivity = new Intent(this, MainActivity.class);
-            startActivity(intentActivity);
+            if (!MainActivity.sIsShown) {
+                Intent intentActivity = new Intent(this, MainActivity.class);
+                startActivity(intentActivity);
+            }
         }
         return START_REDELIVER_INTENT;
     }
