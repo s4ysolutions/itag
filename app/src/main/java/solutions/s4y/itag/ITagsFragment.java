@@ -79,6 +79,7 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
             if (gatt.isFindingITag() ||
                     gatt.isFindingPhone() ||
                     gatt.isError() && device.linked && mainActivity.mITagsServiceBound) {
+                Log.d(LT, "Start animate because gatt.isFindingITag");
                 animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
         }
@@ -107,11 +108,14 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         imageITag.setImageResource(imageId);
         imageITag.setTag(device);
         if (animShake == null) {
+            Log.d(LT, "No animations appointed");
             animShake = imageITag.getAnimation();
             if (animShake != null) {
+                Log.d(LT, "Stop previous animation");
                 animShake.cancel();
             }
         } else {
+            Log.d(LT, "Start animation");
             imageITag.startAnimation(animShake);
         }
 

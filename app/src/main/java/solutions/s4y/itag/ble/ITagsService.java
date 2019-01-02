@@ -247,7 +247,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
             HistoryRecord.add(ITagsService.this, gatt.mAddr);
             if (device.linked) {
-                MediaPlayerUtils.getInstance().startSoundDisconnected(this, gatt.mAddr);
+                MediaPlayerUtils.getInstance().startSoundDisconnected(this, gatt);
                 createNotificationChannel();
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
                 builder
@@ -298,7 +298,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             gatt.stopFindITag();
         }
         gatt.startFindPhone();
-        MediaPlayerUtils.getInstance().startFindPhone(this, gatt.mAddr);
+        MediaPlayerUtils.getInstance().startFindPhone(this, gatt);
     }
 
     @Override

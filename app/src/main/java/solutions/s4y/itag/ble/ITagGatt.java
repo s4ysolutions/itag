@@ -314,6 +314,7 @@ public class ITagGatt {
         @NonNull
         private Runnable mWaitForDoubleClick = () -> {
             mClicksCount = 0;
+            Log.d(LT, "cancel wait for double click, issue single click");
             notifyITagClicked();
         };
 
@@ -326,8 +327,10 @@ public class ITagGatt {
 
             if (mClicksCount == 0) {
                 mClicksCount++;
+                Log.d(LT, "start wait for double click");
                 mHandler.postDelayed(mWaitForDoubleClick, DOUBLE_TAG_CLICK_DELAY);
             } else if (mClicksCount == 1) {
+                Log.d(LT, "got double click");
                 mHandler.removeCallbacks(mWaitForDoubleClick);
                 mClicksCount = 0;
                 notifyITagDoubleClicked();
