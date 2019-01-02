@@ -68,6 +68,8 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
                 am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
             }
 
+            mPlayer.stop();
+            mPlayer.reset();
             mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
             mPlayer.reset();
             mPlayer.setLooping(true);
@@ -103,6 +105,8 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
             }
 
             mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+            mPlayer.stop();
+            mPlayer.reset();
             mPlayer.reset();
             mPlayer.setLooping(false);
             mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
