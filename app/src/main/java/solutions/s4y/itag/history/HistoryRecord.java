@@ -4,6 +4,9 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Bundle;
+import android.os.Looper;
+
 import androidx.annotation.NonNull;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +26,7 @@ import java.util.Map;
 
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
+import solutions.s4y.itag.R;
 
 public final class HistoryRecord implements Serializable {
     private static final long serialVersionUID = 1845673754412L;
@@ -124,8 +128,8 @@ public final class HistoryRecord implements Serializable {
 
     private static LocationListener sLocationListener;
 
-    public static void add(final Context context, String addr) {
-        LocationManager locationManager = (LocationManager) context
+    public static void add(final Context context, final String addr) {
+        final LocationManager locationManager = (LocationManager) context
                 .getSystemService(Context.LOCATION_SERVICE);
 
         if (locationManager == null) return;
@@ -141,14 +145,63 @@ public final class HistoryRecord implements Serializable {
                 .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
 
+        Location location = null;
         if (isGPSEnabled || isNetworkEnabled) {
             try {
-                Location location = locationManager
+                location = locationManager
                         .getLastKnownLocation(isGPSEnabled ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER);
                 if (location != null)
                     add(context, new HistoryRecord(addr, location));
             } catch (SecurityException e) {
                 ITagApplication.handleError(e);
+            }
+        }
+
+        if (isGPSEnabled && (
+                location == null ||
+                        !LocationManager.GPS_PROVIDER.equals(location.getProvider()) ||
+                        location.getTime()<System.currentTimeMillis()-1000
+                        )
+                )
+        {
+            sLocationListener = new LocationListener() {
+
+                @Override
+                public void onLocationChanged(Location location) {
+                    locationManager.removeUpdates(sLocationListener);
+                    sLocationListener = null;
+                    if (location != null)
+                        add(context, new HistoryRecord(addr, location));
+                    ITagApplication.faGotGpsLocation();
+                }
+
+                @Override
+                public void onStatusChanged(String provider, int status, Bundle extras) {
+
+                }
+
+                @Override
+                public void onProviderEnabled(String provider) {
+
+                }
+
+                @Override
+                public void onProviderDisabled(String provider) {
+
+                }
+            };
+            try {
+                locationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER, 1, 1, sLocationListener, Looper.getMainLooper());
+                ITagApplication.faIssuedGpsRequest();
+            } catch (SecurityException e) {
+                ITagApplication.handleError(e,R.string.can_not_get_gps_location);
+                sLocationListener=null;
+                ITagApplication.faGpsPermissionError();
+            } catch (Exception e){
+                ITagApplication.handleError(e,true);
+                sLocationListener=null;
+                ITagApplication.faGpsPermissionError();
             }
         }
     }

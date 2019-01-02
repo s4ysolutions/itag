@@ -39,6 +39,19 @@ public final class ITagApplication extends Application {
         });
     }
 
+    static public void handleError(@NonNull Throwable th, int toast) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (context == null) {
+                Log.e(LT, "Attempt to handle error before application created", th);
+                Crashlytics.logException(th);
+            } else {
+                Log.e(LT, "Toasted", th);
+                Toast.makeText(context, toast, Toast.LENGTH_LONG).show();
+                Crashlytics.logException(th);
+            }
+        });
+    }
+
     static public void handleError(@NonNull Throwable th) {
         handleError(th, BuildConfig.DEBUG);
     }
@@ -154,6 +167,16 @@ public final class ITagApplication extends Application {
 
     static public void faShowLastLocation() {
         fa("itag_show_last_location");
+    }
+
+    static public void faIssuedGpsRequest() {
+        fa("itag_issued_gps_request");
+    }
+    static public void faGotGpsLocation() {
+        fa("itag_got_gps_location");
+    }
+    static public void faGpsPermissionError() {
+        fa("itag_gps_permission_error");
     }
 
 }
