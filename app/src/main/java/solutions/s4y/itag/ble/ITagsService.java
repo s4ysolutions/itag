@@ -260,15 +260,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                 intent.putExtra(STOP_SOUND, true);
                 PendingIntent pendingIntent = PendingIntent.getService(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
                 builder.setContentIntent(pendingIntent);
-                /*
-                Intent soundIntent = new Intent(this, ITagsService.class);
-                soundIntent.putExtra(STOP_SOUND, true);
-                PendingIntent soundPIntent = PendingIntent.getBroadcast(this, 1, soundIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                builder.addAction(
-                        R.drawable.noalert,
-                        getResources().getString(R.string.stop_alarm),
-                        soundPIntent);
-                */
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     createDisconnectNotificationChannel();
                     builder.setChannelId(CHANNEL_DISCONNECT_ID);
