@@ -38,7 +38,7 @@
     <string name="service_description">Long press iTag\'s image to make it to ring.</string>
 
     <string name="notify_disconnect">%s disconnected</string>
-    <string name="click_to_silent">Click to pop up iTag One</string>
+    <string name="click_to_silent">Click to stop alarm</string>
 
     <string name="help_longpress">Long Press to Find the iTag</string>
 
@@ -61,5 +61,4 @@
 
     <string name="no_geo_activity">It looks like your device does not have any Map location</string>
 
-    <string name="stop_alarm">Stop alarm</string>
 </resources>
