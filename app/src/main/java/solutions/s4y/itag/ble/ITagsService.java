@@ -28,6 +28,8 @@ import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
 import solutions.s4y.itag.history.HistoryRecord;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 
 public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
     private static final int FOREGROUND_ID = 1;
@@ -86,6 +88,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             MediaPlayerUtils.getInstance().stopSound(this);
             if (!MainActivity.sIsShown) {
                 Intent intentActivity = new Intent(this, MainActivity.class);
+                intentActivity.addFlags(FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intentActivity);
             }
         }
