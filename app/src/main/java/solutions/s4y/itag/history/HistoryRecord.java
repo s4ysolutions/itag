@@ -170,7 +170,9 @@ public final class HistoryRecord implements Serializable {
 
                 @Override
                 public void onLocationChanged(Location location) {
-                    locationManager.removeUpdates(sLocationListener);
+                    if (sLocationListener != null ) {
+                        locationManager.removeUpdates(sLocationListener);
+                    }
                     sLocationListener = null;
                     if (location != null)
                         add(context, new HistoryRecord(addr, location));
