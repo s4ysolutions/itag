@@ -1,5 +1,6 @@
 package solutions.s4y.itag;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -502,5 +503,11 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
     public void onOpenBTSettings(View ignored) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivity(enableBtIntent);
+    }
+
+    @SuppressLint("MissingSuperCall")
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        //No call for super(). Bug on API Level > 11. issue #54
     }
 }
