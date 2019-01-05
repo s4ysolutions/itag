@@ -33,6 +33,7 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
     private static final int FOREGROUND_ID = 1;
+    private static final int NOTIFICATION_DISCONNECT_ID = 2;
     private static final String CHANNEL_ID = "itag3";
     private static final String CHANNEL_DISCONNECT_ID = "ditag1";
     private static final String RUN_IN_FOREGROUND = "run_in_foreground";
@@ -273,12 +274,16 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                 Notification notification = builder.build();
                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 if (notificationManager != null) {
-                    notificationManager.notify(0, notification);
+                    notificationManager.notify(NOTIFICATION_DISCONNECT_ID, notification);
                 }
             }
         } else {
             if (gatt.mIsConnected) {
                 HistoryRecord.clear(this, gatt.mAddr);
+            }
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (notificationManager != null) {
+                notificationManager.cancel(NOTIFICATION_DISCONNECT_ID);
             }
             if (MediaPlayerUtils.getInstance().isSound(gatt.mAddr)) {
                 MediaPlayerUtils.getInstance().stopSound(this);
