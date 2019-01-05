@@ -243,6 +243,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
+    private int mDisconnectionCount = 0;
+
     @Override
     public void onITagChange(@NotNull ITagGatt gatt) {
         ITagDevice device = ITagsDb.findByAddr(gatt.mAddr);
@@ -264,7 +266,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                         .setAutoCancel(true);
                 Intent intent = new Intent(this, ITagsService.class);
                 intent.putExtra(STOP_SOUND, true);
-                PendingIntent pendingIntent = PendingIntent.getService(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                 builder.setContentIntent(pendingIntent);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -276,14 +278,19 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                 if (notificationManager != null) {
                     notificationManager.notify(NOTIFICATION_DISCONNECT_ID, notification);
                 }
+                mDisconnectionCount++;
             }
         } else {
             if (gatt.mIsConnected) {
                 HistoryRecord.clear(this, gatt.mAddr);
-            }
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (notificationManager != null) {
-                notificationManager.cancel(NOTIFICATION_DISCONNECT_ID);
+                mDisconnectionCount--;
+                if (mDisconnectionCount <= 0) {
+                    NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    if (notificationManager != null) {
+                        notificationManager.cancel(NOTIFICATION_DISCONNECT_ID);
+                    }
+                    mDisconnectionCount = 0;
+                }
             }
             if (MediaPlayerUtils.getInstance().isSound(gatt.mAddr)) {
                 MediaPlayerUtils.getInstance().stopSound(this);
