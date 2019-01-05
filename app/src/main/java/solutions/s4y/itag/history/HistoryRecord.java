@@ -27,6 +27,7 @@ import java.util.Map;
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.R;
+import solutions.s4y.itag.ble.ITagGatt;
 
 public final class HistoryRecord implements Serializable {
     private static final long serialVersionUID = 1845673754412L;
@@ -130,7 +131,11 @@ public final class HistoryRecord implements Serializable {
 
     private static LocationListener sLocationListener;
 
-    public static void add(final Context context, final String addr) {
+    public static void add(final Context context, final ITagGatt gatt) {
+        if (gatt == null)
+            return;
+
+        final String addr = gatt.mAddr;
         final LocationManager locationManager = (LocationManager) context
                 .getSystemService(Context.LOCATION_SERVICE);
 
@@ -174,7 +179,7 @@ public final class HistoryRecord implements Serializable {
                         locationManager.removeUpdates(sLocationListener);
                     }
                     sLocationListener = null;
-                    if (location != null)
+                    if (location != null && !gatt.isConnected() )
                         add(context, new HistoryRecord(addr, location));
                     ITagApplication.faGotGpsLocation();
                 }

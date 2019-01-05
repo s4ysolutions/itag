@@ -248,7 +248,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         // Sounds if disconnected
         if (gatt.isError() && device != null) {
 
-            HistoryRecord.add(ITagsService.this, gatt.mAddr);
+            HistoryRecord.add(ITagsService.this, gatt);
             if (device.linked) {
                 MediaPlayerUtils.getInstance().startSoundDisconnected(this, gatt);
                 createNotificationChannel();
