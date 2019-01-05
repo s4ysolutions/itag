@@ -159,7 +159,7 @@ public final class HistoryRecord implements Serializable {
             }
         }
 
-        if (isGPSEnabled && (
+        if (isGPSEnabled && sLocationListener == null && (
                 location == null ||
                         !LocationManager.GPS_PROVIDER.equals(location.getProvider()) ||
                         location.getTime()<System.currentTimeMillis()-1000
