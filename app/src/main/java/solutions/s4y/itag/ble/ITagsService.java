@@ -20,6 +20,7 @@ import android.util.Log;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -243,58 +244,80 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         }
     }
 
-    private int mDisconnectionCount = 0;
+    private class Disconnection {
+        final ITagGatt gatt;
+        final String name;
+        final long ts;
+
+        public Disconnection(final ITagGatt gatt, final ITagDevice device) {
+            this.gatt = gatt;
+            this.name = device.name;
+            ts = System.currentTimeMillis();
+        }
+    }
+
+    private Map<String, Disconnection> mDisconnections = new HashMap<>(4);
+
+    private void createDisconnectNotification(String name) {
+        createNotificationChannel();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        builder
+                .setTicker(String.format(getString(R.string.notify_disconnect),
+                        name == null || "".equals(name) ? "iTag" : name))
+                .setSmallIcon(R.drawable.noalert)
+                .setContentTitle(String.format(getString(R.string.notify_disconnect), name))
+                .setContentText(getString(R.string.click_to_silent))
+                .setPriority(Notification.PRIORITY_MAX)
+                .setAutoCancel(true);
+        Intent intent = new Intent(this, ITagsService.class);
+        intent.putExtra(STOP_SOUND, true);
+        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createDisconnectNotificationChannel();
+            builder.setChannelId(CHANNEL_DISCONNECT_ID);
+        }
+        Notification notification = builder.build();
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.notify(NOTIFICATION_DISCONNECT_ID, notification);
+        }
+    }
 
     @Override
     public void onITagChange(@NotNull ITagGatt gatt) {
         ITagDevice device = ITagsDb.findByAddr(gatt.mAddr);
         // Sounds if disconnected
         if (gatt.isError() && device != null) {
-
             HistoryRecord.add(ITagsService.this, gatt);
             if (device.linked) {
                 MediaPlayerUtils.getInstance().startSoundDisconnected(this, gatt);
-                createNotificationChannel();
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
-                builder
-                        .setTicker(String.format(getString(R.string.notify_disconnect),
-                                device.name == null || "".equals(device.name) ? "iTag" : device.name))
-                        .setSmallIcon(R.drawable.noalert)
-                        .setContentTitle(String.format(getString(R.string.notify_disconnect), device.name))
-                        .setContentText(getString(R.string.click_to_silent))
-                        .setPriority(Notification.PRIORITY_MAX)
-                        .setAutoCancel(true);
-                Intent intent = new Intent(this, ITagsService.class);
-                intent.putExtra(STOP_SOUND, true);
-                PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                builder.setContentIntent(pendingIntent);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    createDisconnectNotificationChannel();
-                    builder.setChannelId(CHANNEL_DISCONNECT_ID);
-                }
-                Notification notification = builder.build();
-                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                if (notificationManager != null) {
-                    notificationManager.notify(NOTIFICATION_DISCONNECT_ID, notification);
-                }
-                mDisconnectionCount++;
             }
+            mDisconnections.put(gatt.mAddr, new Disconnection(gatt, device));
         } else {
             if (gatt.mIsConnected) {
                 HistoryRecord.clear(this, gatt.mAddr);
-                mDisconnectionCount--;
-                if (mDisconnectionCount <= 0) {
-                    NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                    if (notificationManager != null) {
-                        notificationManager.cancel(NOTIFICATION_DISCONNECT_ID);
-                    }
-                    mDisconnectionCount = 0;
-                }
+                mDisconnections.remove(gatt.mAddr);
+            }
+        }
+        if (mDisconnections.size() <= 0) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (notificationManager != null) {
+                notificationManager.cancel(NOTIFICATION_DISCONNECT_ID);
             }
             if (MediaPlayerUtils.getInstance().isSound(gatt.mAddr)) {
                 MediaPlayerUtils.getInstance().stopSound(this);
             }
+        }else{
+            String name = null;
+            long ts = 0;
+
+            for(Disconnection disconnection:mDisconnections.values()){
+                if (disconnection.ts>ts) name=disconnection.name;
+            }
+            if (name!=null)
+                createDisconnectNotification(name);
         }
     }
 
