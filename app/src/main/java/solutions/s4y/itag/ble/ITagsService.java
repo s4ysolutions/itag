@@ -306,17 +306,15 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             if (notificationManager != null) {
                 notificationManager.cancel(NOTIFICATION_DISCONNECT_ID);
             }
-            if (MediaPlayerUtils.getInstance().isSound(gatt.mAddr)) {
-                MediaPlayerUtils.getInstance().stopSound(this);
-            }
-        }else{
+            MediaPlayerUtils.getInstance().stopSound(this);
+        } else {
             String name = null;
             long ts = 0;
 
-            for(Disconnection disconnection:mDisconnections.values()){
-                if (disconnection.ts>ts) name=disconnection.name;
+            for (Disconnection disconnection : mDisconnections.values()) {
+                if (disconnection.ts > ts) name = disconnection.name;
             }
-            if (name!=null)
+            if (name != null)
                 createDisconnectNotification(name);
         }
     }
