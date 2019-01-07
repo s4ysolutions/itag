@@ -25,6 +25,7 @@ import java.util.Map;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import solutions.s4y.itag.BuildConfig;
+import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
 import solutions.s4y.itag.history.HistoryRecord;
@@ -298,7 +299,20 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         } else {
             if (gatt.mIsConnected) {
                 HistoryRecord.clear(this, gatt.mAddr);
-                mDisconnections.remove(gatt.mAddr);
+                Disconnection disconnection = mDisconnections.get(gatt.mAddr);
+                if (disconnection != null) {
+                    mDisconnections.remove(gatt.mAddr);
+                    long duration =  System.currentTimeMillis() - disconnection.ts;
+                    if (duration < 5000) {
+                        ITagApplication.faSuspiciousDisconnect5();
+                    }else if (duration < 10000) {
+                        ITagApplication.faSuspiciousDisconnect10();
+                    }else if (duration < 30000) {
+                        ITagApplication.faSuspiciousDisconnect30();
+                    }else {
+                        ITagApplication.faSuspiciousDisconnectLong();
+                    }
+                }
             }
         }
         if (mDisconnections.size() <= 0) {

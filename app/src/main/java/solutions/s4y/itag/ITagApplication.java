@@ -108,6 +108,22 @@ public final class ITagApplication extends Application {
         fa("itag_itags_view");
     }
 
+    static public void faSuspiciousDisconnect5() {
+        fa("itag_suspicious_disconnect_5");
+    }
+
+    static public void faSuspiciousDisconnect10() {
+        fa("itag_suspicious_disconnect_10");
+    }
+
+    static public void faSuspiciousDisconnect30() {
+        fa("itag_suspicious_disconnect_30");
+    }
+
+    static public void faSuspiciousDisconnectLong() {
+        fa("itag_suspicious_disconnect_long");
+    }
+
     static public void faRememberITag() {
         fa("itag_remember_itag");
     }
@@ -177,6 +193,9 @@ public final class ITagApplication extends Application {
     }
     static public void faGpsPermissionError() {
         fa("itag_gps_permission_error");
+    }
+    static public void faDisconnectDuringCall() {
+        fa("itag_disconnect_during_call");
     }
 
 }
