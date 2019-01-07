@@ -58,11 +58,19 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
 
     public void startSoundDisconnected(Context context, ITagGatt gatt) {
         stopSound(context);
+        AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
+
+        if (am == null)
+            return;
+        if(am.getMode()==AudioManager.MODE_IN_CALL){
+            ITagApplication.faDisconnectDuringCall();
+            return;
+        }
+
         AssetFileDescriptor afd = null;
         try {
             afd = context.getAssets().openFd("lost.mp3");
 
-            AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
             if (am != null) {
                 mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_ALARM);
                 am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
