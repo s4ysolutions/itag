@@ -340,7 +340,7 @@ public class ITagGatt {
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-            Log.d(LT, "onReadRemoteRssi, addr=" + mAddr + " rssi=" + rssi);
+            Log.v(LT, "onReadRemoteRssi, addr=" + mAddr + " rssi=" + rssi);
             mRssi = rssi;
             notifyITagRssi(rssi);
         }

@@ -152,32 +152,43 @@ public final class HistoryRecord implements Serializable {
 
 
         Location location = null;
-        if (isGPSEnabled || isNetworkEnabled) {
+        boolean gotBestLocation = false;
+        if (isGPSEnabled) {
             try {
                 location = locationManager
-                        .getLastKnownLocation(isGPSEnabled ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER);
+                        .getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 if (location != null)
                     add(context, new HistoryRecord(addr, location));
+
+                gotBestLocation = location.getTime() > System.currentTimeMillis() - 5000;
             } catch (SecurityException e) {
                 ITagApplication.handleError(e);
             }
         }
 
-        if (isGPSEnabled && !sLocationListeners.containsKey(addr) && (
-                location == null ||
-                        !LocationManager.GPS_PROVIDER.equals(location.getProvider()) ||
-                        location.getTime()<System.currentTimeMillis()-1000
-                        )
-                )
-        {
+        if (!gotBestLocation && isNetworkEnabled) {
+            try {
+                Location networklocation = locationManager
+                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (networklocation != null) {
+                    if (location==null || location.getTime() < System.currentTimeMillis() - 120000)
+                        add(context, new HistoryRecord(addr, networklocation));
+                }
+            } catch (SecurityException e) {
+                ITagApplication.handleError(e);
+            }
+        }
+
+        if (isGPSEnabled && !sLocationListeners.containsKey(addr) && !gotBestLocation) {
             LocationListener locationListener = new LocationListener() {
 
                 @Override
                 public void onLocationChanged(Location location) {
                     boolean isListening = sLocationListeners.containsKey(addr);
                     locationManager.removeUpdates(this);
-                    if (BuildConfig.DEBUG) Log.d(LT,"GPS removeUpdates on location changed"+addr);
-                    if (isListening && !gatt.isConnected() )
+                    if (BuildConfig.DEBUG)
+                        Log.d(LT, "GPS removeUpdates on location changed" + addr);
+                    if (isListening && !gatt.isConnected())
                         add(context, new HistoryRecord(addr, location));
                     ITagApplication.faGotGpsLocation();
                 }
@@ -200,14 +211,14 @@ public final class HistoryRecord implements Serializable {
             try {
                 locationManager.requestLocationUpdates(
                         LocationManager.GPS_PROVIDER, 1, 1, locationListener, Looper.getMainLooper());
-                if (BuildConfig.DEBUG) Log.d(LT,"GPS requestLocationUpdates "+addr);
+                if (BuildConfig.DEBUG) Log.d(LT, "GPS requestLocationUpdates " + addr);
                 sLocationListeners.put(addr, locationListener);
                 ITagApplication.faIssuedGpsRequest();
             } catch (SecurityException e) {
-                ITagApplication.handleError(e,R.string.can_not_get_gps_location);
+                ITagApplication.handleError(e, R.string.can_not_get_gps_location);
                 ITagApplication.faGpsPermissionError();
-            } catch (Exception e){
-                ITagApplication.handleError(e,true);
+            } catch (Exception e) {
+                ITagApplication.handleError(e, true);
                 ITagApplication.faGpsPermissionError();
             }
         }
@@ -219,7 +230,7 @@ public final class HistoryRecord implements Serializable {
         LocationListener locationListener = sLocationListeners.get(addr);
         sLocationListeners.remove(addr);
         notifyChange();
-        if (locationListener!=null) {
+        if (locationListener != null) {
             final LocationManager locationManager = (LocationManager) context
                     .getSystemService(Context.LOCATION_SERVICE);
             locationManager.removeUpdates(locationListener);
