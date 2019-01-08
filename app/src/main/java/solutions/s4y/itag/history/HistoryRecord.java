@@ -5,6 +5,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
@@ -34,6 +35,8 @@ import solutions.s4y.itag.ble.ITagGatt;
 public final class HistoryRecord implements Serializable {
     private static final long serialVersionUID = 1845673754412L;
     private static final String LT = HistoryRecord.class.getName();
+    private static final Handler mHandler = new Handler();
+    private static final long LOCATION_TIMEOUT = 180000;
 
     public String addr;
     public Double latitude;
@@ -134,6 +137,51 @@ public final class HistoryRecord implements Serializable {
 
     private static Map<String, LocationListener> sLocationListeners = new HashMap<>(4);
 
+    private static class HistoryLocationListener implements LocationListener {
+        private final Context context;
+        private final LocationManager locationManager;
+        private final String addr;
+        private final ITagGatt gatt;
+        private final long ts;
+
+        public HistoryLocationListener(Context context, LocationManager locationManager, String addr, ITagGatt gatt) {
+            this.context = context;
+            this.locationManager = locationManager;
+            this.addr = addr;
+            this.gatt = gatt;
+            this.ts = System.currentTimeMillis();
+        }
+
+        @Override
+        public void onLocationChanged(Location location) {
+            boolean isListening = sLocationListeners.containsKey(addr);
+            locationManager.removeUpdates(this);
+            ITagApplication.faRemovedGpsRequestBySuccess();
+            if (BuildConfig.DEBUG)
+                Log.d(LT, "GPS removeUpdates on location changed" + addr);
+            if (isListening && !gatt.isConnected() && location.getTime() < ts + LOCATION_TIMEOUT)
+                add(context, new HistoryRecord(addr, location));
+            ITagApplication.faGotGpsLocation();
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    }
+
+    ;
+
     public static void add(final Context context, final ITagGatt gatt) {
         if (gatt == null)
             return;
@@ -171,7 +219,7 @@ public final class HistoryRecord implements Serializable {
                 Location networklocation = locationManager
                         .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 if (networklocation != null) {
-                    if (location==null || location.getTime() < System.currentTimeMillis() - 120000)
+                    if (location == null || location.getTime() < System.currentTimeMillis() - 120000)
                         add(context, new HistoryRecord(addr, networklocation));
                 }
             } catch (SecurityException e) {
@@ -180,39 +228,20 @@ public final class HistoryRecord implements Serializable {
         }
 
         if (isGPSEnabled && !sLocationListeners.containsKey(addr) && !gotBestLocation) {
-            LocationListener locationListener = new LocationListener() {
+            LocationListener locationListener =
+                    new HistoryLocationListener(context, locationManager, addr, gatt);
 
-                @Override
-                public void onLocationChanged(Location location) {
-                    boolean isListening = sLocationListeners.containsKey(addr);
-                    locationManager.removeUpdates(this);
-                    if (BuildConfig.DEBUG)
-                        Log.d(LT, "GPS removeUpdates on location changed" + addr);
-                    if (isListening && !gatt.isConnected())
-                        add(context, new HistoryRecord(addr, location));
-                    ITagApplication.faGotGpsLocation();
-                }
-
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-
-                }
-
-                @Override
-                public void onProviderEnabled(String provider) {
-
-                }
-
-                @Override
-                public void onProviderDisabled(String provider) {
-
-                }
-            };
             try {
                 locationManager.requestLocationUpdates(
                         LocationManager.GPS_PROVIDER, 1, 1, locationListener, Looper.getMainLooper());
                 if (BuildConfig.DEBUG) Log.d(LT, "GPS requestLocationUpdates " + addr);
                 sLocationListeners.put(addr, locationListener);
+                mHandler.postDelayed(() -> {
+                    sLocationListeners.remove(addr);
+                    locationManager.removeUpdates(locationListener);
+                    ITagApplication.faRemovedGpsRequestByTimeout();
+                }, LOCATION_TIMEOUT);
+
                 ITagApplication.faIssuedGpsRequest();
             } catch (SecurityException e) {
                 ITagApplication.handleError(e, R.string.can_not_get_gps_location);
@@ -234,6 +263,7 @@ public final class HistoryRecord implements Serializable {
             final LocationManager locationManager = (LocationManager) context
                     .getSystemService(Context.LOCATION_SERVICE);
             locationManager.removeUpdates(locationListener);
+            ITagApplication.faRemovedGpsRequestByConnect();
             if (BuildConfig.DEBUG) Log.d(LT, "GPS removeUpdates on clear history" + addr);
         }
 

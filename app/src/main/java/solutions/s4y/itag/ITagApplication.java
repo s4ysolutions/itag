@@ -188,6 +188,15 @@ public final class ITagApplication extends Application {
     static public void faIssuedGpsRequest() {
         fa("itag_issued_gps_request");
     }
+    static public void faRemovedGpsRequestBySuccess() {
+        fa("itag_removed_gps_request_by_success");
+    }
+    static public void faRemovedGpsRequestByConnect() {
+        fa("itag_removed_gps_request_by_connect");
+    }
+    static public void faRemovedGpsRequestByTimeout() {
+        fa("itag_removed_gps_request_by_timeout");
+    }
     static public void faGotGpsLocation() {
         fa("itag_got_gps_location");
     }
