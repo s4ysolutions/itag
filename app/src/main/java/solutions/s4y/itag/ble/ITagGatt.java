@@ -30,7 +30,7 @@ import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 public class ITagGatt {
-    private static final int DOUBLE_TAG_CLICK_DELAY = 300;
+    private static final int DOUBLE_TAG_CLICK_DELAY = 500;
 
     private static final String LT = ITagGatt.class.getName();
 
