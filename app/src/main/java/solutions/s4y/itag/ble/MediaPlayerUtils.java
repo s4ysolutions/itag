@@ -62,7 +62,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
 
         if (am == null)
             return;
-        if(am.getMode()==AudioManager.MODE_IN_CALL){
+        if(am.getMode()!=AudioManager.MODE_NORMAL) {
             ITagApplication.faDisconnectDuringCall();
             return;
         }
