@@ -35,7 +35,7 @@ import solutions.s4y.itag.ble.ITagGatt;
 public final class HistoryRecord implements Serializable {
     private static final long serialVersionUID = 1845673754412L;
     private static final String LT = HistoryRecord.class.getName();
-    private static final Handler mHandler = new Handler();
+    private static final Handler mGpsTimeoutHandler = new Handler(Looper.getMainLooper());
     private static final long LOCATION_TIMEOUT = 180000;
 
     public String addr;
@@ -236,7 +236,7 @@ public final class HistoryRecord implements Serializable {
                         LocationManager.GPS_PROVIDER, 1, 1, locationListener, Looper.getMainLooper());
                 if (BuildConfig.DEBUG) Log.d(LT, "GPS requestLocationUpdates " + addr);
                 sLocationListeners.put(addr, locationListener);
-                mHandler.postDelayed(() -> {
+                mGpsTimeoutHandler.postDelayed(() -> {
                     sLocationListeners.remove(addr);
                     locationManager.removeUpdates(locationListener);
                     ITagApplication.faRemovedGpsRequestByTimeout();
