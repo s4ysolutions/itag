@@ -224,9 +224,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     }
 
     public static void stop(@NonNull Context context) {
-        if (ITagsDb.getDevices(context).size() == 0) {
-            context.stopService(new Intent(context, ITagsService.class));
-        }
+        context.stopService(new Intent(context, ITagsService.class));
     }
 
     private void createDisconnectNotificationChannel() {
@@ -302,14 +300,14 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                 Disconnection disconnection = mDisconnections.get(gatt.mAddr);
                 if (disconnection != null) {
                     mDisconnections.remove(gatt.mAddr);
-                    long duration =  System.currentTimeMillis() - disconnection.ts;
+                    long duration = System.currentTimeMillis() - disconnection.ts;
                     if (duration < 5000) {
                         ITagApplication.faSuspiciousDisconnect5();
-                    }else if (duration < 10000) {
+                    } else if (duration < 10000) {
                         ITagApplication.faSuspiciousDisconnect10();
-                    }else if (duration < 30000) {
+                    } else if (duration < 30000) {
                         ITagApplication.faSuspiciousDisconnect30();
-                    }else {
+                    } else {
                         ITagApplication.faSuspiciousDisconnectLong();
                     }
                 }

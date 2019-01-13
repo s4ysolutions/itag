@@ -66,4 +66,6 @@
     <string name="uint_min"> min </string>
     <string name="uint_hour"> hr </string>
 
+    <string name="menu_app_exit">Stop tracking</string>
+
 </resources>

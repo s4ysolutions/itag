@@ -14,6 +14,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -94,7 +95,8 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager != null)
             mBluetoothAdapter = bluetoothManager.getAdapter();
-
+        SharedPreferences preferences =(getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
+        preferences.edit().putBoolean("loadOnBoot", true).apply();
     }
 
     private void setupProgressBar() {
@@ -381,6 +383,27 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         } else {
             LeScanner.startScan(mBluetoothAdapter, this);
         }
+    }
+
+    public void onAppMenu(@NonNull View sender) {
+        final PopupMenu popupMenu = new PopupMenu(this, sender);
+        popupMenu.inflate(R.menu.app);
+        popupMenu.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.exit:
+                    SharedPreferences preferences =(getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
+                    preferences.edit().putBoolean("loadOnBoot", false).apply();
+                    ITagsService.stop(this);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        finishAndRemoveTask();
+                    }else{
+                        finishAffinity();
+                    }
+                    break;
+            }
+            return true;
+        });
+        popupMenu.show();
     }
 
     public void onChangeColor(@NonNull View sender) {
