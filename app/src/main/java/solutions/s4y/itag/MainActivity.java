@@ -228,7 +228,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         if (hasFocus!=mHasFocus) {
             mHasFocus = hasFocus;
             if (mIsServiceStartedUnbind) {
-                if (mHasFocus) {
+                if (mHasFocus && mITagsService!=null) {
                     mITagsService.removeFromForeground();
                 }
             }
