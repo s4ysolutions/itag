@@ -205,10 +205,10 @@ public final class HistoryRecord implements Serializable {
             try {
                 location = locationManager
                         .getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                if (location != null)
+                if (location != null) {
                     add(context, new HistoryRecord(addr, location));
-
-                gotBestLocation = location.getTime() > System.currentTimeMillis() - 5000;
+                    gotBestLocation = location.getTime() > System.currentTimeMillis() - 5000;
+                }
             } catch (SecurityException e) {
                 ITagApplication.handleError(e);
             }
