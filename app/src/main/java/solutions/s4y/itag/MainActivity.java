@@ -95,7 +95,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager != null)
             mBluetoothAdapter = bluetoothManager.getAdapter();
-        SharedPreferences preferences =(getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
+        SharedPreferences preferences = (getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
         preferences.edit().putBoolean("loadOnBoot", true).apply();
     }
 
@@ -220,8 +220,22 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         }
     };
 
-    private boolean mIsServiceStartedUnbind;
 
+    private boolean mHasFocus=false;
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus!=mHasFocus) {
+            mHasFocus = hasFocus;
+            if (mIsServiceStartedUnbind) {
+                if (mHasFocus) {
+                    mITagsService.removeFromForeground();
+                }
+            }
+        }
+    }
+
+    private boolean mIsServiceStartedUnbind;
     @Override
     protected void onResume() {
         super.onResume();
@@ -231,9 +245,10 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         LeScanner.addListener(this);
         ITagsDb.addListener(this);
+        mIsServiceStartedUnbind = ITagsService.start(this,!mHasFocus);
         // run the service on the activity start if there are remebered itags
-        mIsServiceStartedUnbind = ITagsService.start(this);
     }
+
 
     @Override
     protected void onPause() {
@@ -391,12 +406,12 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.exit:
-                    SharedPreferences preferences =(getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
+                    SharedPreferences preferences = (getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
                     preferences.edit().putBoolean("loadOnBoot", false).apply();
                     ITagsService.stop(this);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         finishAndRemoveTask();
-                    }else{
+                    } else {
                         finishAffinity();
                     }
                     break;
