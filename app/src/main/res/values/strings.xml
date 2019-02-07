@@ -1,12 +1,12 @@
 <resources>
     <string name="app_name">iTag One</string>
-    <string name="empty" />
+    <string name="empty" translatable="false" />
 
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_no_ble_fragment">Your device has no Bloutooth adapter</string>
+    <string name="hello_no_ble_fragment">Your device has no Bluetooth adapter</string>
 
     <string name="request_permission_title">Permission required</string>
-    <string name="request_location_permission">Starting from Android 6.0 Marhmallow the system requires location permission in order to scan for Bluetooth LE devices.\niTag One is not using location information in any way.\\nYou will have to restart scann process after the giving the access.</string>
+    <string name="request_location_permission">Starting from Android 6.0 Marhmallow the system requires location permission in order to scan for Bluetooth LE devices.\\nYou will have to restart scann process after the giving the access.</string>
     <string name="confirm_title">Confirm</string>
     <string name="confirm_forget">The device will be forgotten, are you sure? You will be able to reconnect this device and remember it in any moment though.\n\nForget?</string>
     <string name="confirm_disconnect">Flinging with your finger you requested iTag to be disconnected.\nThis is not dangerous, the iTag will not be forgotten and you will be able to connect it back with the same side-to-side fling.\n\nDo you really want disconnect iTag?</string>
@@ -17,10 +17,10 @@
     <string name="scanning_new">Scanning for new iTags&#8230;</string>
     <string name="scanning_more">Scanning for more iTags&#8230;</string>
 
-    <string name="color">Change device color</string>
-    <string name="start_scan">Scan for new devices</string>
-    <string name="rememebr">Remember device</string>
-    <string name="forget">Forget device</string>
+    <string name="color">Change iTag color</string>
+    <string name="start_scan">Scan for new iTags</string>
+    <string name="rememebr">Remember iTag</string>
+    <string name="forget">Forget iTag</string>
     <string name="itag">Connected iTag</string>
 
     <string name="connect">iTag will connect</string>
