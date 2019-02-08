@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.google.protobuf'
 
 android {
     compileSdkVersion 28
@@ -11,23 +12,78 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "int", "GRPC_PORT", "9101"
+            buildConfigField "String", "GRPC_HOST", "\"tracker.way.today\""
+        }
+        debug {
+            testCoverageEnabled false
+            buildConfigField "int", "GRPC_PORT", "9101"
+            buildConfigField "String", "GRPC_HOST", "\"tracker.way.today\""
+        }
+    }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.6.1"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.18.0'
+        }
+        javalite {
+            // The codegen for lite comes as a separate artifact
+            artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                remove java
+            }
+            task.plugins {
+                javalite {}
+                grpc {
+                    option 'lite'
+                }
+            }
         }
     }
 
 }
 
+
 dependencies {
+    compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation 'androidx.annotation:annotation:1.0.1'
+    implementation "androidx.core:core:1.0.1"
+    implementation 'io.grpc:grpc-okhttp:1.18.0'
+    implementation 'io.grpc:grpc-stub:1.18.0'
+    implementation 'io.grpc:grpc-protobuf-lite:1.18.0'
+
+    testImplementation 'androidx.test.ext:junit:1.1.0'
+    testImplementation 'com.google.truth:truth:0.42'
+    testImplementation 'org.robolectric:robolectric:4.1'
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
 }
