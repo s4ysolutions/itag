@@ -45,8 +45,15 @@
     <string name="status133">يبدو أن الجهاز لديه مشكلة. قد تفشل ميزة الحماية ضد الضياع.</string>
     <string name="no_geo_activity">يبدو أن جهازك ليس له موقع خريطة</string>
     <string name="can_not_get_gps_location">لم يتمكن ITag One من الحصول على الموقع المحدد بسبب تعطيل GPS لهذا التطبيق</string>
-    <string name="uint_sec">sec</string>
-    <string name="uint_min">min</string>
-    <string name="uint_hour">hr</string>
     <string name="menu_app_exit">توقف عن التتبع</string>
+    <string name="freq_hour_1">ساعة واحدة</string>
+    <string name="freq_min_30">نصف ساعه</string>
+    <string name="freq_min_15">15 دقيقة</string>
+    <string name="freq_min_1">1 دقيقة</string>
+    <string name="freq_min_5">5 دقائق</string>
+    <string name="freq_sec_15">15 ثانية</string>
+    <string name="freq_sec_5">5 ثوان</string>
+    <string name="freq_sec_1">ثانية واحدة</string>
+    <string name="off">ايقاف</string>
+    <string name="about_wt">عن Way.Today</string>
 </resources>

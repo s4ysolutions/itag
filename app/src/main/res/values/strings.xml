@@ -62,10 +62,20 @@
     <string name="no_geo_activity">It looks like your device does not have any Map location</string>
     <string name="can_not_get_gps_location">iTag One could not get exact location because GPS disabled for this application</string>
 
-    <string name="uint_sec"> sec </string>
-    <string name="uint_min"> min </string>
-    <string name="uint_hour"> hr </string>
+    <string name="uint_sec" translatable="false"> sec </string>
+    <string name="uint_min" translatable="false"> min </string>
+    <string name="uint_hour" translatable="false"> hr </string>
 
     <string name="menu_app_exit">Stop tracking</string>
 
+    <string name="freq_hour_1">1 hour</string>
+    <string name="freq_min_30">Half an hour</string>
+    <string name="freq_min_15">15 minutes</string>
+    <string name="freq_min_5">5 minutes</string>
+    <string name="freq_min_1">1 minute</string>
+    <string name="freq_sec_15">15 seconds</string>
+    <string name="freq_sec_5">5 seconds</string>
+    <string name="freq_sec_1">1 second</string>
+    <string name="off">Off</string>
+    <string name="about_wt">About Way.Today</string>
 </resources>

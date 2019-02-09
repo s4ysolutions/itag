@@ -46,4 +46,16 @@
     <string name="no_geo_activity">Ваше устройство не имеет приложения для отображения карт</string>
     <string name="can_not_get_gps_location">Не удалось получить точное местоположение так-как GPS выключен</string>
     <string name="menu_app_exit">Выключить слежение</string>
+
+    <string name="freq_hour_1">1 час</string>
+    <string name="freq_min_30">Полчаса</string>
+    <string name="freq_min_15">15 минут</string>
+    <string name="freq_min_1">1 минута</string>
+    <string name="freq_min_5">5 минут</string>
+    <string name="freq_sec_15">15 секунд</string>
+    <string name="freq_sec_5">5 секунд</string>
+    <string name="freq_sec_1">1 секунда</string>
+    <string name="off">Выключено</string>
+    <string name="about_wt">О сервисе ПростоПуть</string>
+
 </resources>

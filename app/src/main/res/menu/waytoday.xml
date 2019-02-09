@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:title="Item" />
+    <group>
+        <item
+            android:id="@+id/wt_off"
+            android:title="@string/off" />
+        <item
+            android:id="@+id/wt_min_1"
+            android:title="@string/freq_min_1" />
+        <item
+            android:id="@+id/wt_hour_1"
+            android:title="@string/freq_hour_1" />
+        <item
+            android:id="@+id/wt_min_5"
+            android:title="@string/freq_min_5" />
+        <item
+            android:id="@+id/wt_min_15"
+            android:title="@string/freq_min_15" />
+    </group>
+    <group>
+        <item
+            android:id="@+id/wt_about"
+            android:title="@string/about_wt" />
+    </group>
+
 </menu>

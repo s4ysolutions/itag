@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -34,9 +32,20 @@
             android:text="@string/app_name" />
 
         <ImageView
+            android:id="@+id/btn_waytoday"
+            android:layout_width="36dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="16dp"
+            android:contentDescription="@string/start_scan"
+            android:onClick="onWaytoday"
+            android:scaleType="centerInside"
+            android:src="@drawable/waytoday" />
+
+        <ImageView
             android:id="@+id/imageView"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="36dp"
+            android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
             android:layout_marginEnd="8dp"
             android:contentDescription="@string/start_scan"
