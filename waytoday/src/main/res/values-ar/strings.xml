@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Way.Today</string>
+    <string name="no_location_manager">لا يوجد GPS على هذا الجهاز</string>
+</resources>

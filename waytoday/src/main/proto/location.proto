@@ -1,0 +1,29 @@
+syntax = "proto3";
+option java_package = "solutions.s4y.waytoday.grpc";
+
+package grpc;
+
+message Location {
+    string ID = 1;
+    string tid = 2;
+    uint64 lat = 3;
+    uint64 lon = 4;
+    int64 alt = 5;
+    int64 bear = 6;
+    uint64 ts = 7;
+    uint64 batp = 8;
+    bool bats = 9;
+    string provider = 10;
+    uint64 speed = 11;
+    int64 acc = 12;
+    string sid = 13;
+}
+
+message Locations {
+    repeated Location Items = 1;
+}
+
+message LocationsSet {
+    map<string, Locations> Set = 1;
+}
+
