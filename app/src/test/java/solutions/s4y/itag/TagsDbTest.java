@@ -1,34 +1,26 @@
 package solutions.s4y.itag;
 
-import android.Manifest;
-import android.app.Application;
 import android.bluetooth.BluetoothDevice;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.shadows.ShadowApplication;
 
 import java.util.List;
 
 import androidx.test.core.app.ApplicationProvider;
 import solutions.s4y.itag.ble.ITagDevice;
 import solutions.s4y.itag.ble.ITagsDb;
-import solutions.s4y.itag.ble.ITagsService;
 
 import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
 public class TagsDbTest {
-    Context context;
+    private Context context;
 
     @Before
     public void setupActivity() {
