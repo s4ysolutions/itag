@@ -11,10 +11,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +31,9 @@ import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
 import solutions.s4y.itag.history.HistoryRecord;
+import solutions.s4y.waytoday.locations.LocationsGPSUpdater;
+import solutions.s4y.waytoday.locations.LocationsTracker;
+import solutions.s4y.waytoday.locations.LocationsUpdater;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
@@ -104,6 +109,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         return mBinder;
     }
 
+    private LocationsUpdater gpsLocatonUpdater;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -116,6 +123,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         this.registerReceiver(mBluetoothReceiver, filter);
         connectAll();
+        gpsLocatonUpdater = new LocationsGPSUpdater(this);
     }
 
     @Override
@@ -131,6 +139,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             gatt.disconnect();
         }
 
+        LocationsTracker.stop();
         super.onDestroy();
     }
 
@@ -378,6 +387,19 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             }
         }
         mGatts.remove(device.addr);
+    }
+
+
+    public void startWayToday(int frequency) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferences.edit().putBoolean("wt", true).apply();
+        preferences.edit().putInt("freq", frequency).apply();
+        LocationsTracker.requestStart(gpsLocatonUpdater, frequency);
+    }
+
+    public void stopWayToday() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferences.edit().putBoolean("wt", false).apply();
     }
 
 }
