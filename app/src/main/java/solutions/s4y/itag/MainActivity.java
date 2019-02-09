@@ -205,12 +205,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         @Override
         public void onServiceConnected(ComponentName className,
                                        @NonNull IBinder binder) {
-            mITagsService = ((ITagsService.GattBinder) binder).getService();
-            mITagsServiceBound = true;
-//            mITagsService.connectAll();
-            mITagsService.removeFromForeground();
-            setupContent();
-            notifyServiceBoundChanged();
+            setBinder(binder);
         }
 
         @Override
@@ -219,6 +214,15 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
             notifyServiceBoundChanged();
         }
     };
+
+    protected void setBinder(@NonNull IBinder binder) {
+        mITagsService = ((ITagsService.GattBinder) binder).getService();
+        mITagsServiceBound = true;
+//            mITagsService.connectAll();
+        mITagsService.removeFromForeground();
+        setupContent();
+        notifyServiceBoundChanged();
+    }
 
 
     private boolean mHasFocus=false;
@@ -421,6 +425,35 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         popupMenu.show();
     }
 
+    public void onWaytoday(@NonNull View sender) {
+        if (!mITagsServiceBound || mITagsService == null)
+            return;
+        final PopupMenu popupMenu = new PopupMenu(this, sender);
+        popupMenu.inflate(R.menu.waytoday);
+        popupMenu.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.wt_min_1:
+                    mITagsService.startWayToday(60000);
+                    break;
+                case R.id.wt_min_5:
+                    mITagsService.startWayToday(60000);
+                    break;
+                case R.id.wt_min_15:
+                    mITagsService.startWayToday(60000);
+                    break;
+                case R.id.wt_hour_1:
+                    mITagsService.startWayToday(60000);
+                    break;
+                case R.id.wt_off:
+                    mITagsService.stopWayToday();
+                    break;
+
+            }
+            return true;
+        });
+        popupMenu.show();
+    }
+
     public void onChangeColor(@NonNull View sender) {
         final ITagDevice device = (ITagDevice) sender.getTag();
         if (device == null) {
@@ -502,6 +535,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
 
         }
     */
+
     @Override
     public void onStartScan() {
         setupContent();
