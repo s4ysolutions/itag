@@ -78,4 +78,9 @@
     <string name="freq_sec_1">1 second</string>
     <string name="off">Off</string>
     <string name="about_wt">About Way.Today</string>
+    <string name="freq_continuously">Сontinuously</string>
+    <string name="waytoday">Way.Today</string>
+    <string name="trackid">Way.Today ID:</string>
+    <string name="wt_new_id">Change ID</string>
+    <string name="wt_share">Share locaiton</string>
 </resources>

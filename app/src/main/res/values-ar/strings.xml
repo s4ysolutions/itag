@@ -56,4 +56,9 @@
     <string name="freq_sec_1">ثانية واحدة</string>
     <string name="off">ايقاف</string>
     <string name="about_wt">عن Way.Today</string>
+    <string name="freq_continuously">بشكل متواصل</string>
+    <string name="waytoday">طريق اليوم</string>
+    <string name="trackid">هوية شخصية</string>
+    <string name="wt_new_id">تغيير المعرف</string>
+    <string name="wt_share">شارك الموقع</string>
 </resources>

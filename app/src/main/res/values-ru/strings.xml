@@ -57,5 +57,10 @@
     <string name="freq_sec_1">1 секунда</string>
     <string name="off">Выключено</string>
     <string name="about_wt">О сервисе ПростоПуть</string>
+    <string name="freq_continuously">Непрерывно</string>
+    <string name="waytoday">Просто путь</string>
+    <string name="trackid">Код ПростоПуть:</string>
+    <string name="wt_new_id">Сменить код</string>
+    <string name="wt_share">Поделиться местоположением</string>
 
 </resources>
