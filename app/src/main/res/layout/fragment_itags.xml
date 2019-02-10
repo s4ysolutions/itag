@@ -33,12 +33,14 @@
 
         <ImageView
             android:id="@+id/btn_waytoday"
-            android:layout_width="36dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
             android:layout_marginRight="16dp"
             android:contentDescription="@string/start_scan"
             android:onClick="onWaytoday"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
             android:scaleType="centerInside"
             android:src="@drawable/waytoday" />
 
@@ -50,6 +52,7 @@
             android:layout_marginEnd="8dp"
             android:contentDescription="@string/start_scan"
             android:onClick="onStartStopScan"
+            android:padding="4dp"
             android:scaleType="centerInside"
             android:src="@drawable/scan" />
 
