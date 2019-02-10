@@ -19,8 +19,6 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +29,7 @@ import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.MainActivity;
 import solutions.s4y.itag.R;
 import solutions.s4y.itag.history.HistoryRecord;
+import solutions.s4y.waytoday.idservice.IDService;
 import solutions.s4y.waytoday.locations.LocationsGPSUpdater;
 import solutions.s4y.waytoday.locations.LocationsTracker;
 import solutions.s4y.waytoday.locations.LocationsUpdater;
@@ -143,8 +142,8 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         super.onDestroy();
     }
 
-    @NotNull
-    public ITagGatt getGatt(@NotNull final String addr, boolean connect) {
+    @NonNull
+    public ITagGatt getGatt(@NonNull final String addr, boolean connect) {
         ITagGatt gatt = mGatts.get(addr);
         if (gatt == null) {
             gatt = new ITagGatt(addr);
@@ -294,7 +293,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     }
 
     @Override
-    public void onITagChange(@NotNull ITagGatt gatt) {
+    public void onITagChange(@NonNull ITagGatt gatt) {
         ITagDevice device = ITagsDb.findByAddr(gatt.mAddr);
         // Sounds if disconnected
         if (gatt.isError() && device != null) {
@@ -341,7 +340,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     }
 
     @Override
-    public void onITagClicked(@NotNull ITagGatt gatt) {
+    public void onITagClicked(@NonNull ITagGatt gatt) {
         if (gatt.isFindingITag()) {
             gatt.stopFindITag();
         }
@@ -389,12 +388,30 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         mGatts.remove(device.addr);
     }
 
-
     public void startWayToday(int frequency) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        final SharedPreferences preferences =
+                PreferenceManager.getDefaultSharedPreferences(this);
         preferences.edit().putBoolean("wt", true).apply();
         preferences.edit().putInt("freq", frequency).apply();
-        LocationsTracker.requestStart(gpsLocatonUpdater, frequency);
+        String tid = preferences.getString("tid", null);
+        Handler handler = new Handler();
+        if (tid == null) {
+            final IDService.IIDSeriviceListener listener = new IDService.IIDSeriviceListener() {
+                @Override
+                public void onTrackID(@NonNull String trackID) {
+                    IDService.removeOnITagChangeListener(this);
+                    if (!"".equals(trackID)) {
+                        preferences.edit().putString("tid", tid).apply();
+                        handler.post(() ->
+                                LocationsTracker.requestStart(gpsLocatonUpdater, frequency));
+                    }
+                }
+            };
+            IDService.addOnITagChangeListener(listener);
+            IDService.enqueueRetrieveId(this, "");
+        } else {
+            LocationsTracker.requestStart(gpsLocatonUpdater, frequency);
+        }
     }
 
     public void stopWayToday() {
