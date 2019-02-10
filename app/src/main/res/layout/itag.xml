@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layout_itag"
     android:layout_width="match_parent"
@@ -71,6 +70,14 @@
         android:padding="8dp"
         android:scaleType="fitCenter"
         android:src="@drawable/itag_white" />
+
+        <solutions.s4y.itag.WaytodayView
+            android:id="@+id/wt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|left"
+            android:layout_marginLeft="8dp"
+            android:layout_marginBottom="8dp" />
 
         <ImageView
             android:id="@+id/location"
