@@ -225,14 +225,15 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
     }
 
 
-    private boolean mHasFocus=false;
+    private boolean mHasFocus = false;
+
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus!=mHasFocus) {
+        if (hasFocus != mHasFocus) {
             mHasFocus = hasFocus;
             if (mIsServiceStartedUnbind) {
-                if (mHasFocus && mITagsService!=null) {
+                if (mHasFocus && mITagsService != null) {
                     mITagsService.removeFromForeground();
                 }
             }
@@ -240,6 +241,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
     }
 
     private boolean mIsServiceStartedUnbind;
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -249,7 +251,7 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         LeScanner.addListener(this);
         ITagsDb.addListener(this);
-        mIsServiceStartedUnbind = ITagsService.start(this,!mHasFocus);
+        mIsServiceStartedUnbind = ITagsService.start(this, !mHasFocus);
         // run the service on the activity start if there are remebered itags
     }
 
@@ -432,22 +434,26 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
         popupMenu.inflate(R.menu.waytoday);
         popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
-                case R.id.wt_min_1:
-                    mITagsService.startWayToday(60000);
+                case R.id.wt_sec_1:
+                    mITagsService.startWayToday(1);
                     break;
                 case R.id.wt_min_5:
-                    mITagsService.startWayToday(60000);
-                    break;
-                case R.id.wt_min_15:
-                    mITagsService.startWayToday(60000);
+                    mITagsService.startWayToday(300000);
                     break;
                 case R.id.wt_hour_1:
-                    mITagsService.startWayToday(60000);
+                    mITagsService.startWayToday(3600000);
                     break;
                 case R.id.wt_off:
                     mITagsService.stopWayToday();
                     break;
-
+                case R.id.wt_about:
+                    final String appPackageName = "solutions.s4y.waytoday";
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                    } catch (android.content.ActivityNotFoundException anfe) {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                    }
+                    break;
             }
             return true;
         });
