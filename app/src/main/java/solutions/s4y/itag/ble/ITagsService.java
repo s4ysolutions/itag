@@ -417,6 +417,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
     public void stopWayToday() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         preferences.edit().putBoolean("wt", false).apply();
+        LocationsTracker.stop();
     }
 
 }
