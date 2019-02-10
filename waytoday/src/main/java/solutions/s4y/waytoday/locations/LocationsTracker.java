@@ -20,7 +20,8 @@ public class LocationsTracker {
     @VisibleForTesting
     private static final List<ITrackingStateListener> sStateListeners =
             new ArrayList<>(2);
-    private static boolean isSuspended;
+    @SuppressWarnings("WeakerAccess")
+    public static boolean isSuspended;
     static private final LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
@@ -63,7 +64,7 @@ public class LocationsTracker {
         }
     };
     private static LocationsUpdater updater;
-    private static boolean isUpdating;
+    public static boolean isUpdating;
 
     public static void addOnILocationListener(ILocationListener listener) {
         mLocationListeners.add(listener);
