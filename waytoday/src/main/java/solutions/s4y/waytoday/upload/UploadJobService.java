@@ -46,7 +46,9 @@ public class UploadJobService extends JobIntentService {
     private static boolean sPrevIsUploading;
     private static int sPrevSize;
     private static Status sPrevStatus;
-    public GRPCChannelProvider grpcChannelProvider;
+    @VisibleForTesting
+    public static final List<IUploadListener> sListeners =
+            new ArrayList<>(2);
     protected ManagedChannel ch = null;
 
     public static Status uploadStatus() {
@@ -76,6 +78,23 @@ public class UploadJobService extends JobIntentService {
         enqueueWork(context, UploadJobService.class, 1000, intent);
     }
 
+    final GRPCChannelProvider grpcChannelProvider = GRPCChannelProvider.getInstance();
+
+    public static void addOnITagChangeListener(IUploadListener listener) {
+        sListeners.add(listener);
+    }
+
+    public static void removeOnITagChangeListener(IUploadListener listener) {
+        sListeners.remove(listener);
+    }
+
+    private static void notifyUploadStatus() {
+        Status status = uploadStatus();
+        for (IUploadListener listener : sListeners) {
+            listener.onStatusChange(status);
+        }
+    }
+
     private static void notifyUpdateState() {
         if (BuildConfig.DEBUG) {
             boolean changed = false;
@@ -97,14 +116,18 @@ public class UploadJobService extends JobIntentService {
                 if (sPrevStatus == status) {
                     ErrorsObservable.notify(new Exception("Status must not be the same"), true);
                 }
+                notifyUploadStatus();
                 sPrevStatus = status;
-//                subjectStatus.onNext(uploadStatus());
             } else {
                 ErrorsObservable.notify(new Exception("Should never be called without changes"), true);
             }
         } else {
-            //          subjectStatus.onNext(uploadStatus());
+            notifyUploadStatus();
         }
+    }
+
+    public interface IUploadListener {
+        void onStatusChange(Status status);
     }
 
     @VisibleForTesting()
