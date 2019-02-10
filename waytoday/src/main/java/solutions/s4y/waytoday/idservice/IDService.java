@@ -51,11 +51,19 @@ public class IDService extends JobIntentService {
         }
     }
 
-    public static void addOnITagChangeListener(IIDSeriviceListener listener) {
+    public static void enqueueRetrieveId(Context context) {
+        if (!isProgress()) {
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+            String prevID = sp.getString("tid", "");
+            enqueueRetrieveId(context, prevID);
+        }
+    }
+
+    public static void addOnTrackIDChangeListener(IIDSeriviceListener listener) {
         sListeners.add(listener);
     }
 
-    public static void removeOnITagChangeListener(IIDSeriviceListener listener) {
+    public static void removeOnTrackIDChangeListener(IIDSeriviceListener listener) {
         sListeners.remove(listener);
     }
 

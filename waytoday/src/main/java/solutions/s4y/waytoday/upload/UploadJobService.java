@@ -269,9 +269,9 @@ public class UploadJobService extends JobIntentService {
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String tid = preferences.getString("tid", null);
+        String tid = preferences.getString("tid", "");
 
-        if (tid == null) return;
+        if ("".equals(tid)) return;
 
         if (sIsUploading) {
             ErrorsObservable.notify(new Error("UploadJobService re-entry"), BuildConfig.DEBUG);

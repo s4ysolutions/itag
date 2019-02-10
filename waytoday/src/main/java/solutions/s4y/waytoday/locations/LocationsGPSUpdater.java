@@ -5,6 +5,9 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import solutions.s4y.waytoday.BuildConfig;
 import solutions.s4y.waytoday.R;
@@ -17,6 +20,32 @@ public class LocationsGPSUpdater implements LocationsUpdater {
     public LocationsGPSUpdater(@NonNull Context context) {
         mLocationManager = (LocationManager) context
                 .getSystemService(Context.LOCATION_SERVICE);
+    }
+
+    private static final List<RequestGPSPermissionListener> mPermissionListeners =
+            new ArrayList<>(2);
+
+    @Override
+    public void cancelLocationUpdates(@NonNull LocationListener listener) {
+        if (mLocationManager == null) {
+            ErrorsObservable.toast(R.string.no_location_manager);
+            return;
+        }
+        mLocationManager.removeUpdates(listener);
+    }
+
+    public static void addOnGPSPermissionListener(RequestGPSPermissionListener listener) {
+        mPermissionListeners.add(listener);
+    }
+
+    private static void notifyPermissionRequest() {
+        for (RequestGPSPermissionListener listener : mPermissionListeners) {
+            listener.onGPSPermissionRequest();
+        }
+    }
+
+    public static void removeOnLocationListener(RequestGPSPermissionListener listener) {
+        mPermissionListeners.remove(listener);
     }
 
     @Override
@@ -45,16 +74,11 @@ public class LocationsGPSUpdater implements LocationsUpdater {
         } catch (SecurityException e) {
             requestUpdatesListener.onRequestResult(false);
             ErrorsObservable.notify(e, true);
+            notifyPermissionRequest();
         }
     }
 
-    @Override
-    public void cancelLocationUpdates(@NonNull LocationListener listener) {
-        if (mLocationManager == null) {
-            ErrorsObservable.toast(R.string.no_location_manager);
-            return;
-        }
-        mLocationManager.removeUpdates(listener);
+    public interface RequestGPSPermissionListener {
+        void onGPSPermissionRequest();
     }
-
 }

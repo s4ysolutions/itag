@@ -9,9 +9,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.util.List;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
@@ -22,20 +19,17 @@ import solutions.s4y.waytoday.upload.UploadJobService;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.CoreMatchers.anything;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
-public class WayTodayFirstSessionTest {
+public class WayTodayChangeTrackIDTest {
     private static IDService.IIDSeriviceListener mockIDListener =
             mock(IDService.IIDSeriviceListener.class);
     private static UploadJobService.IUploadListener mockUploadListener =
@@ -68,9 +62,10 @@ public class WayTodayFirstSessionTest {
         p.edit().remove("freq").apply();
         p.edit().remove("tid").apply();
         p.edit().remove("wt").apply();
-        p.edit().remove("wtfirst").apply();
         reset(mockIDListener);
         reset(mockUploadListener);
+        reset(mockTrackingStateListener);
+        reset(mockLocationListener);
     }
 
     @After
@@ -90,45 +85,27 @@ public class WayTodayFirstSessionTest {
     }
 
     @Test
-    public void activity_firstLaunchWT() {
+    public void activity_clickChangeID() {
         try (ActivityScenario<MainActivity> ignored = ActivityScenario.launch(MainActivity.class)) {
-            // open waytoday menu
-            onView(withId(R.id.btn_waytoday))
-                    .perform(click());
-            onView(withText(R.string.wt_new_id))
-                    .check(doesNotExist());
-            //close waytoday menu
-            onView(withText(R.string.freq_continuously))
-                    .perform(click());
 
             Application application = ApplicationProvider.getApplicationContext();
-            SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(application);
-            assertThat(p.getInt("freq", -1), equalTo(1));
-            assertThat(p.getBoolean("wt", false), is(true));
-            assertThat(p.getBoolean("wtfirst", true), is(true));
-            assertThat(p.getBoolean("wtfirst", false), is(false));
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(application);
 
-            ArgumentCaptor<LocationsTracker.TrackingState> state =
-                    ArgumentCaptor.forClass(LocationsTracker.TrackingState.class);
-
-            verify(mockIDListener, timeout(10000)).onTrackID(any());
-            verify(mockTrackingStateListener, timeout(1000).times(2)).onStateChange(state.capture());
-            List<LocationsTracker.TrackingState> states =
-                    state.getAllValues();
-            assertThat(states.size(), is(2));
-            assertThat(states.get(0).isSuspended, is(false));
-            assertThat(states.get(0).isUpdating, is(true));
-            assertThat(states.get(1).isSuspended, is(anything()));
-            assertThat(states.get(1).isUpdating, is(true));
-            assertThat(p.getBoolean("wtfirst", true), is(false));
+            String prevID = sp.getString("tid", "");
 
             // open waytoday menu
             onView(withId(R.id.btn_waytoday))
                     .perform(click());
-            onView(withText(R.string.wt_new_id));
             //close waytoday menu
-            onView(withId(R.id.btn_waytoday))
+            onView(withText(R.string.wt_new_id))
                     .perform(click());
+
+            SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(application);
+
+            verify(mockIDListener, timeout(10000)).onTrackID(any());
+            String id = sp.getString("tid", "xxxx");
+            assertThat(id, not(prevID));
+            assertThat(id, not("xxxx"));
         }
     }
 }

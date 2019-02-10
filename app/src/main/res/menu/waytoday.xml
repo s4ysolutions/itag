@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <group>
-        <item
-            android:id="@+id/wt_off"
-            android:title="@string/off" />
+    <item
+        android:id="@+id/wt_about_first"
+        android:title="@string/about_wt" />
+    <item
+        android:id="@+id/wt_off"
+        android:title="@string/off" />
+    <group android:checkableBehavior="all">
         <item
             android:id="@+id/wt_sec_1"
             android:title="@string/freq_continuously" />

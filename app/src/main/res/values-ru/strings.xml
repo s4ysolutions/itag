@@ -45,8 +45,7 @@
     <string name="status133">Устройство работает с проблемами. Возможно функция тревоги при утере не будет работать.</string>
     <string name="no_geo_activity">Ваше устройство не имеет приложения для отображения карт</string>
     <string name="can_not_get_gps_location">Не удалось получить точное местоположение так-как GPS выключен</string>
-    <string name="menu_app_exit">Выключить слежение</string>
-
+    <string name="menu_app_exit">Завершить</string>
     <string name="freq_hour_1">1 час</string>
     <string name="freq_min_30">Полчаса</string>
     <string name="freq_min_15">15 минут</string>
@@ -55,12 +54,17 @@
     <string name="freq_sec_15">15 секунд</string>
     <string name="freq_sec_5">5 секунд</string>
     <string name="freq_sec_1">1 секунда</string>
-    <string name="off">Выключено</string>
+    <string name="off">Выключить</string>
     <string name="about_wt">О сервисе ПростоПуть</string>
     <string name="freq_continuously">Непрерывно</string>
     <string name="waytoday">Просто путь</string>
     <string name="trackid">Код ПростоПуть:</string>
     <string name="wt_new_id">Сменить код</string>
     <string name="wt_share">Поделиться местоположением</string>
-
+    <string name="share_title">Отправить местоположение…</string>
+    <string name="share_link"><![CDATA[Мое положение доступно по ссылке https://way.today/#%1$s!30m или по коду %1$s на сайте простопуть.рф]]></string>
+    <string name="share_subj">Ссобщение с сервиса Way.Today</string>
+    <string name="about_ok">Перейти в Play Market</string>
+    <string name="about_cancel">Закрыть</string>
+    <string name="about_message">С помощью короткоживущего кода сервис ПростоПуть позволяет делиться с другими людьми своим местоположением без нарушения приватности.\n\nВы можете отслеживать свой брелок на сайте прямо сейчас или установить приложение ПростоПуть, которое не требует наличия брелка.\n\nРекомендуем установить приложение, так как оно имеет некоторые дополнительные фукнции.</string>
 </resources>

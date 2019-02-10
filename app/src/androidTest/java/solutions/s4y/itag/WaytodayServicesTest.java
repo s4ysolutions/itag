@@ -36,13 +36,13 @@ public class WaytodayServicesTest {
 
     @BeforeClass
     public static void beforeClass() {
-        IDService.addOnITagChangeListener(mockIDListiner);
+        IDService.addOnTrackIDChangeListener(mockIDListiner);
         UploadJobService.addOnITagChangeListener(mockUploadListiner);
     }
 
     @AfterClass
     public static void afterClass() {
-        IDService.removeOnITagChangeListener(mockIDListiner);
+        IDService.removeOnTrackIDChangeListener(mockIDListiner);
         UploadJobService.removeOnITagChangeListener(mockUploadListiner);
     }
 

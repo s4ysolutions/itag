@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -33,11 +34,16 @@ import solutions.s4y.waytoday.idservice.IDService;
 import solutions.s4y.waytoday.locations.LocationsGPSUpdater;
 import solutions.s4y.waytoday.locations.LocationsTracker;
 import solutions.s4y.waytoday.locations.LocationsUpdater;
+import solutions.s4y.waytoday.upload.UploadJobService;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 
-public class ITagsService extends Service implements ITagGatt.ITagChangeListener, ITagsDb.DbListener {
+public class ITagsService extends Service implements
+        ITagGatt.ITagChangeListener,
+        ITagsDb.DbListener,
+        LocationsTracker.ILocationListener,
+        IDService.IIDSeriviceListener {
     private static final int FOREGROUND_ID = 1;
     private static final int NOTIFICATION_DISCONNECT_ID = 2;
     private static final String CHANNEL_ID = "itag3";
@@ -51,6 +57,21 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
 
     @NonNull
     private HashMap<String, ITagGatt> mGatts = new HashMap<>(4);
+
+    @Override
+    public void onLocation(@NonNull Location location) {
+        UploadJobService.enqueueUploadLocation(this, location);
+    }
+
+    @Override
+    public void onTrackID(@NonNull String trackID) {
+        if ("".equals(trackID))
+            return;
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp.edit().putString("tid", trackID).apply();
+        sp.edit().putBoolean("wtfirst", false).apply();
+    }
 
     public class GattBinder extends Binder {
         @NonNull
@@ -123,6 +144,15 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         this.registerReceiver(mBluetoothReceiver, filter);
         connectAll();
         gpsLocatonUpdater = new LocationsGPSUpdater(this);
+        LocationsTracker.addOnLocationListener(this);
+        IDService.addOnTrackIDChangeListener(this);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean wt = preferences.getBoolean("wt", false);
+        int freq = preferences.getInt("freq", 0);
+        if (wt && freq > 0) {
+            startWayToday(freq);
+        }
     }
 
     @Override
@@ -130,7 +160,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
         if (BuildConfig.DEBUG) {
             Log.d(LT, "onDestroy");
         }
-
+        LocationsTracker.removeOnLocationListener(this);
         this.unregisterReceiver(mBluetoothReceiver);
         ITagGatt.removeOnITagChangeListener(this);
         ITagsDb.removeListener(this);
@@ -399,7 +429,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
             final IDService.IIDSeriviceListener listener = new IDService.IIDSeriviceListener() {
                 @Override
                 public void onTrackID(@NonNull String trackID) {
-                    IDService.removeOnITagChangeListener(this);
+                    IDService.removeOnTrackIDChangeListener(this);
                     if (!"".equals(trackID)) {
                         preferences.edit().putString("tid", tid).apply();
                         handler.post(() ->
@@ -407,7 +437,7 @@ public class ITagsService extends Service implements ITagGatt.ITagChangeListener
                     }
                 }
             };
-            IDService.addOnITagChangeListener(listener);
+            IDService.addOnTrackIDChangeListener(listener);
             IDService.enqueueRetrieveId(this, "");
         } else {
             LocationsTracker.requestStart(gpsLocatonUpdater, frequency);

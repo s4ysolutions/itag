@@ -1,7 +1,9 @@
 package solutions.s4y.itag;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,22 +25,31 @@ import solutions.s4y.itag.ble.ITagGatt;
 import solutions.s4y.itag.ble.ITagsDb;
 import solutions.s4y.itag.ble.ITagsService;
 import solutions.s4y.itag.history.HistoryRecord;
+import solutions.s4y.waytoday.idservice.IDService;
+import solutions.s4y.waytoday.locations.LocationsTracker;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagGatt.ITagChangeListener, MainActivity.ServiceBoundListener, HistoryRecord.HistoryRecordListener {
+public class ITagsFragment extends Fragment
+        implements
+        ITagsDb.DbListener,
+        ITagGatt.ITagChangeListener,
+        MainActivity.ServiceBoundListener,
+        HistoryRecord.HistoryRecordListener,
+        LocationsTracker.ITrackingStateListener,
+        IDService.IIDSeriviceListener {
     private static final String LT = ITagsFragment.class.getName();
     private Animation mLocationAnimation;
     private Animation mITagAnimation;
-
+    private String trackID = "";
 
     public ITagsFragment() {
         // Required empty public constructor
     }
 
-    private void setupTag(@NonNull final ITagDevice device, final View itagLayout) {
+    private void setupTag(int n, @NonNull final ITagDevice device, final View itagLayout) {
         final View btnForget = itagLayout.findViewById(R.id.btn_forget);
         btnForget.setTag(device);
         final View btnColor = itagLayout.findViewById(R.id.btn_color);
@@ -142,6 +153,16 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
             imageLocation.setVisibility(View.VISIBLE);
         }
 
+        View waytoday = itagLayout.findViewById(R.id.wt);
+        if (n == 1 && LocationsTracker.isUpdating && !"".equals(trackID)) {
+            waytoday.setVisibility(View.VISIBLE);
+            TextView wtid = waytoday.findViewById(R.id.text_wt_id);
+            wtid.setText(trackID);
+            wtid = waytoday.findViewById(R.id.text_wt_id2);
+            wtid.setText(trackID);
+        } else {
+            waytoday.setVisibility(View.GONE);
+        }
     }
 
     private void setupTags(@NonNull ViewGroup root) {
@@ -158,17 +179,31 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
         tagsLayout = activity.getLayoutInflater().inflate(rid, root, false);
         root.addView(tagsLayout, index);
-        if (s > 0) {
-            setupTag(ITagsDb.getDevices(getActivity()).get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
-        }
-        if (s > 1) {
-            setupTag(ITagsDb.getDevices(getActivity()).get(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
-        }
-        if (s > 2) {
-            setupTag(ITagsDb.getDevices(getActivity()).get(2), tagsLayout.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
-        }
-        if (s > 3) {
-            setupTag(ITagsDb.getDevices(getActivity()).get(3), tagsLayout.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
+        if (s == 0) {
+            boolean active = !"".equals(trackID) && LocationsTracker.isUpdating;
+            View wtview = tagsLayout.findViewById(R.id.wt);
+            wtview.setVisibility(
+                    active
+                            ? View.VISIBLE
+                            : View.GONE
+            );
+            if (active) {
+                TextView tid = wtview.findViewById(R.id.text_wt_id);
+                tid.setText(trackID);
+                TextView tid2 = wtview.findViewById(R.id.text_wt_id2);
+                tid2.setText(trackID);
+            }
+        } else {
+            setupTag(1, ITagsDb.getDevices(getActivity()).get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
+            if (s > 1) {
+                setupTag(2, ITagsDb.getDevices(getActivity()).get(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
+            }
+            if (s > 2) {
+                setupTag(3, ITagsDb.getDevices(getActivity()).get(2), tagsLayout.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
+            }
+            if (s > 3) {
+                setupTag(4, ITagsDb.getDevices(getActivity()).get(3), tagsLayout.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
+            }
         }
     }
 
@@ -179,6 +214,8 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
 
         mLocationAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shadow_location);
         mITagAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        trackID = sp.getString("tid", "");
 
         return inflater.inflate(R.layout.fragment_itags, container, false);
     }
@@ -234,6 +271,8 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         ITagsDb.addListener(this);
         ITagGatt.addOnITagChangeListener(this);
         HistoryRecord.addListener(this);
+        LocationsTracker.addOnTrackingStateListener(this);
+        IDService.addOnTrackIDChangeListener(this);
     }
 
     @Override
@@ -244,7 +283,9 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
         HistoryRecord.removeListener(this);
         ITagGatt.removeOnITagChangeListener(this);
         ITagsDb.removeListener(this);
+        LocationsTracker.removeOnTrackingStateListener(this);
         MainActivity.removeServiceBoundListener(this);
+        IDService.removeOnTrackIDChangeListener(this);
         stopRssi();
         super.onPause();
     }
@@ -329,6 +370,31 @@ public class ITagsFragment extends Fragment implements ITagsDb.DbListener, ITagG
     @Override
     public void onHistoryRecordChange() {
 
+        final View view = getView();
+        if (view != null) {
+            Activity activity = getActivity();
+            if (activity == null)
+                return;
+
+            activity.runOnUiThread(() -> setupTags((ViewGroup) view));
+        }
+    }
+
+    @Override
+    public void onStateChange(@NonNull LocationsTracker.TrackingState state) {
+        final View view = getView();
+        if (view != null) {
+            Activity activity = getActivity();
+            if (activity == null)
+                return;
+
+            activity.runOnUiThread(() -> setupTags((ViewGroup) view));
+        }
+    }
+
+    @Override
+    public void onTrackID(@NonNull String trackID) {
+        this.trackID = trackID;
         final View view = getView();
         if (view != null) {
             Activity activity = getActivity();

@@ -1,5 +1,6 @@
 package solutions.s4y.itag;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -8,6 +9,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -17,6 +19,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
@@ -40,8 +43,13 @@ import solutions.s4y.itag.ble.LeScanResult;
 import solutions.s4y.itag.ble.LeScanner;
 import solutions.s4y.itag.ble.MediaPlayerUtils;
 import solutions.s4y.itag.history.HistoryRecord;
+import solutions.s4y.waytoday.idservice.IDService;
+import solutions.s4y.waytoday.locations.LocationsGPSUpdater;
 
-public class MainActivity extends FragmentActivity implements LeScanner.LeScannerListener, ITagsDb.DbListener {
+public class MainActivity extends FragmentActivity implements
+        LeScanner.LeScannerListener,
+        ITagsDb.DbListener,
+        LocationsGPSUpdater.RequestGPSPermissionListener {
     static public final int REQUEST_ENABLE_LOCATION = 2;
     public BluetoothAdapter mBluetoothAdapter;
     public ITagsService mITagsService;
@@ -430,8 +438,21 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
     public void onWaytoday(@NonNull View sender) {
         if (!mITagsServiceBound || mITagsService == null)
             return;
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        String tid = sp.getString("tid", "");
+        boolean on = sp.getBoolean("wt", false);
+        boolean first = sp.getBoolean("wtfirst", true);
+        int freq = sp.getInt("freq", -1);
         final PopupMenu popupMenu = new PopupMenu(this, sender);
         popupMenu.inflate(R.menu.waytoday);
+        popupMenu.getMenu().findItem(R.id.wt_about_first).setVisible(first);
+        popupMenu.getMenu().findItem(R.id.wt_sec_1).setChecked(on && freq == 1);
+        popupMenu.getMenu().findItem(R.id.wt_min_5).setChecked(on && freq == 300000);
+        popupMenu.getMenu().findItem(R.id.wt_hour_1).setChecked(on && freq == 3600000);
+        popupMenu.getMenu().findItem(R.id.wt_off).setVisible(on);
+        popupMenu.getMenu().findItem(R.id.wt_new_tid).setVisible(!("".equals(tid) && first));
+        popupMenu.getMenu().findItem(R.id.wt_about).setVisible(!first);
+        popupMenu.getMenu().findItem(R.id.wt_share).setVisible(!"".equals(tid));
         popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.wt_sec_1:
@@ -446,13 +467,41 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
                 case R.id.wt_off:
                     mITagsService.stopWayToday();
                     break;
-                case R.id.wt_about:
-                    final String appPackageName = "solutions.s4y.waytoday";
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                    } catch (android.content.ActivityNotFoundException anfe) {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                case R.id.wt_new_tid:
+                    IDService.enqueueRetrieveId(this);
+                    break;
+                case R.id.wt_share:
+                    if (!"".equals(tid)) {
+                        String txt = String.format(getResources().getString(R.string.share_link), tid);
+                        Intent sendIntent = new Intent();
+                        sendIntent.setAction(Intent.ACTION_SEND);
+                        sendIntent.putExtra(Intent.EXTRA_TEXT, txt);
+                        sendIntent.putExtra(Intent.EXTRA_SUBJECT, getResources().getString(R.string.share_subj));
+                        // sendIntent.setType("message/rfc822");
+                        sendIntent.setType("text/plain");
+                        startActivity(Intent.createChooser(sendIntent, getResources().getString(R.string.share_title)));
                     }
+                    break;
+                case R.id.wt_about_first:
+                case R.id.wt_about:
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle(R.string.about_wt)
+                            .setMessage(R.string.about_message)
+                            .setPositiveButton(R.string.about_ok, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    final String appPackageName = "solutions.s4y.waytoday";
+                                    try {
+                                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                                    } catch (android.content.ActivityNotFoundException anfe) {
+                                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                                    }
+                                }
+                            })
+                            .setNegativeButton(R.string.about_cancel, (dialog, id) -> {
+                                // User cancelled the dialog
+                            });
+                    // Create the AlertDialog object and return it
+                    builder.create().show();
                     break;
             }
             return true;
@@ -587,5 +636,22 @@ public class MainActivity extends FragmentActivity implements LeScanner.LeScanne
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         //No call for super(). Bug on API Level > 11. issue #54
+    }
+
+    @Override
+    public void onGPSPermissionRequest() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(R.string.request_location_permission)
+                        .setTitle(R.string.request_permission_title)
+                        .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
+                        .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
+                        .show();
+            } else {
+                // isScanRequestAbortedBecauseOfPermission=true;
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
+            }
+        }
     }
 }

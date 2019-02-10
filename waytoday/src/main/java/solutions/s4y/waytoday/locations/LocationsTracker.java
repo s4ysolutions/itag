@@ -57,7 +57,7 @@ public class LocationsTracker {
         @Override
         public void onRequestResult(boolean success) {
             if (BuildConfig.DEBUG) {
-                Log.d(LT, "onRequestResult: " + success);
+                Log.d(LT, "onGPSPermissionRequest: " + success);
             }
             isSuspended = !success;
             notifyStateChange();
@@ -66,7 +66,7 @@ public class LocationsTracker {
     private static LocationsUpdater updater;
     public static boolean isUpdating;
 
-    public static void addOnILocationListener(ILocationListener listener) {
+    public static void addOnLocationListener(ILocationListener listener) {
         mLocationListeners.add(listener);
     }
 
@@ -76,7 +76,7 @@ public class LocationsTracker {
         }
     }
 
-    public static void removeOnILocationListener(ILocationListener listener) {
+    public static void removeOnLocationListener(ILocationListener listener) {
         mLocationListeners.remove(listener);
     }
 

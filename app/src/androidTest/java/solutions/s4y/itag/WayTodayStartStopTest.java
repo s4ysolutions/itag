@@ -45,18 +45,18 @@ public class WayTodayStartStopTest {
 
     @BeforeClass
     public static void beforeClass() {
-        IDService.addOnITagChangeListener(mockIDListener);
+        IDService.addOnTrackIDChangeListener(mockIDListener);
         UploadJobService.addOnITagChangeListener(mockUploadListener);
         LocationsTracker.addOnTrackingStateListener(mockTrackingStateListener);
-        LocationsTracker.addOnILocationListener(mockLocationListener);
+        LocationsTracker.addOnLocationListener(mockLocationListener);
     }
 
     @AfterClass
     public static void afterClass() {
-        IDService.removeOnITagChangeListener(mockIDListener);
+        IDService.removeOnTrackIDChangeListener(mockIDListener);
         UploadJobService.removeOnITagChangeListener(mockUploadListener);
         LocationsTracker.removeOnTrackingStateListener(mockTrackingStateListener);
-        LocationsTracker.removeOnILocationListener(mockLocationListener);
+        LocationsTracker.removeOnLocationListener(mockLocationListener);
     }
 
     @Before

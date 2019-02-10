@@ -76,11 +76,17 @@
     <string name="freq_sec_15">15 seconds</string>
     <string name="freq_sec_5">5 seconds</string>
     <string name="freq_sec_1">1 second</string>
-    <string name="off">Off</string>
+    <string name="off">Turn off</string>
     <string name="about_wt">About Way.Today</string>
     <string name="freq_continuously">Сontinuously</string>
     <string name="waytoday">Way.Today</string>
     <string name="trackid">Way.Today ID:</string>
     <string name="wt_new_id">Change ID</string>
     <string name="wt_share">Share locaiton</string>
+    <string name="share_title">Share via…</string>
+    <string name="share_link"><![CDATA[Track my location by clicking https://way.today/#%1$s!30m or use ID %1$s on the site way.today]]></string>
+    <string name="share_subj">Way.Today location note</string>
+    <string name="about_ok">Install Way.Today</string>
+    <string name="about_cancel">Close</string>
+    <string name="about_message">With a short living personal code Way.Today lets you share the current location with others without hurting your privacy.\n\nYou can track your iTag on Way.Today site right now or install the standalone app which does not require the gadget.\n\nWe recommend to give it a try because of some nice features iTag One does not have.</string>
 </resources>

@@ -54,11 +54,17 @@
     <string name="freq_sec_15">15 ثانية</string>
     <string name="freq_sec_5">5 ثوان</string>
     <string name="freq_sec_1">ثانية واحدة</string>
-    <string name="off">ايقاف</string>
+    <string name="off">أطفئه</string>
     <string name="about_wt">عن Way.Today</string>
     <string name="freq_continuously">بشكل متواصل</string>
     <string name="waytoday">طريق اليوم</string>
     <string name="trackid">هوية شخصية</string>
     <string name="wt_new_id">تغيير المعرف</string>
     <string name="wt_share">شارك الموقع</string>
+    <string name="share_title">شارك عبر…</string>
+    <string name="share_link"><![CDATA[تتبع موقعي بالنقر https://way.today/#%1$s!30m]]></string>
+    <string name="share_subj">Way.Today location note</string>
+    <string name="about_ok">انتقل إلى Play Market</string>
+    <string name="about_cancel">إلغاء</string>
+    <string name="about_message">مع رمز شخصي قصير يعيش Way.Today يتيح لك مشاركة الموقع الحالي مع الآخرين دون الإضرار خصوصيتك. يمكنك تتبع iTag على موقع Way.Today الآن أو تثبيت التطبيق المستقل الذي لا يتطلب الأداة. نوصي أن نجربها بسبب بعض الميزات الرائعة التي لا يمتلكها iTagOne.</string>
 </resources>

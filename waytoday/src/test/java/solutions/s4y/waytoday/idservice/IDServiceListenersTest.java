@@ -12,9 +12,9 @@ public class IDServiceListenersTest {
 
         };
 
-        IDService.addOnITagChangeListener(l);
+        IDService.addOnTrackIDChangeListener(l);
         assertThat(IDService.sListeners.size()).isEqualTo(1);
-        IDService.removeOnITagChangeListener(l);
+        IDService.removeOnTrackIDChangeListener(l);
         assertThat(IDService.sListeners.size()).isEqualTo(0);
 
     }
@@ -30,13 +30,13 @@ public class IDServiceListenersTest {
 
         };
 
-        IDService.addOnITagChangeListener(l1);
+        IDService.addOnTrackIDChangeListener(l1);
         assertThat(IDService.sListeners.size()).isEqualTo(1);
-        IDService.addOnITagChangeListener(l2);
+        IDService.addOnTrackIDChangeListener(l2);
         assertThat(IDService.sListeners.size()).isEqualTo(2);
-        IDService.removeOnITagChangeListener(l1);
+        IDService.removeOnTrackIDChangeListener(l1);
         assertThat(IDService.sListeners.size()).isEqualTo(1);
-        IDService.removeOnITagChangeListener(l2);
+        IDService.removeOnTrackIDChangeListener(l2);
         assertThat(IDService.sListeners.size()).isEqualTo(0);
     }
 
