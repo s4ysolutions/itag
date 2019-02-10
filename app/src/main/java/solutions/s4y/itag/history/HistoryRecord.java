@@ -9,10 +9,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
 import solutions.s4y.itag.R;
@@ -83,9 +80,9 @@ public final class HistoryRecord implements Serializable {
     private static final String DB_FILE_NAME = "dbh1";
     private static Map<String, HistoryRecord> records = null;
 
-    @NotNull
+    @NonNull
     static private File getDbFile(
-            @NotNull final Context context) throws IOException {
+            @NonNull final Context context) throws IOException {
         File file = new File(context.getFilesDir(), HistoryRecord.DB_FILE_NAME);
         //noinspection ResultOfMethodCallIgnored
         file.createNewFile();
@@ -179,8 +176,6 @@ public final class HistoryRecord implements Serializable {
 
         }
     }
-
-    ;
 
     public static void add(final Context context, final ITagGatt gatt) {
         if (gatt == null)

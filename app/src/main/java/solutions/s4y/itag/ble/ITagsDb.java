@@ -2,9 +2,6 @@ package solutions.s4y.itag.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import androidx.annotation.NonNull;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +13,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import solutions.s4y.itag.BuildConfig;
 import solutions.s4y.itag.ITagApplication;
 
@@ -67,17 +65,17 @@ public class ITagsDb {
         }
     }
 
-    static ITagDevice findByAddr(@NotNull final String addr) {
+    static ITagDevice findByAddr(@NonNull final String addr) {
         for (ITagDevice d : devices) {
             if (d.addr.equals(addr)) return d;
         }
         return null;
     }
 
-    @NotNull
+    @NonNull
     static private File getDbFile(
-            @NotNull final Context context,
-            @NotNull final String name) throws IOException {
+            @NonNull final Context context,
+            @NonNull final String name) throws IOException {
         File file = new File(context.getFilesDir(), name);
         //noinspection ResultOfMethodCallIgnored
         file.createNewFile();
@@ -85,9 +83,9 @@ public class ITagsDb {
     }
 
     static private void loadFromFile(
-            @NotNull final Context context,
-            @NotNull final String fileName,
-            @NotNull final List<ITagDevice> devices) {
+            @NonNull final Context context,
+            @NonNull final String fileName,
+            @NonNull final List<ITagDevice> devices) {
         devices.clear();
 
         File file;
@@ -128,18 +126,18 @@ public class ITagsDb {
         }
     }
 
-    static private void load(@NotNull final Context context) {
+    static private void load(@NonNull final Context context) {
         loadFromFile(context, DB_FILE_NAME, devices);
     }
 
     @NonNull
-    private static List<ITagDevice> loadOldDevices(@NotNull final Context context) {
+    private static List<ITagDevice> loadOldDevices(@NonNull final Context context) {
         final List<ITagDevice> devices = new ArrayList<>(16);
         loadFromFile(context, DB_OLD_FILE_NAME, devices);
         return devices;
     }
 
-    private static ITagDevice getOldDevice(@NotNull final Context context, String addr) {
+    private static ITagDevice getOldDevice(@NonNull final Context context, String addr) {
         final List<ITagDevice> oldDevices = loadOldDevices(context);
         for (ITagDevice oldDevice : oldDevices) {
             if (oldDevice.addr.equals(addr)) {
@@ -149,7 +147,7 @@ public class ITagsDb {
         return null;
     }
 
-    private static void updateOld(@NotNull final Context context) {
+    private static void updateOld(@NonNull final Context context) {
         final List<ITagDevice> composeDevices = new ArrayList<>(16);
 
         try {
@@ -203,7 +201,7 @@ public class ITagsDb {
         }
     }
 
-    public static void save(@NotNull final Context context) {
+    public static void save(@NonNull final Context context) {
         try (FileOutputStream fos = new FileOutputStream(getDbFile(context, DB_FILE_NAME))) {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(devices);
@@ -218,7 +216,7 @@ public class ITagsDb {
         }
     }
 
-    static public void remember(@NotNull final Context context, @NotNull final BluetoothDevice device) {
+    static public void remember(@NonNull final Context context, @NonNull final BluetoothDevice device) {
         if (findByAddr(device.getAddress()) == null) {
             final ITagDevice oldDevice = getOldDevice(context, device.getAddress());
             final ITagDevice d = new ITagDevice(device, oldDevice);
@@ -230,7 +228,7 @@ public class ITagsDb {
         }
     }
 
-    static public void forget(@NotNull final Context context, @NotNull final ITagDevice device) {
+    static public void forget(@NonNull final Context context, @NonNull final ITagDevice device) {
         ITagDevice existing = findByAddr(device.addr);
         if (existing != null) {
             devices.remove(existing);
@@ -241,11 +239,11 @@ public class ITagsDb {
         }
     }
 
-    static public boolean has(@NotNull final BluetoothDevice device) {
+    static public boolean has(@NonNull final BluetoothDevice device) {
         return findByAddr(device.getAddress()) != null;
     }
 
-    static public boolean has(@NotNull final ITagDevice device) {
+    static public boolean has(@NonNull final ITagDevice device) {
         return findByAddr(device.addr) != null;
     }
 
