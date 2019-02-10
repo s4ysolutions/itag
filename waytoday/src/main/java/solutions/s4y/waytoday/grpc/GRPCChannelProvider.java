@@ -1,6 +1,5 @@
 package solutions.s4y.waytoday.grpc;
 
-import androidx.annotation.NonNull;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -9,11 +8,7 @@ public class GRPCChannelProvider {
     private final String host;
     private final int port;
 
-    GRPCChannelProvider(@NonNull String host, int port) {
-        this.host = host;
-        this.port = port;
-        tls = (port % 1000) > 100;
-    }
+    private static GRPCChannelProvider sInstance;
 
     public ManagedChannel channel() {
         ManagedChannelBuilder channelBuilder = ManagedChannelBuilder
@@ -21,5 +16,19 @@ public class GRPCChannelProvider {
         if (!tls)
             channelBuilder.usePlaintext();
         return channelBuilder.build();
+    }
+
+    private GRPCChannelProvider() {
+        this.host = "tracker.way.today";
+        this.port = 9101;
+        // tls = (port % 1000) > 100;
+        tls = true;
+    }
+
+    public static GRPCChannelProvider getInstance() {
+        if (sInstance == null) {
+            sInstance = new GRPCChannelProvider();
+        }
+        return sInstance;
     }
 }
