@@ -16,7 +16,7 @@ public class Wsse {
             MessageDigest md = MessageDigest.getInstance("SHA");
             md.update(text.getBytes(UTF8_CHARSET));
             byte[] digest = md.digest();
-            return Base64.encodeToString(digest, Base64.DEFAULT);
+            return Base64.encodeToString(digest, Base64.NO_WRAP);
         } catch (Exception e) {
             ErrorsObservable.notify(e, true);
             return "";
@@ -31,8 +31,9 @@ public class Wsse {
     public static String getToken() {
         String nonce = String.valueOf(Math.random());
         String created = new Date().toString();
+        String digest = digest(Secret.get(), nonce, created);
         return "Username=\"solutions.s4y.itag\"," +
-                "PasswordDigest=\"" + digest(Secret.get(), nonce, created) + "\"," +
+                "PasswordDigest=\"" + digest + "\"," +
                 "nonce=\"" + nonce + "\"," +
                 "Created=\"" + created + "\"";
     }
