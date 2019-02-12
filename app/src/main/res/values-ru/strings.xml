@@ -30,7 +30,7 @@
     <string name="notify_disconnect">%s отключен</string>
     <string name="click_to_silent">Одно нажатия для выключения сигнала</string>
     <string name="help_longpress">Длинное нажатие для поиска брелка</string>
-    <string name="help_scan">Нет подключенных брелков. Нажмите кнопку сканирования, чтобы начать подключение</string>
+    <string name="help_scan">Нет подключенных брелков. Нажмите кнопку сканирования, чтобы начать подключение.</string>
     <string name="try_enable_bt">Bluetooth не включен</string>
     <string name="try_enable_bt_failed">Вам нужно включить Bluetooth в настройках устройства</string>
     <string name="open_bt_settings">Включить Bluetooth</string>
