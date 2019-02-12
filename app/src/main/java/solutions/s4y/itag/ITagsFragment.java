@@ -158,8 +158,6 @@ public class ITagsFragment extends Fragment
             waytoday.setVisibility(View.VISIBLE);
             TextView wtid = waytoday.findViewById(R.id.text_wt_id);
             wtid.setText(trackID);
-            wtid = waytoday.findViewById(R.id.text_wt_id2);
-            wtid.setText(trackID);
         } else {
             waytoday.setVisibility(View.GONE);
         }
@@ -190,8 +188,8 @@ public class ITagsFragment extends Fragment
             if (active) {
                 TextView tid = wtview.findViewById(R.id.text_wt_id);
                 tid.setText(trackID);
-                TextView tid2 = wtview.findViewById(R.id.text_wt_id2);
-                tid2.setText(trackID);
+//                TextView tid2 = wtview.findViewById(R.id.text_wt_id2);
+//                tid2.setText(trackID);
             }
         } else {
             setupTag(1, ITagsDb.getDevices(getActivity()).get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));

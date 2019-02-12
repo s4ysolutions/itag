@@ -5,38 +5,23 @@
 
     <ImageView
         android:id="@+id/btn_wt_map"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="28dp"
+        android:alpha="0.85"
         android:contentDescription="TODO"
-        android:src="@drawable/ic_map" />
-
-    <TextView
-        android:id="@+id/text_wt_id2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginLeft="2px"
-        android:layout_marginTop="2px"
-        android:gravity="center_horizontal"
-        android:minWidth="48dp"
-        android:text="@string/empty"
-        android:textAlignment="gravity"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:src="@drawable/waytoday" />
 
     <TextView
         android:id="@+id/text_wt_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="bottom|center_horizontal"
         android:gravity="center_horizontal"
         android:minWidth="48dp"
-        android:text="@string/empty"
+        android:text="1234"
         android:textAlignment="gravity"
-        android:textColor="#eee"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textSize="18sp" />
 
 </FrameLayout>
