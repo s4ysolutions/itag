@@ -26,7 +26,7 @@
                 android:layout_gravity="top"
                 android:layout_weight="1"
                 android:paddingTop="2dp"
-                android:paddingRight="2dp"
+                android:paddingRight="12dp"
                 android:scaleType="fitXY"
                 android:src="@drawable/help_scan" />
         </LinearLayout>

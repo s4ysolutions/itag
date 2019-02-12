@@ -457,20 +457,25 @@ public class MainActivity extends FragmentActivity implements
             switch (item.getItemId()) {
                 case R.id.wt_sec_1:
                     mITagsService.startWayToday(1);
+                    ITagApplication.faWtOn1();
                     break;
                 case R.id.wt_min_5:
                     mITagsService.startWayToday(300000);
                     break;
                 case R.id.wt_hour_1:
                     mITagsService.startWayToday(3600000);
+                    ITagApplication.faWtOn300();
                     break;
                 case R.id.wt_off:
                     mITagsService.stopWayToday();
+                    ITagApplication.faWtOff();
                     break;
                 case R.id.wt_new_tid:
+                    ITagApplication.faWtChangeID();
                     IDService.enqueueRetrieveId(this);
                     break;
                 case R.id.wt_share:
+                    ITagApplication.faWtShare();
                     if (!"".equals(tid)) {
                         String txt = String.format(getResources().getString(R.string.share_link), tid);
                         Intent sendIntent = new Intent();
@@ -484,6 +489,7 @@ public class MainActivity extends FragmentActivity implements
                     break;
                 case R.id.wt_about_first:
                 case R.id.wt_about:
+                    ITagApplication.faWtAbout();
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle(R.string.about_wt)
                             .setMessage(R.string.about_message)

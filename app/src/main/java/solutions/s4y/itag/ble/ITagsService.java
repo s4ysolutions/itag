@@ -426,11 +426,13 @@ public class ITagsService extends Service implements
         String tid = preferences.getString("tid", null);
         Handler handler = new Handler();
         if (tid == null) {
+            ITagApplication.faWtNoTrackID();
             final IDService.IIDSeriviceListener listener = new IDService.IIDSeriviceListener() {
                 @Override
                 public void onTrackID(@NonNull String trackID) {
                     IDService.removeOnTrackIDChangeListener(this);
                     if (!"".equals(trackID)) {
+                        // duplicate of ITagsService.onTrackID
                         preferences.edit().putString("tid", tid).apply();
                         handler.post(() ->
                                 LocationsTracker.requestStart(gpsLocatonUpdater, frequency));

@@ -41,6 +41,7 @@ public class WaytodayView extends LinearLayout {
         assert inflater != null;
         View root = inflater.inflate(R.layout.waytoday, this);
         root.setOnClickListener(v -> {
+            ITagApplication.faWtVisit();
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
             String tid = sp.getString("tid", "");
             if ("".equals(tid))

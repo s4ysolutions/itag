@@ -6,12 +6,13 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.google.firebase.analytics.FirebaseAnalytics;
+
+import androidx.annotation.NonNull;
 
 public final class ITagApplication extends Application {
     private final static String LT = ITagApplication.class.getName();
@@ -207,4 +208,39 @@ public final class ITagApplication extends Application {
         fa("itag_disconnect_during_call");
     }
 
+    static public void faWtOff() {
+        fa("itag_wt_off");
+    }
+
+    static public void faWtOn1() {
+        fa("itag_wt_on1");
+    }
+
+    static public void faWtNoTrackID() {
+        fa("itag_wt_no_track_id");
+    }
+
+    static public void faWtOn300() {
+        fa("itag_wt_on300");
+    }
+
+    static public void faWtOn3600() {
+        fa("itag_wt_on3600");
+    }
+
+    static public void faWtChangeID() {
+        fa("itag_wt_change_id");
+    }
+
+    static public void faWtShare() {
+        fa("itag_wt_share");
+    }
+
+    static public void faWtAbout() {
+        fa("itag_wt_about");
+    }
+
+    static public void faWtVisit() {
+        fa("itag_wt_visit");
+    }
 }
