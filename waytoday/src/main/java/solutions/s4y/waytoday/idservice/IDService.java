@@ -68,7 +68,7 @@ public class IDService extends JobIntentService {
     }
 
     private static void notifyTrack(@NonNull String trackID) {
-        for (IIDSeriviceListener listener : sListeners) {
+        for (IIDSeriviceListener listener : new ArrayList<>(sListeners)) {
             listener.onTrackID(trackID);
         }
     }
