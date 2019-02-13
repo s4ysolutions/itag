@@ -9,7 +9,6 @@ import android.bluetooth.BluetoothManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -497,14 +496,12 @@ public class MainActivity extends FragmentActivity implements
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle(R.string.about_wt)
                             .setMessage(R.string.about_message)
-                            .setPositiveButton(R.string.about_ok, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int id) {
-                                    final String appPackageName = "solutions.s4y.waytoday";
-                                    try {
-                                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                                    } catch (android.content.ActivityNotFoundException anfe) {
-                                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-                                    }
+                            .setPositiveButton(R.string.about_ok, (dialog, id) -> {
+                                final String appPackageName = "solutions.s4y.waytoday";
+                                try {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                                } catch (ActivityNotFoundException anfe) {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
                                 }
                             })
                             .setNegativeButton(R.string.about_cancel, (dialog, id) -> {
