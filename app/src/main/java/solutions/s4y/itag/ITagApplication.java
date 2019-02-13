@@ -63,7 +63,6 @@ public final class ITagApplication extends Application {
         if (context == null) return;
         if (sFirebaseAnalytics == null) {
             sFirebaseAnalytics = FirebaseAnalytics.getInstance(context);
-            faAppCreated();
         }
         sFirebaseAnalytics.logEvent(event, bundle);
         if (BuildConfig.DEBUG) {
