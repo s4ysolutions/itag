@@ -278,7 +278,11 @@ public class MainActivity extends FragmentActivity implements
         } else {
             ITagsService.stop(this);
         }
-        unbindService(mConnection);
+        try {
+            unbindService(mConnection);
+        } catch (IllegalArgumentException e) {
+            ITagApplication.handleError(e, false);
+        }
         ITagsDb.removeListener(this);
         LeScanner.removeListener(this);
         super.onPause();
