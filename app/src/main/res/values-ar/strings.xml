@@ -69,4 +69,5 @@
     <string name="about_message">مع رمز شخصي قصير يعيش Way.Today يتيح لك مشاركة الموقع الحالي مع الآخرين دون الإضرار خصوصيتك. يمكنك تتبع iTag على موقع Way.Today الآن أو تثبيت التطبيق المستقل الذي لا يتطلب الأداة. نوصي أن نجربها بسبب بعض الميزات الرائعة التي لا يمتلكها iTagOne.</string>
     <string name="disable_wt">أزلها</string>
     <string name="disable_wt_msg">سيؤدي هذا الإجراء إلى إزالة Way.Today وتعطيله إلى الأبد. الطريقة الوحيدة لاسترداد traking هي إزالة التطبيق وتثبيته.</string>
+    <string name="disable_wt_ok">تعطيل Way.Today</string>
 </resources>

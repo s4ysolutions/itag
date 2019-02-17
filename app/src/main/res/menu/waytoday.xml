@@ -28,5 +28,10 @@
             android:id="@+id/wt_about"
             android:title="@string/about_wt" />
     </group>
+    <group>
+        <item
+            android:id="@+id/wt_disable"
+            android:title="@string/disable_wt" />
+    </group>
 
 </menu>

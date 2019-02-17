@@ -441,7 +441,7 @@ public class MainActivity extends FragmentActivity implements
     public void onWaytoday(@NonNull View sender) {
         if (!mITagsServiceBound || mITagsService == null)
             return;
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         String tid = sp.getString("tid", "");
         boolean on = sp.getBoolean("wt", false);
         boolean first = sp.getBoolean("wtfirst", true);
@@ -457,6 +457,7 @@ public class MainActivity extends FragmentActivity implements
         popupMenu.getMenu().findItem(R.id.wt_about).setVisible(!first);
         popupMenu.getMenu().findItem(R.id.wt_share).setVisible(!"".equals(tid));
         popupMenu.setOnMenuItemClickListener(item -> {
+            AlertDialog.Builder builder;
             switch (item.getItemId()) {
                 case R.id.wt_sec_1:
                     mITagsService.startWayToday(1);
@@ -493,7 +494,7 @@ public class MainActivity extends FragmentActivity implements
                 case R.id.wt_about_first:
                 case R.id.wt_about:
                     ITagApplication.faWtAbout();
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder = new AlertDialog.Builder(this);
                     builder.setTitle(R.string.about_wt)
                             .setMessage(R.string.about_message)
                             .setPositiveButton(R.string.about_ok, (dialog, id) -> {
@@ -503,6 +504,25 @@ public class MainActivity extends FragmentActivity implements
                                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
                                 } catch (ActivityNotFoundException anfe) {
                                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                                }
+                            })
+                            .setNegativeButton(R.string.about_cancel, (dialog, id) -> {
+                                // User cancelled the dialog
+                            });
+                    // Create the AlertDialog object and return it
+                    builder.create().show();
+                    break;
+                case R.id.wt_disable:
+                    builder = new AlertDialog.Builder(this);
+                    builder.setTitle(R.string.disable_wt_ok)
+                            .setMessage(R.string.disable_wt_msg)
+                            .setPositiveButton(R.string.disable_wt_ok, (dialog, id) -> {
+                                ITagApplication.faWtRemove();
+                                mITagsService.stopWayToday();
+                                sp.edit().putBoolean("wt_disabled", true).apply();
+                                final View v = findViewById(R.id.btn_waytoday);
+                                if (v != null) {
+                                    v.setVisibility(View.GONE);
                                 }
                             })
                             .setNegativeButton(R.string.about_cancel, (dialog, id) -> {

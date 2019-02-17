@@ -264,13 +264,21 @@ public class ITagsFragment extends Fragment
             return;
         ITagApplication.faITagsView(ITagsDb.getDevices(activity).size());
         startRssi();
-        setupTags((ViewGroup) Objects.requireNonNull(getView()));
+        ViewGroup root = (ViewGroup) Objects.requireNonNull(getView());
+        setupTags(root);
         MainActivity.addServiceBoundListener(this);
         ITagsDb.addListener(this);
         ITagGatt.addOnITagChangeListener(this);
         HistoryRecord.addListener(this);
-        LocationsTracker.addOnTrackingStateListener(this);
-        IDService.addOnTrackIDChangeListener(this);
+
+        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean wt_disabled = sp.getBoolean("wt_disabled", false);
+        if (wt_disabled) {
+            root.findViewById(R.id.btn_waytoday).setVisibility(View.GONE);
+        } else {
+            LocationsTracker.addOnTrackingStateListener(this);
+            IDService.addOnTrackIDChangeListener(this);
+        }
     }
 
     @Override
