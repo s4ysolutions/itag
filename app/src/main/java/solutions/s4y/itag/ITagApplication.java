@@ -242,4 +242,12 @@ public final class ITagApplication extends Application {
     static public void faWtVisit() {
         fa("itag_wt_visit");
     }
+
+    static public void faWtPlaymarket() {
+        fa("itag_wt_playmarket");
+    }
+
+    static public void faWtRemove() {
+        fa("itag_wt_remove");
+    }
 }

@@ -497,6 +497,7 @@ public class MainActivity extends FragmentActivity implements
                     builder.setTitle(R.string.about_wt)
                             .setMessage(R.string.about_message)
                             .setPositiveButton(R.string.about_ok, (dialog, id) -> {
+                                ITagApplication.faWtPlaymarket();
                                 final String appPackageName = "solutions.s4y.waytoday";
                                 try {
                                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
