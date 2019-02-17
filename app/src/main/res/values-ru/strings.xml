@@ -5,8 +5,7 @@
     <string name="request_permission_title">Разрешить</string>
     <string name="request_location_permission">Начиная с версии Android 6.0 для использованию Bluetooth устройств необходимо разрешить определять местоположение.\\nВам нужно будет повторить процесс сканирования после того разрешите доступ к датчику положения.</string>
     <string name="confirm_title">Подтверждение</string>
-    <string name="confirm_forget">Брелок будет удален из списка запомненных? Тем не менее при следующем подключении все настройки будут восстановлены.  Продолжить?</string>
-    <string name="confirm_disconnect">Этот жест отключит брелок и удалит его из списка, тем не менее при следующем подключении все настройки будут восстановлены.  Продолжить отключение?</string>
+    <string name="confirm_disconnect">Этот жест отключит брелок и удалит его из списка. При повторном подключении текущие настройки будут восстановлены.  Продолжить отключение?</string>
     <string name="change_name">Дать название для брелка</string>
     <string name="manage_alert">Разрешить звуковой сигнал при утере брелка</string>
     <string name="scanning">Поиск брелков&#8230;</string>
@@ -28,7 +27,7 @@
     <string name="service_in_background">Двойное нажатие кнопки брелка для поиска телефона</string>
     <string name="service_description">Долгое нажатие на изображении брелка для его поиска</string>
     <string name="notify_disconnect">%s отключен</string>
-    <string name="click_to_silent">Одно нажатия для выключения сигнала</string>
+    <string name="click_to_silent">Одно нажатие для выключения сигнала</string>
     <string name="help_longpress">Длинное нажатие для поиска брелка</string>
     <string name="help_scan">Нет подключенных брелков. Нажмите кнопку сканирования, чтобы начать подключение.</string>
     <string name="try_enable_bt">Bluetooth не включен</string>
@@ -63,8 +62,11 @@
     <string name="wt_share">Поделиться местоположением</string>
     <string name="share_title">Отправить местоположение…</string>
     <string name="share_link"><![CDATA[Мое положение доступно по ссылке https://way.today/#%1$s!30m или по коду %1$s на сайте простопуть.рф]]></string>
-    <string name="share_subj">Ссобщение с сервиса Way.Today</string>
+    <string name="share_subj">Собщение с сервиса Way.Today</string>
     <string name="about_ok">Перейти в Play Market</string>
     <string name="about_cancel">Закрыть</string>
     <string name="about_message">С помощью короткоживущего кода сервис ПростоПуть позволяет делиться с другими людьми своим местоположением без нарушения приватности.\n\nВы можете отслеживать свой брелок на сайте прямо сейчас или установить приложение ПростоПуть, которое не требует наличия брелка.\n\nРекомендуем установить приложение, так как оно имеет некоторые дополнительные фукнции.</string>
+    <string name="disable_wt">Больше не показывать</string>
+    <string name="confirm_forget">Этот жест отключит брелок и удалит его из списка. При повторном подключении текущие настройки будут восстановлены.  Продолжить отключение?</string>
+    <string name="disable_wt_msg">Серис Простопуть.рф будет отключен и удален.\\n\\nДля его восстановления будет необходимо переустановить приложение.</string>
 </resources>
