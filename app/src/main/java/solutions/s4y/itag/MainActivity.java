@@ -194,7 +194,7 @@ public class MainActivity extends FragmentActivity implements
         }
         if (fragment != null) {
             fragmentTransaction.replace(R.id.content, fragment);
-            fragmentTransaction.commit();
+            fragmentTransaction.commitAllowingStateLoss();
         }
     }
 
