@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "solutions.s4y.itag"
-        minSdkVersion 18
+        minSdkVersion 19
         targetSdkVersion 28
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
