@@ -423,7 +423,7 @@ public class ITagsService extends Service implements
                 PreferenceManager.getDefaultSharedPreferences(this);
         preferences.edit().putBoolean("wt", true).apply();
         preferences.edit().putInt("freq", frequency).apply();
-        String tid = preferences.getString("tid", null);
+        final String tid = preferences.getString("tid", null);
         Handler handler = new Handler();
         if (tid == null) {
             ITagApplication.faWtNoTrackID();
@@ -433,7 +433,7 @@ public class ITagsService extends Service implements
                     IDService.removeOnTrackIDChangeListener(this);
                     if (!"".equals(trackID)) {
                         // duplicate of ITagsService.onTrackID
-                        preferences.edit().putString("tid", tid).apply();
+                        preferences.edit().putString("tid", trackID).apply();
                         handler.post(() ->
                                 LocationsTracker.requestStart(gpsLocatonUpdater, frequency));
                     }
