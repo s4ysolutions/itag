@@ -13,13 +13,13 @@
     android:paddingEnd="8dp"
     tools:context=".MainActivity">
 
-    <solutions.s4y.itag.RssiView
+    <s4y.itag.RssiView
         android:id="@+id/rssi"
         android:layout_width="16dp"
         android:layout_height="match_parent"
         android:layout_marginEnd="8dp">
 
-    </solutions.s4y.itag.RssiView>
+    </s4y.itag.RssiView>
 
     <LinearLayout
         android:layout_width="0dp"

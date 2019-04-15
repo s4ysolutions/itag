@@ -46,7 +46,7 @@
         android:layout_height="0dp"
         android:layout_weight="2">
 
-        <solutions.s4y.itag.WaytodayView
+        <s4y.itag.WaytodayView
             android:id="@+id/wt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -9,7 +9,7 @@ The devices are sold through the lot of online stores for bargain price of $1 or
 
 ## Getting Started
 
-First the application needs to be installed from [Google Play](https://play.google.com/store/apps/details?id=solutions.s4y.itag).
+First the application needs to be installed from [Google Play](https://play.google.com/store/apps/details?id=s4y.itag).
 
 The use of iTags with iTag one is as easy as scanning for the new devices with the one click of the on-screen button and remember the discovered device clicking plus button next to the discovered item
 
@@ -40,7 +40,7 @@ One may wonder why it is necessary to double click the device in order to search
 
 ## Price
 
-The application is completely free and has no ads. It would be enough to rate it on the [Google Play](https://play.google.com/store/apps/details?id=solutions.s4y.itag) if you'd think we did a good job.
+The application is completely free and has no ads. It would be enough to rate it on the [Google Play](https://play.google.com/store/apps/details?id=s4y.itag) if you'd think we did a good job.
 
 Moreover the application is open source and nobody is prevented from use it with only providing the references to [S4Y](https://s4y.solutions) site.
 

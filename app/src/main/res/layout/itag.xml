@@ -61,7 +61,7 @@
         android:layout_weight="1"
         >
 
-    <solutions.s4y.itag.ITagImageView
+    <s4y.itag.ITagImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/image_itag"
@@ -72,7 +72,7 @@
         android:scaleType="fitCenter"
         android:src="@drawable/itag_white" />
 
-        <solutions.s4y.itag.WaytodayView
+        <s4y.itag.WaytodayView
             android:id="@+id/wt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -91,7 +91,7 @@
             android:src="@drawable/location"
             tools:ignore="RtlHardcoded" />
 
-        <solutions.s4y.itag.RssiView
+        <s4y.itag.RssiView
             android:id="@+id/rssi"
             android:layout_width="8dp"
             android:layout_height="64dp"

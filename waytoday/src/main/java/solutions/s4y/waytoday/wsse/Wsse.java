@@ -32,7 +32,7 @@ public class Wsse {
         String nonce = String.valueOf(Math.random());
         String created = new Date().toString();
         String digest = digest(Secret.get(), nonce, created);
-        return "Username=\"solutions.s4y.itag\"," +
+        return "Username=\"s4y.itag\"," +
                 "PasswordDigest=\"" + digest + "\"," +
                 "nonce=\"" + nonce + "\"," +
                 "Created=\"" + created + "\"";

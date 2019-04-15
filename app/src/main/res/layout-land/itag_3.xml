@@ -5,20 +5,20 @@
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:baselineAligned="false">
-    <solutions.s4y.itag.TagLayout
+    <s4y.itag.TagLayout
         android:id="@+id/tag_1"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1" />
 
-    <solutions.s4y.itag.TagLayout
+    <s4y.itag.TagLayout
         android:id="@+id/tag_2"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1" />
 
 
-    <solutions.s4y.itag.TagLayout
+    <s4y.itag.TagLayout
         android:id="@+id/tag_3"
         android:layout_width="0dp"
         android:layout_height="match_parent"
