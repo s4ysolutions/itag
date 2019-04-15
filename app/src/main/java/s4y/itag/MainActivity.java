@@ -193,6 +193,7 @@ public class MainActivity extends FragmentActivity implements
             }
         }
         if (fragment != null) {
+            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             fragmentTransaction.replace(R.id.content, fragment);
             fragmentTransaction.commitAllowingStateLoss();
         }
