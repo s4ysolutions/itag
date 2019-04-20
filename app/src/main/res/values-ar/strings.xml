@@ -70,4 +70,5 @@
     <string name="disable_wt">أزلها</string>
     <string name="disable_wt_msg">سيؤدي هذا الإجراء إلى إزالة Way.Today وتعطيله إلى الأبد. الطريقة الوحيدة لاسترداد traking هي إزالة التطبيق وتثبيته.</string>
     <string name="disable_wt_ok">تعطيل Way.Today</string>
+    <string name="gold">ذهبي</string>
 </resources>

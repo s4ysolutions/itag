@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="s4y.itag"
-    android:versionCode="58"
-    android:versionName="1.1"
+    android:versionCode="62"
+    android:versionName="1.5"
     >
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -20,6 +20,8 @@
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
+
+    <!-- uses-feature android:name="com.sec.feature.spen_usp" android:required="true"/-->
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application

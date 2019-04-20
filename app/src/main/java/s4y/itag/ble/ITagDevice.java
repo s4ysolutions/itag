@@ -13,6 +13,7 @@ public final class ITagDevice implements Serializable {
         BLACK,
         WHITE,
         RED,
+        GOLD,
         GREEN,
         BLUE
     }

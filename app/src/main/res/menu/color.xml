@@ -14,6 +14,10 @@
         android:icon="@drawable/itag_green"
         android:title="@string/green" />
     <item
+        android:id="@+id/gold"
+        android:icon="@drawable/itag_gold"
+        android:title="@string/gold" />
+    <item
         android:id="@+id/red"
         android:icon="@drawable/itag_red"
         android:title="@string/red" />

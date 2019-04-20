@@ -560,6 +560,9 @@ public class MainActivity extends FragmentActivity implements
                 case R.id.green:
                     device.color = ITagDevice.Color.GREEN;
                     break;
+                case R.id.gold:
+                    device.color = ITagDevice.Color.GOLD;
+                    break;
                 case R.id.blue:
                     device.color = ITagDevice.Color.BLUE;
                     break;

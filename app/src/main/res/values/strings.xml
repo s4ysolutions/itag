@@ -32,6 +32,7 @@
     <string name="black">Black</string>
     <string name="red">Red</string>
     <string name="green">Green</string>
+    <string name="gold">Gold</string>
     <string name="blue">Blue</string>
 
     <string name="service_in_background">Double click iTag\'s button to find the phone</string>
