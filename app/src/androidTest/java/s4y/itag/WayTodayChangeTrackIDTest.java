@@ -13,9 +13,9 @@ import org.junit.Test;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.ViewInteraction;
-import solutions.s4y.waytoday.idservice.IDService;
-import solutions.s4y.waytoday.locations.LocationsTracker;
-import solutions.s4y.waytoday.upload.UploadJobService;
+import s4y.waytoday.idservice.IDService;
+import s4y.waytoday.locations.LocationsTracker;
+import s4y.waytoday.upload.UploadJobService;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;

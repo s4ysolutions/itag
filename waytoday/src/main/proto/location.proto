@@ -1,5 +1,5 @@
 syntax = "proto3";
-option java_package = "solutions.s4y.waytoday.grpc";
+option java_package = "s4y.waytoday.grpc";
 
 package grpc;
 

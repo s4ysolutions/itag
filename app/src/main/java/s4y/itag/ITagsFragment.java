@@ -25,8 +25,8 @@ import s4y.itag.ble.ITagGatt;
 import s4y.itag.ble.ITagsDb;
 import s4y.itag.ble.ITagsService;
 import s4y.itag.history.HistoryRecord;
-import solutions.s4y.waytoday.idservice.IDService;
-import solutions.s4y.waytoday.locations.LocationsTracker;
+import s4y.waytoday.idservice.IDService;
+import s4y.waytoday.locations.LocationsTracker;
 
 
 /**

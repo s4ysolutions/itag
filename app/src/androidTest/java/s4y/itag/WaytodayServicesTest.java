@@ -16,8 +16,8 @@ import java.util.List;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
-import solutions.s4y.waytoday.idservice.IDService;
-import solutions.s4y.waytoday.upload.UploadJobService;
+import s4y.waytoday.idservice.IDService;
+import s4y.waytoday.upload.UploadJobService;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;

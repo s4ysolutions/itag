@@ -42,8 +42,8 @@ import s4y.itag.ble.LeScanResult;
 import s4y.itag.ble.LeScanner;
 import s4y.itag.ble.MediaPlayerUtils;
 import s4y.itag.history.HistoryRecord;
-import solutions.s4y.waytoday.idservice.IDService;
-import solutions.s4y.waytoday.locations.LocationsGPSUpdater;
+import s4y.waytoday.idservice.IDService;
+import s4y.waytoday.locations.LocationsGPSUpdater;
 
 public class MainActivity extends FragmentActivity implements
         LeScanner.LeScannerListener,

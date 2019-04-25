@@ -60,11 +60,11 @@
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name="solutions.s4y.waytoday.upload.UploadJobService"
+            android:name="s4y.waytoday.upload.UploadJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
-            android:name="solutions.s4y.waytoday.idservice.IDService"
+            android:name="s4y.waytoday.idservice.IDService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <receiver

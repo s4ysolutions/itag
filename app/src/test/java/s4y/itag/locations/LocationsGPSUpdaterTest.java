@@ -15,9 +15,9 @@ import org.robolectric.shadows.ShadowLocationManager;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import solutions.s4y.waytoday.errors.ErrorsObservable;
-import solutions.s4y.waytoday.locations.LocationsGPSUpdater;
-import solutions.s4y.waytoday.locations.RequestUpdatesListener;
+import s4y.waytoday.errors.ErrorsObservable;
+import s4y.waytoday.locations.LocationsGPSUpdater;
+import s4y.waytoday.locations.RequestUpdatesListener;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;

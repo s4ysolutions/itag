@@ -17,9 +17,9 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.rule.ActivityTestRule;
 import s4y.itag.MainActivityMockBinder;
-import solutions.s4y.waytoday.errors.ErrorsObservable;
-import solutions.s4y.waytoday.locations.LocationsGPSUpdater;
-import solutions.s4y.waytoday.locations.RequestUpdatesListener;
+import s4y.waytoday.errors.ErrorsObservable;
+import s4y.waytoday.locations.LocationsGPSUpdater;
+import s4y.waytoday.locations.RequestUpdatesListener;
 
 import static android.content.pm.PackageManager.PERMISSION_DENIED;
 import static com.google.common.truth.Truth.assertThat;

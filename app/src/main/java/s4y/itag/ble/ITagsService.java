@@ -30,11 +30,11 @@ import s4y.itag.ITagApplication;
 import s4y.itag.MainActivity;
 import s4y.itag.R;
 import s4y.itag.history.HistoryRecord;
-import solutions.s4y.waytoday.idservice.IDService;
-import solutions.s4y.waytoday.locations.LocationsGPSUpdater;
-import solutions.s4y.waytoday.locations.LocationsTracker;
-import solutions.s4y.waytoday.locations.LocationsUpdater;
-import solutions.s4y.waytoday.upload.UploadJobService;
+import s4y.waytoday.idservice.IDService;
+import s4y.waytoday.locations.LocationsGPSUpdater;
+import s4y.waytoday.locations.LocationsTracker;
+import s4y.waytoday.locations.LocationsUpdater;
+import s4y.waytoday.upload.UploadJobService;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
