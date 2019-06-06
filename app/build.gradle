@@ -40,22 +40,22 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.annotation:annotation:1.0.1'
-    implementation 'androidx.core:core:1.0.1'
+    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'androidx.core:core:1.0.2'
     implementation 'androidx.fragment:fragment:1.0.0'
-    implementation 'com.google.firebase:firebase-core:16.0.7'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
+    implementation 'com.google.firebase:firebase-core:16.0.9'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
     implementation project(':waytoday')
 
-    testImplementation 'androidx.test.ext:junit:1.1.0'
-    testImplementation 'androidx.test:rules:1.1.1'
+    testImplementation 'androidx.test.ext:junit:1.1.1'
+    testImplementation 'androidx.test:rules:1.2.0'
     testImplementation 'com.google.truth:truth:0.42'
     testImplementation 'org.mockito:mockito-core:2.23.4'
     testImplementation 'org.robolectric:robolectric:4.1'
 
-    androidTestImplementation 'androidx.test:rules:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test:rules:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation "org.mockito:mockito-android:2.23.4"
 }
 
