@@ -25,15 +25,16 @@ import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import s4y.itag.ble.ITagDevice;
 import s4y.itag.ble.ITagGatt;
 import s4y.itag.ble.ITagsDb;
@@ -399,7 +400,8 @@ public class MainActivity extends FragmentActivity implements
             MediaPlayerUtils.getInstance().stopSound(this);
         }
         if (needNotify) {
-            Toast.makeText(this, R.string.help_longpress, Toast.LENGTH_SHORT).show();
+            gatt.findITag();
+            // Toast.makeText(this, R.string.help_longpress, Toast.LENGTH_SHORT).show();
         }
     }
 
