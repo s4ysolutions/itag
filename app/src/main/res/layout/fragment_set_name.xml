@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:layout_margin="16dp"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/itag_name"
+        android:textSize="18sp" />
 
     <EditText
         android:id="@+id/text_name"
@@ -12,4 +21,56 @@
         android:inputType="textPersonName"
         android:text="Name" />
 
-</FrameLayout>
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/itag_alarm_delay"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        android:text="@string/itag_alarm_delay_description" />
+
+    <RadioGroup
+        android:id="@+id/alarm_delay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="8dp">
+
+        <RadioButton
+            android:id="@+id/alarm_delay_0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/itag_alarm_delay_0" />
+
+        <RadioButton
+            android:id="@+id/alarm_delay_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/itag_alarm_delay_3" />
+
+        <RadioButton
+            android:id="@+id/alarm_delay_5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/itag_alarm_delay_5" />
+
+        <RadioButton
+            android:id="@+id/alarm_delay_10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/itag_alarm_delay_10" />
+
+    </RadioGroup>
+
+</LinearLayout>

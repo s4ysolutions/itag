@@ -10,7 +10,14 @@
     <string name="confirm_title">Confirm</string>
     <string name="confirm_forget">The device will be forgotten, are you sure? You will be able to reconnect this device and remember it in any moment though.\n\nForget?</string>
     <string name="confirm_disconnect">Flinging with your finger you requested iTag to be disconnected.\nThis is not dangerous, the iTag will not be forgotten and you will be able to connect it back with the same side-to-side fling.\n\nDo you really want disconnect iTag?</string>
-    <string name="change_name">Set iTag\'s name</string>
+    <string name="change_name">iTag\'s settings</string>
+    <string name="itag_name">iTag\'s Name</string>
+    <string name="itag_alarm_delay">Alarm delay</string>
+    <string name="itag_alarm_delay_0">No delay</string>
+    <string name="itag_alarm_delay_3">3 sec</string>
+    <string name="itag_alarm_delay_5">5 sec</string>
+    <string name="itag_alarm_delay_10">10 sec</string>
+    <string name="itag_alarm_delay_description">The alarm delay will prevent itag from buzzing on very short disconnection.</string>
     <string name="manage_alert">Enable/disable Alert on disconnect</string>
 
     <string name="scanning">Scanning for iTags&#8230;</string>
@@ -18,6 +25,7 @@
     <string name="scanning_more">Scanning for more iTags&#8230;</string>
 
     <string name="color">Change iTag color</string>
+    <string name="color_label">Color</string>
     <string name="start_scan">Scan for new iTags</string>
     <string name="rememebr">Remember iTag</string>
     <string name="forget">Forget iTag</string>
