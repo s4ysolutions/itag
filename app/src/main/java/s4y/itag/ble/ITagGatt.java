@@ -11,10 +11,11 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -63,7 +64,7 @@ public class ITagGatt {
     @Nullable
     private BluetoothGatt mGatt;
     private boolean mIsError;
-    public boolean mIsConnected;
+    boolean mIsConnected;
     private boolean mIsConnecting;
     private boolean mIsTransmitting;
     private boolean mIsFindingITag;
@@ -188,7 +189,7 @@ public class ITagGatt {
                     try {
                         mGatt.close();
                     } catch (Exception e) {
-                        ITagApplication.handleError(new Exception("onConnectionStateChange STATE_DISCONNECTED, can't close",e));
+                        ITagApplication.handleError(new Exception("onConnectionStateChange STATE_DISCONNECTED, can't close", e));
                     } finally {
                         endConnection();
                     }
@@ -372,6 +373,8 @@ public class ITagGatt {
             @NonNull final BluetoothGattService service,
             int value
     ) {
+        if (mGatt == null)
+            return;
         if (service.getCharacteristics() == null || service.getCharacteristics().size() == 0) {
             ITagApplication
                     .handleError(
@@ -399,7 +402,7 @@ public class ITagGatt {
         connect(contex, false);
     }
 
-    private void connect(@NonNull final Context context, boolean workaraund133) {
+    private void connect(final Context context, boolean workaraund133) {
         if (BuildConfig.DEBUG) {
             if (mGatt != null && !mIsError) {
                 ITagApplication.handleError(new Exception("DeviceGatt.connectAll: mGatt!=null && !mIsError"));
@@ -437,7 +440,7 @@ public class ITagGatt {
             } else {
                 mGatt = mDevice.connectGatt(context, true, mCallback);
             }
-            mDevicesCount = ITagsDb.getDevices(context).size();
+            if (context != null) mDevicesCount = ITagsDb.getDevices(context).size();
         } else {
             ITagApplication.handleError(new Exception("getRemoteDevice " + mAddr + " return null"));
         }
@@ -497,7 +500,7 @@ public class ITagGatt {
         }
     }
 
-    public void disconnect() {
+    void disconnect() {
         disconnect(false);
     }
 
@@ -558,7 +561,7 @@ public class ITagGatt {
 
     public boolean isConnected() {
         // mGatt != null is quick dirty solution of issue #42
-        return mGatt!=null && mIsConnected && !mIsError;
+        return mGatt != null && mIsConnected && !mIsError;
     }
 
     public boolean isTransmitting() {
