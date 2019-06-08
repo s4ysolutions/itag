@@ -26,6 +26,7 @@ import java.util.UUID;
 import s4y.itag.BuildConfig;
 import s4y.itag.ITagApplication;
 import s4y.itag.R;
+import s4y.itag.preference.AlarmDelayPreference;
 
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
@@ -153,6 +154,9 @@ public class ITagGatt {
         }
     }
 
+    private Handler mAlarmDelayHandler = new android.os.Handler();
+    private Runnable mAlarmDelayRunnable = null;
+
     @Nullable
     private final BluetoothGattCallback mCallback = new BluetoothGattCallback() {
         @Override
@@ -162,6 +166,11 @@ public class ITagGatt {
                         "GattCallback.onConnectionStateChange: addr=" + gatt.getDevice().getAddress() +
                                 " status=" + status +
                                 " state=" + newState);
+            }
+
+            if (mAlarmDelayRunnable != null) {
+                mAlarmDelayHandler.removeCallbacks(mAlarmDelayRunnable);
+                mAlarmDelayRunnable = null;
             }
 
             // the callback is for no connection state changes only
@@ -204,13 +213,16 @@ public class ITagGatt {
                     ITagApplication.handleError(new Exception("onConnectionStateChange code= 133 will try workaround"));
                     mHandler.postDelayed(() -> connect(mContext, true), 100);
                 } else {
-                    mIsError = true;
-                    notifyITagChanged();
-                    ITagApplication.faITagLost(mIsError);
-                    // 8, 19 and 22 are confirmed statuses iTag has lost
-                    if (status != 8 && status != 22 && status != 19) {
-                        ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
-                    }
+                    mAlarmDelayRunnable = () -> {
+                        mIsError = true;
+                        notifyITagChanged();
+                        ITagApplication.faITagLost(mIsError);
+                        // 8, 19 and 22 are confirmed statuses iTag has lost
+                        if (status != 8 && status != 22 && status != 19) {
+                            ITagApplication.handleError(new Exception("onConnectionStateChange failed: code=" + status + " state=" + newState));
+                        }
+                    };
+                    mAlarmDelayHandler.postDelayed(mAlarmDelayRunnable, new AlarmDelayPreference(ITagApplication.context, ITagGatt.this).get() * 1000);
                 }
                 // keep context only for very first connectAll
                 mContext = null;

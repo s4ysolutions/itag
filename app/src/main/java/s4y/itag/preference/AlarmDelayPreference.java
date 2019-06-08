@@ -3,6 +3,7 @@ package s4y.itag.preference;
 import android.content.Context;
 
 import s4y.itag.ble.ITagDevice;
+import s4y.itag.ble.ITagGatt;
 
 public class AlarmDelayPreference extends IntPreference {
     protected AlarmDelayPreference(Context context, String addr) {
@@ -11,5 +12,9 @@ public class AlarmDelayPreference extends IntPreference {
 
     public AlarmDelayPreference(Context context, ITagDevice device) {
         this(context, device.addr);
+    }
+
+    public AlarmDelayPreference(Context context, ITagGatt gatt) {
+        this(context, gatt.mAddr);
     }
 }
