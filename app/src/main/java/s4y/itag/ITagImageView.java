@@ -136,7 +136,7 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         if (Math.abs(velocityX) > Math.abs(velocityY)) {
             float move = Math.abs(e2.getX() - e1.getX());
-            if (move > 8) {
+            if (move > 16) {
                 final ITagDevice device = (ITagDevice) getTag();
                 MainActivity mainActivity = getActivity();
                 if (mainActivity != null && mainActivity.mITagsServiceBound) {
