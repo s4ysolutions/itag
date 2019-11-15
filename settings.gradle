@@ -1,1 +1,1 @@
-include ':app', ':waytoday'
+include ':app', ':waytoday', ':itagble'
