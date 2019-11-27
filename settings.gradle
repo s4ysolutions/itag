@@ -1,1 +1,1 @@
-include ':app', ':waytoday', ':itagble'
+include ':app', ':waytoday', ':itagble', ':observables'
