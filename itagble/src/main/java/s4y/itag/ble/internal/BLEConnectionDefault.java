@@ -14,15 +14,17 @@ import androidx.annotation.NonNull;
 import java.util.UUID;
 
 import s4y.itag.ble.BLEException;
+import s4y.observables.Observable;
 import s4y.observables.Subscription;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
+import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 
 public class BLEConnectionDefault implements BLEConnectionInterface {
-    static final UUID IMMEDIATE_ALERT_SERVICE = UUID.fromString("00001802-0000-1000-8000-00805f9b34fb");
-    static final UUID FINDME_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
-    static final UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
-    static final UUID FINDME_CHARACTERISTIC = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
+    private static final UUID IMMEDIATE_ALERT_SERVICE = UUID.fromString("00001802-0000-1000-8000-00805f9b34fb");
+    private static final UUID FINDME_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
+    private static final UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
+    private static final UUID FINDME_CHARACTERISTIC = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
     private static final UUID CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     final private Context context;
@@ -33,10 +35,13 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
 
     private BluetoothDevice peripheral = null;
     private BluetoothGatt gatt = null;
-    private BluetoothGattService serviceImmediateAlert = null;
     private BluetoothGattCharacteristic characteristicImmediateAlert = null;
-    private BluetoothGattService serviceFindMe = null;
     private BluetoothGattCharacteristic characteristicFindMe = null;
+
+    private int lastStatus = GATT_SUCCESS;
+
+    private AlertVolume alertVolume;
+    private final Observable<AlertVolume> observableAlertVolume = new Observable<>(AlertVolume.NO_ALERT);
 
     private static class ConnectionStateChange {
         final BluetoothGatt gatt;
@@ -114,15 +119,18 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (status == GATT_SUCCESS) {
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
+                if (newState == STATE_CONNECTED) {
                     monitorConnect.setPayload(new ConnectionStateChange(gatt, status, newState));
+                    completeConnection(60);
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     monitorDisconnect.setPayload(new ConnectionStateChange(gatt, status, newState));
+                    markDisconnected();
                 }
             } else if (status == 133) {
                 monitorConnect.setPayload(new ConnectionStateChange(gatt, status, newState));
+            } else {
+                markDisconnected();
             }
-// TODO: handle else { ... }
         }
 
         @Override
@@ -134,17 +142,22 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
 
         @Override
         public void onCharacteristicWrite(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic, int status) {
-            if (id.equals(gatt.getDevice().getAddress()) &&
-                    (characteristicToWrite == null || characteristicToWrite.getUuid().equals(characteristic.getUuid()))
-            ) {
-                monitorCharacteristicWrite.setPayload(new CharacteristicWrite(gatt, characteristic, status));
+            if (id.equals(gatt.getDevice().getAddress())) {
+                connectionsControl.setState(id, BLEConnectionState.connected);
+                // TODO: parallel writes?
+                if (alertVolume!=null && ALERT_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid())) {
+                    observableAlertVolume.onNext(alertVolume);
+                }
+                if (characteristicToWrite == null || characteristicToWrite.getUuid().equals(characteristic.getUuid())) {
+                    monitorCharacteristicWrite.setPayload(new CharacteristicWrite(gatt, characteristic, status));
+                }
             }
         }
 
         @Override
         public void onCharacteristicChanged(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic) {
-            if (id.equals(gatt.getDevice().getAddress())) {
-                // TODO:
+            if (id.equals(gatt.getDevice().getAddress()) && FINDME_CHARACTERISTIC.equals(characteristic.getUuid())) {
+                findMeControl.onClick(id);
             }
         }
     };
@@ -166,6 +179,15 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
             peripheral = manager.retrievePeripheral(id);
         }
         return BLEError.ok;
+    }
+
+    private void markDisconnected() {
+        if (gatt != null) {
+            gatt.close();
+        }
+        gatt = null;
+        observableAlertVolume.onNext(AlertVolume.NO_ALERT);
+        connectionsControl.setState(id, BLEConnectionState.disconnected);
     }
 
     private final Object lockWaitForDiscover = new Object();
@@ -201,31 +223,21 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         return lockWaitForDiscoverTimeout ? BLEError.timeout : BLEError.ok;
     }
 
-    private void disconnectGatt() {
-        if (gatt != null) {
-            gatt.disconnect();
-        }
-    }
-
-
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private boolean waitForConnectState(int timeoutSec) {
-        if (gatt != null) {
-            gatt.disconnect();
-        }
-        monitorConnect.waitFor(
-                () -> gatt = peripheral.connectGatt(context, true, gattCallback),
-                timeoutSec);
-        return !monitorConnect.isTimedOut();
-    }
 
     private BLEError waitForConnect(int timeoutSec) throws BLEException {
         if (peripheral == null)
             return BLEError.noPeripheral;
+
+        if (isConnected()) {
+            return completeConnection(60);
+        }
+
         connectionsControl.setState(id, BLEConnectionState.connecting);
 
-        if (!waitForConnectState(timeoutSec)) {
-            disconnectGatt();
+        monitorConnect.waitFor(
+                () -> gatt = peripheral.connectGatt(context, true, gattCallback),
+                timeoutSec);
+        if (monitorConnect.isTimedOut()){
             return BLEError.timeout;
         }
 
@@ -238,16 +250,25 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
                 e.printStackTrace();
             }
             if (gatt != null) {
-                gatt.disconnect();
+                gatt.close();
+                gatt = null;
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-            if (!waitForConnectState(timeoutSec)) {
+
+            monitorConnect.waitFor(
+                    () -> gatt = peripheral.connectGatt(context, true, gattCallback),
+                    timeoutSec);
+            if (monitorConnect.isTimedOut()){
                 return BLEError.timeout;
             }
             count++;
         }
 
-        if (monitorConnect.payload().status != GATT_SUCCESS || monitorConnect.payload().newState != BluetoothProfile.STATE_CONNECTED) {
-            // TODO: handle error
+        if (monitorConnect.payload().status != GATT_SUCCESS || monitorConnect.payload().newState != STATE_CONNECTED) {
             throw new BLEException(monitorConnect.payload().status);
         }
         return BLEError.ok;
@@ -257,7 +278,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         return waitForConnect(0);
     }
 
-    private BLEError waitForDiscoverServices(int timeoutSec) throws BLEException {
+    private BLEError waitForDiscoverCharacteristics(int timeoutSec) {
         if (peripheral == null) {
             return BLEError.noPeripheral;
         }
@@ -276,11 +297,24 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         }
 
         if (monitorServicesDiscovered.payload().status != GATT_SUCCESS) {
-            throw new BLEException(monitorServicesDiscovered.payload().status);
+            lastStatus = monitorServicesDiscovered.payload().status;
+            return BLEError.badStatus;
         }
 
         for (BluetoothGattService service : gatt.getServices()) {
-            // TODO:
+            if (IMMEDIATE_ALERT_SERVICE.equals(service.getUuid())) {
+                for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
+                    if (ALERT_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid())) {
+                        characteristicImmediateAlert = characteristic;
+                    }
+                }
+            } else if (FINDME_SERVICE.equals(service.getUuid())) {
+                for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
+                    if (FINDME_CHARACTERISTIC.equals(characteristic.getUuid())) {
+                        characteristicFindMe = characteristic;
+                    }
+                }
+            }
         }
         return BLEError.ok;
     }
@@ -293,13 +327,12 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
             return BLEError.noGatt;
         }
 
+        connectionsControl.setState(id, BLEConnectionState.writting);
         characteristic.setValue(value, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
         if (timeoutSec <= 0) {
             gatt.writeCharacteristic(characteristic);
             return BLEError.ok;
         }
-
-        connectionsControl.setState(id, BLEConnectionState.writting);
 
         characteristicToWrite = characteristic;
         monitorCharacteristicWrite.waitFor(() -> gatt.writeCharacteristic(characteristic), timeoutSec);
@@ -316,64 +349,60 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         }
     }
 
-    private BLEError completeConnection(int timeoutSec) throws BLEException {
+    @SuppressWarnings("SameParameterValue")
+    private BLEError completeConnection(int timeoutSec) {
 
         if (peripheral == null) {
+            connectionsControl.setState(id, BLEConnectionState.disconnected);
             return BLEError.noPeripheral;
         }
 
         if (gatt == null) {
+            connectionsControl.setState(id, BLEConnectionState.disconnected);
             return BLEError.noGatt;
         }
 
-        if (serviceImmediateAlert == null) {
-            BLEError error = waitForDiscoverServices(timeoutSec);
+        if (characteristicImmediateAlert == null) {
+            BLEError error = waitForDiscoverCharacteristics(timeoutSec);
             if (error != BLEError.ok) {
+                gatt.disconnect();
                 return error;
             }
         }
 
-        if (serviceImmediateAlert == null) {
-            return BLEError.noImmediateAlertService;
-        }
-
         if (characteristicImmediateAlert == null) {
+            gatt.disconnect();
             return BLEError.noImmediateAlertCharacteristic;
         }
 
-        if (serviceFindMe == null) {
-            return BLEError.noFindMeAlertService;
+        if (characteristicFindMe == null) {
+            BLEError error = waitForDiscoverCharacteristics(timeoutSec);
+            if (error != BLEError.ok) {
+                gatt.disconnect();
+                return error;
+            }
         }
 
         if (characteristicFindMe == null) {
+            gatt.disconnect();
             return BLEError.noFindMeAlertCharacteristic;
         }
 
         setCharacteristicNotification(gatt, characteristicFindMe);
 
+        connectionsControl.setState(id, BLEConnectionState.connected);
         return BLEError.ok;
-
-    }
-
-    private BLEError completeConnection() throws BLEException {
-        return completeConnection(0);
     }
 
     @Override
     public boolean isConnected() {
-        // TODO: gatt == null ?
-        return hasPeripheral() && manager.isConnected(peripheral);
+        return peripheral != null & gatt != null && gatt.getConnectionState(peripheral) == STATE_CONNECTED;
     }
 
     @Override
-    public boolean hasPeripheral() {
-        return peripheral != null;
-    }
-
-    @Override
-    public BLEError establishConnection() throws InterruptedException, BLEException {
-        manager.stopScan();
+    public BLEError connect() throws InterruptedException, BLEException {
         connectionsControl.setState(id, BLEConnectionState.connecting);
+        manager.stopScan();
         assertPeripheral();
 
         if (peripheral == null) {
@@ -400,11 +429,34 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
             return BLEError.noPeripheral;
         }
 
-        BLEError error = waitForConnect();
-        if (error != BLEError.ok) {
-            return error;
+        return waitForConnect();
+    }
+
+    @Override
+    public BLEError connect(int timeout) throws BLEException {
+        final boolean connected = isConnected();
+        connectionsControl.setState(id, connected ? BLEConnectionState.connected : BLEConnectionState.connecting);
+
+        manager.stopScan();
+        assertPeripheral();
+
+        if (waitForConnect(timeout) != BLEError.ok) {
+            peripheral = null;
         }
-        return completeConnection(15);
+
+        if (peripheral == null) {
+            BLEError error = waitForDiscover(timeout);
+            if (error != BLEError.ok) {
+                connectionsControl.setState(id, BLEConnectionState.disconnected);
+                return error;
+            }
+        }
+        if (peripheral == null) {
+            connectionsControl.setState(id, BLEConnectionState.disconnected);
+            return BLEError.noPeripheral;
+        }
+
+        return waitForConnect(timeout);
     }
 
     @Override
@@ -435,12 +487,6 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
                 e.printStackTrace();
             }
             gatt.disconnect();
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            gatt.close();
             return BLEError.ok;
         }
 
@@ -454,9 +500,6 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         }
 
         monitorDisconnect.waitFor(() -> gatt.disconnect(), timeoutSec);
-        gatt.close();
-        gatt = null;
-        connectionsControl.setState(id, BLEConnectionState.disconnected);
 
         if (monitorDisconnect.payload().status != GATT_SUCCESS) {
             throw new BLEException(monitorDisconnect.payload().status);
@@ -465,41 +508,26 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
-    public BLEError makeAvailabe(int timeout) throws BLEException {
-        manager.stopScan();
-        assertPeripheral();
-
-        if (waitForConnect(timeout) != BLEError.ok) {
-            peripheral = null;
-        }
-
-        final boolean connected = isConnected();
-        connectionsControl.setState(id, connected ? BLEConnectionState.connected : BLEConnectionState.disconnected);
-
-        if (peripheral == null) {
-            BLEError error = waitForDiscover(timeout);
-            if (error != BLEError.ok) {
-                return error;
-            }
-            error = waitForConnect(timeout);
-            if (error != BLEError.ok) {
-                return error;
-            }
-        }
-
-        return completeConnection();
-    }
-
-    @Override
     public BLEError writeImmediateAlert(AlertVolume volume, int timeout) {
         if (characteristicImmediateAlert == null) {
             return BLEError.noImmediateAlertCharacteristic;
         }
+        alertVolume = volume;
         return write(characteristicImmediateAlert, volume.value, timeout);
     }
 
     @Override
     public BLEError writeImmediateAlert(AlertVolume volume) {
         return writeImmediateAlert(volume, 0);
+    }
+
+    @Override
+    public Observable<AlertVolume> observableImmediateAlert() {
+        return observableAlertVolume;
+    }
+
+    @Override
+    public int getLastStatus() {
+        return lastStatus;
     }
 }

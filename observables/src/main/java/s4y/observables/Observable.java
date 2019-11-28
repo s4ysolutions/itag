@@ -6,6 +6,16 @@ import java.util.Set;
 
 public class Observable<T> {
     private final Set<Observer<T>> observers = new HashSet<>();
+    private T value;
+
+    public Observable(T value) {
+        this.value = value;
+    }
+
+    public Observable() {
+        this.value = null;
+    }
+
     void remove(Observer<T> observer) {
         observers.remove(observer);
     }
@@ -15,9 +25,14 @@ public class Observable<T> {
         return new Subscription<>(observer,this);
     };
 
-    public void onNext(T t) {
+    public void onNext(T value) {
+        this.value = value;
         for (Observer<T> observer : observers) {
-            observer.onNext(t);
+            observer.onNext(value);
         }
+    }
+
+    public T value() {
+        return value;
     }
 }

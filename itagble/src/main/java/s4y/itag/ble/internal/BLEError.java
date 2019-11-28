@@ -5,9 +5,7 @@ public enum BLEError {
     timeout,
     noPeripheral,
     noGatt,
-    badUUID,
-    noImmediateAlertService,
-    noFindMeAlertService,
     noImmediateAlertCharacteristic,
-    noFindMeAlertCharacteristic
+    noFindMeAlertCharacteristic,
+    badStatus
 }
