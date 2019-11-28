@@ -118,17 +118,14 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            monitorConnect.setPayload(new ConnectionStateChange(gatt, status, newState));
             if (status == GATT_SUCCESS) {
                 if (newState == STATE_CONNECTED) {
-                    monitorConnect.setPayload(new ConnectionStateChange(gatt, status, newState));
                     completeConnection(60);
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    monitorDisconnect.setPayload(new ConnectionStateChange(gatt, status, newState));
                     markDisconnected();
                 }
-            } else if (status == 133) {
-                monitorConnect.setPayload(new ConnectionStateChange(gatt, status, newState));
-            } else {
+            } else if (status != 133) {
                 markDisconnected();
             }
         }
@@ -363,32 +360,43 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         }
 
         if (characteristicImmediateAlert == null) {
+            waitForDiscoverCharacteristics(timeoutSec);
+            /*
             BLEError error = waitForDiscoverCharacteristics(timeoutSec);
             if (error != BLEError.ok) {
                 gatt.disconnect();
                 return error;
-            }
+            }*/
         }
 
+            /*
         if (characteristicImmediateAlert == null) {
             gatt.disconnect();
             return BLEError.noImmediateAlertCharacteristic;
         }
+             */
 
         if (characteristicFindMe == null) {
+            waitForDiscoverCharacteristics(timeoutSec);
+            /*
             BLEError error = waitForDiscoverCharacteristics(timeoutSec);
             if (error != BLEError.ok) {
                 gatt.disconnect();
                 return error;
             }
+             */
         }
 
+            /*
         if (characteristicFindMe == null) {
             gatt.disconnect();
             return BLEError.noFindMeAlertCharacteristic;
         }
+             */
 
-        setCharacteristicNotification(gatt, characteristicFindMe);
+        if (characteristicFindMe != null ) {
+            setCharacteristicNotification(gatt, characteristicFindMe);
+        }
 
         connectionsControl.setState(id, BLEConnectionState.connected);
         return BLEError.ok;
