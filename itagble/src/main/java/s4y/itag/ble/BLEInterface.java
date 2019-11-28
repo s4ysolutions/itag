@@ -1,13 +1,12 @@
 package s4y.itag.ble;
 
-import s4y.itag.ble.internal.BLEAlertInterface;
+import s4y.observables.Observable;
 
 public interface BLEInterface {
-    BLEAlertInterface getAlert();
-    BLEConnectionsInterface getConnections();
-    BLEFindMeInterface getFindMe();
-    BLEScannerInterface getScanner();
-    BLEState getState();
-    void addOnBLEStateChangeListener(OnBLEStateChangeListener onBLEStateChangeListener);
-    void removeOnBLEStateChangeListener(OnBLEStateChangeListener onBLEStateChangeListener);
+    BLEAlertInterface alert();
+    BLEConnectionsInterface connections();
+    BLEFindMeInterface findMe();
+    BLEScannerInterface scanner();
+    BLEState state();
+    Observable<BLEState> observableState();
 }

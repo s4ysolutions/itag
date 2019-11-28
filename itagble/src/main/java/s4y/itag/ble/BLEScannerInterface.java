@@ -1,6 +1,5 @@
 package s4y.itag.ble;
 
-import s4y.itag.ble.internal.BLEDiscoveryResult;
 import s4y.itag.ble.observables.Subject;
 
 public interface BLEScannerInterface {
