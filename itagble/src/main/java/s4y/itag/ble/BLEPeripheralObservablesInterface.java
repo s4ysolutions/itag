@@ -3,7 +3,7 @@ package s4y.itag.ble;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 
-import s4y.observables.Observable;
+import s4y.rasat.Observable;
 
 interface BLEPeripheralObservablesInterface {
     class DiscoveredCharacteristic {
@@ -19,21 +19,21 @@ interface BLEPeripheralObservablesInterface {
             this.error = error;
         }
     }
-    class Characteristic {
+    class CharacteristicEvent {
         final CBPeripheralInterace peripheral;
         final BluetoothGattCharacteristic characteristic;
         final BLEError error;
 
-        public Characteristic(CBPeripheralInterace peripheral, BluetoothGattCharacteristic characteristic, BLEError error) {
+        public CharacteristicEvent(CBPeripheralInterace peripheral, BluetoothGattCharacteristic characteristic, BLEError error) {
             this.peripheral = peripheral;
             this.characteristic = characteristic;
             this.error = error;
         }
     }
 
-    Observable<CBPeripheralInterace> getDidDiscoverServices();
-    Observable<DiscoveredCharacteristic> getDidDiscoverCharacteristicsForService();
-    Observable<Characteristic> getDidWriteValueForCharacteristic();
-    Observable<Characteristic> getDidUpdateNotificationStateForCharacteristic();
-    Observable<Characteristic> getDidUpdateValueForCharacteristic();
+    Observable<CBPeripheralInterace> didDiscoverServices();
+    Observable<DiscoveredCharacteristic> didDiscoverCharacteristicsForService();
+    Observable<CharacteristicEvent> didWriteValueForCharacteristic();
+    Observable<CharacteristicEvent> didUpdateNotificationStateForCharacteristic();
+    Observable<CharacteristicEvent> didUpdateValueForCharacteristic();
 }

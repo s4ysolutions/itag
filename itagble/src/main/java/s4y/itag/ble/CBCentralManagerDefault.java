@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
-import s4y.observables.Observable;
+import s4y.rasat.Channel;
 
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
@@ -14,11 +14,11 @@ class CBCentralManagerDefault implements CBCentralManagerInterface {
     private final Context context;
     private final CBCentralManagerDelegate delegate;
 
-    private final Observable<BLEDiscoveryResult> didDiscoverPeripheral = new Observable<>();
+    private final Channel<BLEDiscoveryResult> didDiscoverPeripheral = new Channel<>();
     private final BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] data) {
-            didDiscoverPeripheral.onNext(new BLEDiscoveryResult(bluetoothDevice, rssi, data));
+            didDiscoverPeripheral.broadcast(new BLEDiscoveryResult(bluetoothDevice, rssi, data));
         }
     };
 
@@ -40,6 +40,11 @@ class CBCentralManagerDefault implements CBCentralManagerInterface {
 
     public boolean canScan() {
         return true;
+    }
+
+    @Override
+    public CBManagerState state() {
+        return null;
     }
 
     private boolean isScanning = false;
@@ -72,7 +77,7 @@ class CBCentralManagerDefault implements CBCentralManagerInterface {
     }
 
     @Override
-    public Observable<BLEDiscoveryResult> observableDidDiscoverPeripheral() {
+    public Channel<BLEDiscoveryResult> observableDidDiscoverPeripheral() {
         return didDiscoverPeripheral;
     }
 

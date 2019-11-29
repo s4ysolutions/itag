@@ -2,73 +2,73 @@ package s4y.itag.ble;
 
 import java.util.Map;
 
-import s4y.observables.Observable;
+import s4y.rasat.Channel;
 
 class BLEManagerObservablesDefault implements BLEManagerObservablesInterface, CBCentralManagerDelegate {
-    private final Observable<CBPeripheralInterace> didConnectPeripheral = new Observable<>();
-    private final Observable<CBPeripheralConnected> didFailToConnectPeripheral = new Observable<>();
-    private final Observable<CBPeripheralConnected> didDisconnectPeripheral = new Observable<>();
-    private final Observable<CBPeripheralDiscovered> didDiscoverPeripheral = new Observable<>();
-    private final Observable<CBManagerState> didUpdateState = new Observable<>(CBManagerState.unknown);
-    private final Observable<CBPeripheralInterace[]> willRestoreState = new Observable<>();
+    private final Channel<CBPeripheralInterace> didConnectPeripheral = new Channel<>();
+    private final Channel<CBPeripheralConnectedEvent> didFailToConnectPeripheral = new Channel<>();
+    private final Channel<CBPeripheralConnectedEvent> didDisconnectPeripheral = new Channel<>();
+    private final Channel<CBPeripheralDiscoveredEvent> didDiscoverPeripheral = new Channel<>();
+    private final Channel<CBManagerState> didUpdateState = new Channel<>(CBManagerState.unknown);
+    private final Channel<CBPeripheralInterace[]> willRestoreState = new Channel<>();
 
     @Override
-    public Observable<CBPeripheralInterace> getDidConnectPeripheral() {
+    public Channel<CBPeripheralInterace> getDidConnectPeripheral() {
         return didConnectPeripheral;
     }
 
     @Override
-    public Observable<CBPeripheralConnected> getDidFailToConnectPeripheral() {
+    public Channel<CBPeripheralConnectedEvent> getDidFailToConnectPeripheral() {
         return didFailToConnectPeripheral;
     }
 
     @Override
-    public Observable<CBPeripheralConnected> getDidDisconnectPeripheral() {
+    public Channel<CBPeripheralConnectedEvent> getDidDisconnectPeripheral() {
         return didDisconnectPeripheral;
     }
 
     @Override
-    public Observable<CBPeripheralDiscovered> getDidDiscoverPeripheral() {
+    public Channel<CBPeripheralDiscoveredEvent> getDidDiscoverPeripheral() {
         return didDiscoverPeripheral;
     }
 
     @Override
-    public Observable<CBManagerState> getDidUpdateState() {
+    public Channel<CBManagerState> getDidUpdateState() {
         return didUpdateState;
     }
 
     @Override
-    public Observable<CBPeripheralInterace[]> getWillRestoreState() {
+    public Channel<CBPeripheralInterace[]> getWillRestoreState() {
         return willRestoreState;
     }
 
     @Override
     public void willRestorePeripherals(CBCentralManagerInterface central, CBPeripheralInterace[] peripherals) {
-        willRestoreState.onNext(peripherals);
+        willRestoreState.broadcast(peripherals);
     }
 
     @Override
     public void didDiscoverPeripheral(CBCentralManagerInterface central, CBPeripheralInterace peripheral, Map<String, Object> advertisementData, int rssi) {
-        didDiscoverPeripheral.onNext(new CBPeripheralDiscovered(peripheral, advertisementData, rssi));
+        didDiscoverPeripheral.broadcast(new CBPeripheralDiscoveredEvent(peripheral, advertisementData, rssi));
     }
 
     @Override
     public void didUpdateState(CBCentralManagerInterface central) {
-        didUpdateState.onNext(central.state());
+        didUpdateState.broadcast(central.state());
     }
 
     @Override
     public void didConnectPeripheral(CBCentralManagerInterface central, CBPeripheralInterace peripheral) {
-        didConnectPeripheral.onNext(peripheral);
+        didConnectPeripheral.broadcast(peripheral);
     }
 
     @Override
     public void didFailToConnectPeripheral(CBCentralManagerInterface central, CBPeripheralInterace peripheral, BLEError error) {
-        didFailToConnectPeripheral.onNext(new CBPeripheralConnected(peripheral, error));
+        didFailToConnectPeripheral.broadcast(new CBPeripheralConnectedEvent(peripheral, error));
     }
 
     @Override
     public void didDisconnectPeripheral(CBCentralManagerInterface central, CBPeripheralInterace peripheral, BLEError error) {
-        didDisconnectPeripheral.onNext(new CBPeripheralConnected(peripheral, error));
+        didDisconnectPeripheral.broadcast(new CBPeripheralConnectedEvent(peripheral, error));
     }
 }

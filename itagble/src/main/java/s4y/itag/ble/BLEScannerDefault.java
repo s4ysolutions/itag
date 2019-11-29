@@ -3,9 +3,6 @@ package s4y.itag.ble;
 import android.os.Handler;
 import android.os.Looper;
 
-import s4y.itag.ble.observables.Subject;
-import s4y.itag.ble.observables.SubjectNext;
-
 public class BLEScannerDefault implements BLEScannerInterface {
     private final CBCentralManagerInterface manager;
     private final BLEConnectionsInterface connections;

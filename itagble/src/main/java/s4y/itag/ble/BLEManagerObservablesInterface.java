@@ -1,34 +1,33 @@
 package s4y.itag.ble;
 
 import java.util.Map;
-
-import s4y.observables.Observable;
+import s4y.rasat.Observable;
 
 interface BLEManagerObservablesInterface {
-    class CBPeripheralConnected {
+    class CBPeripheralConnectedEvent {
        final CBPeripheralInterace peripheral;
        final BLEError error;
 
-        CBPeripheralConnected(CBPeripheralInterace peripheral, BLEError error) {
+        CBPeripheralConnectedEvent(CBPeripheralInterace peripheral, BLEError error) {
             this.peripheral = peripheral;
             this.error = error;
         }
     }
-    class CBPeripheralDiscovered {
+    class CBPeripheralDiscoveredEvent {
         final CBPeripheralInterace peripheral;
         final Map<String, Object> advertisementData;
         final int rssi;
 
-        CBPeripheralDiscovered(CBPeripheralInterace peripheral, Map<String, Object> advertisementData, int rssi) {
+        CBPeripheralDiscoveredEvent(CBPeripheralInterace peripheral, Map<String, Object> advertisementData, int rssi) {
             this.peripheral = peripheral;
             this.advertisementData = advertisementData;
             this.rssi = rssi;
         }
     }
-    Observable<CBPeripheralInterace> getDidConnectPeripheral();
-    Observable<CBPeripheralConnected> getDidFailToConnectPeripheral();
-    Observable<CBPeripheralConnected> getDidDisconnectPeripheral();
-    Observable<CBPeripheralDiscovered> getDidDiscoverPeripheral();
-    Observable<CBManagerState> getDidUpdateState();
-    Observable<CBPeripheralInterace[]> getWillRestoreState();
+    Observable<CBPeripheralInterace> didConnectPeripheral();
+    Observable<CBPeripheralConnectedEvent> didFailToConnectPeripheral();
+    Observable<CBPeripheralConnectedEvent> didDisconnectPeripheral();
+    Observable<CBPeripheralDiscoveredEvent> didDiscoverPeripheral();
+    Observable<CBManagerState> didUpdateState();
+    Observable<CBPeripheralInterace[]> willRestoreState();
 }

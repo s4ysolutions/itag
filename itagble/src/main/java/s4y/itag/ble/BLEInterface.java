@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-import s4y.observables.Observable;
+import s4y.rasat.Channel;
 
 public interface BLEInterface {
     BLEAlertInterface alert();
@@ -8,5 +8,5 @@ public interface BLEInterface {
     BLEFindMeInterface findMe();
     BLEScannerInterface scanner();
     BLEState state();
-    Observable<BLEState> observableState();
+    Channel<BLEState> observableState();
 }

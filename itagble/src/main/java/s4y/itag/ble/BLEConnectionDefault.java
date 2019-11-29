@@ -1,19 +1,18 @@
 package s4y.itag.ble;
 
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 
 import java.util.UUID;
 
-import s4y.observables.Subscription;
+import s4y.rasat.Channel;
+import s4y.rasat.Handler;
+import s4y.rasat.Disposable;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
@@ -21,160 +20,161 @@ import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 public class BLEConnectionDefault implements BLEConnectionInterface {
     private static final UUID IMMEDIATE_ALERT_SERVICE = UUID.fromString("00001802-0000-1000-8000-00805f9b34fb");
     private static final UUID FINDME_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
+    private static final UUID CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     private static final UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
     private static final UUID FINDME_CHARACTERISTIC = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
-    private static final UUID CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
-    final private Context context;
+    @NonNull
     final private BLEConnectionsControlInterface connectionsControl;
-    final private BLEFindMeControl findMeControl;
+    private CBPeripheralInterace peripheral;
+    @NonNull
     final private CBCentralManagerInterface manager;
-    final private String id;
+    final private BLEManagerObservablesInterface managerObservables;
+    final private BLEPeripheralObservablesInterface peripheralObservables;
 
-    private BluetoothDevice peripheral = null;
-    private BluetoothGatt gatt = null;
+    private String id;
+    private Disposable<BLEPeripheralObservablesInterface.CharacteristicEvent> disposableImmediateAlert;
+
     private BluetoothGattCharacteristic characteristicImmediateAlert = null;
     private BluetoothGattCharacteristic characteristicFindMe = null;
 
-    private int lastStatus = GATT_SUCCESS;
-/*
-    private AlertVolume alertVolume;
-    private final Observable<AlertVolume> observableAlertVolume = new Observable<>(AlertVolume.NO_ALERT);
-*/
-    private static class ConnectionStateChange {
-        final BluetoothGatt gatt;
-        final int status;
-        final int newState;
+    private final Channel<AlertUpdateNotificationEvent> immediateAlertUpdateNotificationChannel;
 
-        ConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            this.gatt = gatt;
-            this.status = status;
-            this.newState = newState;
-        }
-    }
+    @NonNull
+    final private Context context;
+    @NonNull
+    final private BLEFindMeControl findMeControl;
 
-    private static class ServicesDiscovered {
-        final BluetoothGatt gatt;
-        final int status;
-
-        ServicesDiscovered(BluetoothGatt gatt, int status) {
-            this.gatt = gatt;
-            this.status = status;
-        }
-    }
-
-    private static class CharacteristicWrite {
-        final BluetoothGatt gatt;
-        final BluetoothGattCharacteristic characteristic;
-        final int status;
-
-        CharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            this.gatt = gatt;
-            this.characteristic = characteristic;
-            this.status = status;
-        }
-    }
-
-    private static class Monitor<T> {
-        private T state;
-
-        synchronized void setPayload(T state) {
-            this.state = state;
-            notifyAll();
-        }
-
-        synchronized void waitFor(Runnable runnable, long timeoutSec) {
-            state = null;
-            runnable.run();
-            try {
-                if (timeoutSec > 0) {
-                    wait(timeoutSec * 1000);
-                } else {
-                    wait();
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        boolean isTimedOut() {
-            return state == null;
-        }
-
-        T payload() {
-            return state;
-        }
-    }
-
-    private final Monitor<ConnectionStateChange> monitorConnect = new Monitor<>();
-    private final Monitor<ConnectionStateChange> monitorDisconnect = new Monitor<>();
-    private final Monitor<ServicesDiscovered> monitorServicesDiscovered = new Monitor<>();
-    private final Monitor<CharacteristicWrite> monitorCharacteristicWrite = new Monitor<>();
-
-    private BluetoothGattCharacteristic characteristicToWrite = null;
-
-    private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            monitorConnect.setPayload(new ConnectionStateChange(gatt, status, newState));
-            if (status == GATT_SUCCESS) {
-                if (newState == STATE_CONNECTED) {
-                    completeConnection(60);
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    markDisconnected();
-                }
-            } else if (status != 133) {
-                markDisconnected();
-            }
-        }
-
-        @Override
-        public void onServicesDiscovered(@NonNull final BluetoothGatt gatt, int status) {
-            if (id.equals(gatt.getDevice().getAddress())) {
-                monitorServicesDiscovered.setPayload(new ServicesDiscovered(gatt, status));
-            }
-        }
-
-        @Override
-        public void onCharacteristicWrite(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic, int status) {
-            if (id.equals(gatt.getDevice().getAddress())) {
-                connectionsControl.setState(id, BLEConnectionState.connected);
-                // TODO: parallel writes?
-                /*
-                if (alertVolume!=null && ALERT_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid())) {
-                    observableAlertVolume.onNext(alertVolume);
-                }
-                 */
-                if (characteristicToWrite == null || characteristicToWrite.getUuid().equals(characteristic.getUuid())) {
-                    monitorCharacteristicWrite.setPayload(new CharacteristicWrite(gatt, characteristic, status));
-                }
-            }
-        }
-
-        @Override
-        public void onCharacteristicChanged(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic) {
-            if (id.equals(gatt.getDevice().getAddress()) && FINDME_CHARACTERISTIC.equals(characteristic.getUuid())) {
-                findMeControl.onClick(id);
-            }
-        }
-    };
-
-    BLEConnectionDefault(Context context,
-                         BLEConnectionsControlInterface connectionsControl,
-                         BLEFindMeControl findMeControl,
-                         CBCentralManagerInterface manager,
-                         String id) {
+    BLEConnectionDefault(@NonNull Context context,
+                         @NonNull BLEConnectionsControlInterface connectionsControl,
+                         @NonNull BLEFindMeControl findMeControl,
+                         @NonNull CBCentralManagerInterface manager,
+                         @NonNull BLEPeripheralObservablesFactoryInterface peripheralObservablesFactory,
+                         @NonNull BLEManagerObservablesFactoryInterface managerObservablesFactory,
+                         @NonNull String id) {
         this.context = context;
         this.connectionsControl = connectionsControl;
         this.findMeControl = findMeControl;
         this.id = id;
         this.manager = manager;
+        this.peripheralObservables = peripheralObservablesFactory.observables();
+        this.managerObservables = managerObservablesFactory.observables();
+        peripheralObservables.didUpdateValueForCharacteristic().subscribe(new Handler<BLEPeripheralObservablesInterface.CharacteristicEvent>() {
+            @Override
+            public void handle(BLEPeripheralObservablesInterface.CharacteristicEvent event) {
+                if (peripheral.identifier().equals(event.peripheral.identifier()) &&
+                        FINDME_CHARACTERISTIC.equals(event.characteristic.getUuid())
+                ) {
+                    findMeControl.onClick(id);
+                }
+            }
+        });
+        immediateAlertUpdateNotificationChannel = new Channel<>(new AlertUpdateNotificationEvent(id, AlertVolume.NO_ALERT));
+
+        disposableImmediateAlert = peripheralObservables
+                .didWriteValueForCharacteristic()
+                .subscribe(event -> {
+                    if (id.equals(event.peripheral.identifier()) &&
+                            ALERT_LEVEL_CHARACTERISTIC.equals(event.characteristic.getUuid())) {
+                        immediateAlertUpdateNotificationChannel.broadcast(
+                                new AlertUpdateNotificationEvent(
+                                        id,
+                                        AlertVolume.fromCharacteristic(event.characteristic))
+                        );
+                    }
+                });
+    }
+
+    BLEConnectionDefault(@NonNull Context context,
+                         @NonNull BLEConnectionsControlInterface connectionsControl,
+                         @NonNull BLEFindMeControl findMeControl,
+                         @NonNull CBCentralManagerInterface manager,
+                         @NonNull BLEPeripheralObservablesFactoryInterface peripheralObservablesFactory,
+                         @NonNull BLEManagerObservablesFactoryInterface managerObservablesFactory,
+                         @NonNull CBPeripheralInterace peripheral) {
+        this(context,
+                connectionsControl,
+                findMeControl,
+                manager,
+                peripheralObservablesFactory,
+                managerObservablesFactory,
+                peripheral.identifier().toString()
+        );
+        setPeripheral(peripheral);
+    }
+
+    private void setPeripheral(CBPeripheralInterace peripheral) {
+        this.peripheral = peripheral;
+        if (disposableImmediateAlert != null) {
+            disposableImmediateAlert.dispose();
+        }
+        if (peripheral == null) {
+            disposableImmediateAlert = null;
+        } else {
+            disposableImmediateAlert = peripheralObservables
+                    .didWriteValueForCharacteristic()
+                    .subscribe(event -> {
+                        if (id.equals(event.peripheral.identifier()) &&
+                                ALERT_LEVEL_CHARACTERISTIC.equals(event.characteristic.getUuid())) {
+                            immediateAlertUpdateNotificationChannel.broadcast(
+                                    new AlertUpdateNotificationEvent(
+                                            id,
+                                            AlertVolume.fromCharacteristic(event.characteristic))
+                            );
+                        }
+                    });
+        }
+    }
+
+
+    @Override
+    public boolean isConnected() {
+        return peripheral.state() == CBPeripheralState.connected;
+    }
+
+    private CBService immediateAlertService() {
+        for (CBService service : peripheral.services()) {
+            if (IMMEDIATE_ALERT_SERVICE.equals(service.uuid())) {
+                return service;
+            }
+        }
+        return null;
+    }
+
+    private CBService findMeService() {
+        for (CBService service : peripheral.services()) {
+            if (FINDME_SERVICE.equals(service.uuid())) {
+                return service;
+            }
+        }
+        return null;
+    }
+
+    private CBCharacteristic immediateAlertCharacteristic() {
+        CBService service = immediateAlertService();
+        if (service != null) {
+            for (CBCharacteristic characteristic : service.characteristics) {
+                if (ALERT_LEVEL_CHARACTERISTIC.equals(characteristic.uuid())) {
+                    return characteristic;
+                }
+            }
+        }
+        return null;
+    }
+
+    private CBCharacteristic findMeCharacteristic() {
+        CBService service = findMeService();
+        if (service != null) {
+            for (CBCharacteristic characteristic : service.characteristics) {
+                if (FINDME_CHARACTERISTIC.equals(characteristic.uuid())) {
+                    return characteristic;
+                }
+            }
+        }
+        return null;
     }
 
     private BLEError assertPeripheral() {
-        if (peripheral == null) {
-            peripheral = manager.retrievePeripheral(id);
-        }
         return BLEError.ok;
     }
 
@@ -183,7 +183,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
             gatt.close();
         }
         gatt = null;
-        // observableAlertVolume.onNext(AlertVolume.NO_ALERT);
+        // observableAlertVolume.broadcast(AlertVolume.NO_ALERT);
         connectionsControl.setState(id, BLEConnectionState.disconnected);
     }
 
@@ -194,10 +194,10 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         // TODO: another scan
         connectionsControl.setState(id, BLEConnectionState.discovering);
 
-        Subscription<BLEDiscoveryResult> subscription =
-                manager.observableDidDiscoverPeripheral().subscribe(bleDiscoveryResult -> {
-                    if (id.equals(bleDiscoveryResult.peripheral.getAddress())) {
-                        peripheral = bleDiscoveryResult.peripheral;
+        Disposable<BLEManagerObservablesInterface.CBPeripheralDiscoveredEvent> disposable =
+                managerObservables.didDiscoverPeripheral().subscribe(event -> {
+                    if (peripheral.identifier().equals(event.peripheral.identifier())) {
+                        setPeripheral(event.peripheral);
                         lockWaitForDiscoverTimeout = false;
                         synchronized (lockWaitForDiscover) {
                             lockWaitForDiscover.notifyAll();
@@ -214,27 +214,41 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
                 e.printStackTrace();
             }
         }
-        subscription.dispose();
+        disposable.dispose();
 
         manager.stopScan();
         return lockWaitForDiscoverTimeout ? BLEError.timeout : BLEError.ok;
     }
 
+    private final ThreadWait<CBPeripheralDefault.ConnectionStateChange> monitorConnect = new ThreadWait<>();
+    private final ThreadWait<CBPeripheralDefault.ConnectionStateChange> monitorDisconnect = new ThreadWait<>();
+    private final ThreadWait<CBPeripheralDefault.ServicesDiscovered> monitorServicesDiscovered = new ThreadWait<>();
+    private final ThreadWait<CBPeripheralDefault.CharacteristicWrite> monitorCharacteristicWrite = new ThreadWait<>();
 
     private BLEError waitForConnect(int timeoutSec) throws BLEException {
         if (peripheral == null)
             return BLEError.noPeripheral;
 
-        if (isConnected()) {
+        if (peripheral.state() == CBPeripheralState.connected) {
             return completeConnection(60);
         }
-
         connectionsControl.setState(id, BLEConnectionState.connecting);
 
+        try (Disposable<CBPeripheralInterace> disposable = managerObservables.didConnectPeripheral().subscribe(
+                new Handler<CBPeripheralInterace>() {
+                    @Override
+                    public void handle(CBPeripheralInterace event) {
+
+                    }
+                }
+        )){
+int a;
+a=1;
+        }
         monitorConnect.waitFor(
                 () -> gatt = peripheral.connectGatt(context, true, gattCallback),
                 timeoutSec);
-        if (monitorConnect.isTimedOut()){
+        if (monitorConnect.isTimedOut()) {
             return BLEError.timeout;
         }
 
@@ -259,7 +273,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
             monitorConnect.waitFor(
                     () -> gatt = peripheral.connectGatt(context, true, gattCallback),
                     timeoutSec);
-            if (monitorConnect.isTimedOut()){
+            if (monitorConnect.isTimedOut()) {
                 return BLEError.timeout;
             }
             count++;
@@ -395,17 +409,12 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         }
              */
 
-        if (characteristicFindMe != null ) {
+        if (characteristicFindMe != null) {
             setCharacteristicNotification(gatt, characteristicFindMe);
         }
 
         connectionsControl.setState(id, BLEConnectionState.connected);
         return BLEError.ok;
-    }
-
-    @Override
-    public boolean isConnected() {
-        return peripheral != null & gatt != null && gatt.getConnectionState(peripheral) == STATE_CONNECTED;
     }
 
     @Override
@@ -415,7 +424,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         assertPeripheral();
 
         if (peripheral == null) {
-            Subscription<BLEDiscoveryResult> subscription =
+            Disposable<BLEDiscoveryResult> disposable =
                     manager.observableDidDiscoverPeripheral().subscribe(bleDiscoveryResult -> {
                         if (id.equals(bleDiscoveryResult.peripheral.getAddress())) {
                             peripheral = bleDiscoveryResult.peripheral;
@@ -430,7 +439,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
                     lockWaitForDiscover.wait();
                 }
             } finally {
-                subscription.dispose();
+                disposable.dispose();
             }
         }
         if (peripheral == null) {
@@ -531,14 +540,19 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
     public BLEError writeImmediateAlert(AlertVolume volume) {
         return writeImmediateAlert(volume, 0);
     }
-/*
-    @Override
-    public Observable<AlertVolume> observableImmediateAlert() {
-        return observableAlertVolume;
-    }
-*/
+
+    /*
+        @Override
+        public Channel<AlertVolume> observableImmediateAlert() {
+            return observableAlertVolume;
+        }
+    */
     @Override
     public int getLastStatus() {
         return lastStatus;
     }
+
+    Channel<AlertUpdateNotificationEvent> immediateAlertUpdateNotificationChannel(){
+        return immediateAlertUpdateNotificationChannel;
+    };
 }

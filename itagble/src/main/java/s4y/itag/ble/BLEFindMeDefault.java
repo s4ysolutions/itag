@@ -9,13 +9,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import s4y.observables.Observable;
+import s4y.rasat.Channel;
 
 public class BLEFindMeDefault implements BLEFindMeInterface, BLEFindMeControl {
     private static final int CLICK_INTERVAL = 600;
     private static final int CLICK_COUNT = 2;
 
-    private final Observable<FindMe> observable = new Observable<>();
+    private final Channel<FindMe> channel = new Channel<>();
     private final Set<String> findMes = new HashSet<>();
 
     private Handler handler = new Handler();
@@ -52,8 +52,8 @@ public class BLEFindMeDefault implements BLEFindMeInterface, BLEFindMeControl {
     }
 
     @Override
-    public Observable<FindMe> observable() {
-        return observable;
+    public Channel<FindMe> observable() {
+        return channel;
     }
 
     @Override
@@ -68,7 +68,7 @@ public class BLEFindMeDefault implements BLEFindMeInterface, BLEFindMeControl {
         synchronized (findMes) {
             findMes.remove(id);
         }
-        observable.onNext(new FindMe(id, false));
+        channel.broadcast(new FindMe(id, false));
     }
 
     @Override
@@ -83,7 +83,7 @@ public class BLEFindMeDefault implements BLEFindMeInterface, BLEFindMeControl {
                 synchronized (findMes) {
                     findMes.add(id);
                 }
-                observable.onNext(new FindMe(id, true));
+                channel.broadcast(new FindMe(id, true));
             } else {
                 cancel(id);
             }

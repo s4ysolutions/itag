@@ -1,7 +1,7 @@
 package s4y.itag.ble;
 
-import s4y.observables.Observable;
-import s4y.observables.Observer;
+import s4y.rasat.Channel;
+import s4y.rasat.Handler;
 
 public class BLEDefault implements BLEInterface {
     static final int TIMEOUT = 60;
@@ -10,7 +10,7 @@ public class BLEDefault implements BLEInterface {
     private final BLEAlertInterface alert;
     private final BLEFindMeInterface findMe;
     private final BLEScannerInterface scanner;
-    private final Observable<BLEState> observableState = new Observable<>();
+    private final Channel<BLEState> channelState = new Channel<>();
 
     BLEDefault (
             CBCentralManagerFactoryInterface managerFactory,
@@ -36,7 +36,7 @@ public class BLEDefault implements BLEInterface {
         this.alert = alertFactory.alert(store);
         this.findMe = findMe;
         this.scanner = scannerFactory.scanner(connections, manager);
-        managerObservables.getWillRestoreState().subscribe(new Observer<CBPeripheralInterace[]>() {
+        managerObservables.getWillRestoreState().subscribe(new Handler<CBPeripheralInterace[]>() {
             @Override
             public void onNext(CBPeripheralInterace[] peripherals) {
                 store.restorePeripherals(peripherals);
@@ -70,7 +70,7 @@ public class BLEDefault implements BLEInterface {
     }
 
     @Override
-    public Observable<BLEState> observableState() {
-        return observableState;
+    public Channel<BLEState> observableState() {
+        return channelState;
     }
 }

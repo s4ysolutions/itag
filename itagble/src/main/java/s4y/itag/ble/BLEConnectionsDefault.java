@@ -5,16 +5,16 @@ import androidx.annotation.NonNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import s4y.observables.Observable;
+import s4y.rasat.Channel;
 
 public class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsControlInterface {
 
-    private final Observable<BLEStateNotification> stateObservable = new Observable<>();
+    private final Channel<BLEStateNotification> stateChannel = new Channel<>();
     private final Map<String, BLEConnectionState> states = new HashMap<>();
 
     @Override
-    public Observable<BLEStateNotification> getStateObservable() {
-        return stateObservable;
+    public Channel<BLEStateNotification> getStateChannel() {
+        return stateChannel;
     }
 
     @Override

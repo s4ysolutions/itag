@@ -2,7 +2,7 @@ package s4y.itag.ble;
 
 import java.util.Map;
 
-import s4y.observables.Observable;
+import s4y.rasat.Channel;
 
 public interface BLEConnectionsInterface {
     class BLEStateNotification {
@@ -15,9 +15,10 @@ public interface BLEConnectionsInterface {
         }
     }
 
-    Observable<BLEStateNotification> getStateObservable();
+    Channel<BLEStateNotification> getStateChannel();
     Map<String, BLEConnectionState> getStates();
     void connect(String id);
     void connect(String id, int timeoutSec);
     void disconnect(String id);
+    Channel<AlertUpdateNotificationEvent> immediateAlertUpdateNotificationChannel();
 }
