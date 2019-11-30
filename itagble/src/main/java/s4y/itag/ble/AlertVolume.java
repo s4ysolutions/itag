@@ -1,7 +1,5 @@
 package s4y.itag.ble;
 
-import android.bluetooth.BluetoothGattCharacteristic;
-
 enum AlertVolume {
     NO_ALERT((byte) 0x00),
     MEDIUM_ALERT((byte) 0x01),
@@ -13,8 +11,8 @@ enum AlertVolume {
         this.value = value;
     }
 
-    static AlertVolume fromCharacteristic(BluetoothGattCharacteristic characteristic) {
-        int value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+    static AlertVolume fromCharacteristic(BLECharacteristic characteristic) {
+        int value = characteristic.int8();
         switch (value) {
             case 0:
                 return NO_ALERT;

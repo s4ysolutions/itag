@@ -11,8 +11,8 @@ interface BLECentralManagerInterface {
     boolean canScan();
     BLECentralManagerState state();
 
-    CBPeripheralInterace retrievePeripheral(@NonNull String id);
-    boolean isConnected(BluetoothDevice device);
+    BLEPeripheralInterace retrievePeripheral(@NonNull String id);
+    boolean connected(BluetoothDevice device);
 
     BLECentralManagerObservablesInterface observables();
 }

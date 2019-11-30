@@ -6,11 +6,11 @@ import s4y.rasat.Observable;
 
 interface BLECentralManagerObservablesInterface {
     class DiscoveredEvent {
-        final CBPeripheralInterace peripheral;
+        final BLEPeripheralInterace peripheral;
         final byte[] advertisementData;
         final int rssi;
 
-        DiscoveredEvent(@NonNull CBPeripheralInterace peripheral, byte[] advertisementData, int rssi) {
+        DiscoveredEvent(@NonNull BLEPeripheralInterace peripheral, byte[] advertisementData, int rssi) {
             this.peripheral = peripheral;
             this.advertisementData = advertisementData;
             this.rssi = rssi;

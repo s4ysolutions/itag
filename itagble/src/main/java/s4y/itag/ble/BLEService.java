@@ -7,17 +7,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-class CBService {
+class BLEService {
     final BluetoothGattService gatt;
-    final CBCharacteristic[] characteristics;
+    final BLECharacteristic[] characteristics;
 
-    CBService(BluetoothGattService gattService) {
+    BLEService(BluetoothGattService gattService) {
         this.gatt = gattService;
-        List<CBCharacteristic> characteristicList = new ArrayList<>();
+        List<BLECharacteristic> characteristicList = new ArrayList<>();
         for (BluetoothGattCharacteristic characteristic: gattService.getCharacteristics()){
-            characteristicList.add(new CBCharacteristic(characteristic));
+            characteristicList.add(new BLECharacteristic(characteristic));
         }
-        characteristics = new CBCharacteristic[characteristicList.size()];
+        characteristics = new BLECharacteristic[characteristicList.size()];
         characteristicList.toArray(characteristics);
     }
 

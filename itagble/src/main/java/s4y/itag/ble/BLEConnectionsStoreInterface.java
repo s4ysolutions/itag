@@ -9,5 +9,5 @@ interface BLEConnectionsStoreInterface {
     BLEConnectionInterface get(String id);
     @NonNull
     BLEConnectionInterface getOrMake(String id);
-    void restorePeripherals(CBPeripheralInterace[] peripherals);
+    void restorePeripherals(BLEPeripheralInterace[] peripherals);
 }

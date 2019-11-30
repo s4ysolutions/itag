@@ -37,9 +37,9 @@ public class BLEDefault implements BLEInterface {
         this.alert = alertFactory.alert(store);
         this.findMe = findMe;
         this.scanner = scannerFactory.scanner(connections, manager);
-        managerObservables.getWillRestoreState().subscribe(new Handler<CBPeripheralInterace[]>() {
+        managerObservables.getWillRestoreState().subscribe(new Handler<BLEPeripheralInterace[]>() {
             @Override
-            public void onNext(CBPeripheralInterace[] peripherals) {
+            public void onNext(BLEPeripheralInterace[] peripherals) {
                 store.restorePeripherals(peripherals);
             }
         });

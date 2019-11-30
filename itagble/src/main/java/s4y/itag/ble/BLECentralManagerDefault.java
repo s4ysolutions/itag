@@ -20,7 +20,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface {
             observables
                     .observablePeripheralDiscovered
                     .broadcast(new BLECentralManagerObservablesInterface.DiscoveredEvent(
-                            new BLEPeripheralDefault(context, bluetoothDevice),
+                            new BLEPeripheralDefault(context,  BLECentralManagerDefault.this, bluetoothDevice),
                             data,
                             rssi
                     ));
@@ -76,13 +76,13 @@ class BLECentralManagerDefault implements BLECentralManagerInterface {
         }
     }
 
-    public CBPeripheralInterace retrievePeripheral(@NonNull String id) {
+    public BLEPeripheralInterace retrievePeripheral(@NonNull String id) {
         BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(id);
-        return new BLEPeripheralDefault(context, device);
+        return new BLEPeripheralDefault(context, this, device);
     }
 
     @Override
-    public boolean isConnected(BluetoothDevice device) {
+    public boolean connected(BluetoothDevice device) {
         BluetoothManager bluetoothManager = getManager();
         if (bluetoothManager == null)
             return false;

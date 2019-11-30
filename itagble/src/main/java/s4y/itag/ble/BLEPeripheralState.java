@@ -1,8 +1,9 @@
 package s4y.itag.ble;
 
-public enum CBPeripheralState {
+public enum BLEPeripheralState {
     disconnected,
     connecting,
     connected,
     disconnecting,
+    writting,
 }

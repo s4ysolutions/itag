@@ -23,20 +23,20 @@ interface BLEPeripheralObservablesInterface {
     }
 
     class DiscoveredServicesEvent {
-        final CBService[] services;
+        final BLEService[] services;
         final int status;
 
-        public DiscoveredServicesEvent(CBService[] services, int status) {
+        public DiscoveredServicesEvent(BLEService[] services, int status) {
             this.services = services;
             this.status = status;
         }
     }
 
     class CharacteristicEvent {
-        final CBCharacteristic characteristic;
+        final BLECharacteristic characteristic;
         final int status;
 
-        public CharacteristicEvent(CBCharacteristic characteristic, int status) {
+        public CharacteristicEvent(BLECharacteristic characteristic, int status) {
             this.characteristic = characteristic;
             this.status = status;
         }
