@@ -4,17 +4,15 @@ import android.bluetooth.BluetoothDevice;
 
 import androidx.annotation.NonNull;
 
-import s4y.rasat.Channel;
-
-interface CBCentralManagerInterface {
+interface BLECentralManagerInterface {
     void scanForPeripherals();
     boolean isScanning();
     void stopScan();
     boolean canScan();
-    CBManagerState state();
+    BLECentralManagerState state();
 
-    BluetoothDevice retrievePeripheral(@NonNull String uuid);
+    CBPeripheralInterace retrievePeripheral(@NonNull String id);
     boolean isConnected(BluetoothDevice device);
 
-    Channel<BLEDiscoveryResult> observableDidDiscoverPeripheral();
+    BLECentralManagerObservablesInterface observables();
 }

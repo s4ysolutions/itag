@@ -8,5 +8,9 @@ interface CBPeripheralInterace {
     String identifier();
     CBService[] services();
     CBPeripheralState state();
-    retrievePeripherals
+    void connect();
+    void setDelegagte(CBPeripheralDelegate delegagte);
+    CBPeripheralDelegate delegate();
+
+    //retrievePeripheras
 }

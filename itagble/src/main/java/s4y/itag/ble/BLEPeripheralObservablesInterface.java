@@ -1,39 +1,51 @@
 package s4y.itag.ble;
 
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-
 import s4y.rasat.Observable;
 
 interface BLEPeripheralObservablesInterface {
-    class DiscoveredCharacteristic {
-        final CBPeripheralInterace peripheral;
-        final BluetoothGattService service;
-        final BluetoothGattCharacteristic characteristic;
-        final BLEError error;
+    class ConnectedEvent {
+    }
 
-        public DiscoveredCharacteristic(CBPeripheralInterace peripheral, BluetoothGattService service, BluetoothGattCharacteristic characteristic, BLEError error) {
-            this.peripheral = peripheral;
-            this.service = service;
-            this.characteristic = characteristic;
-            this.error = error;
+    class ConnectionFailedEvent {
+        final int status;
+
+        public ConnectionFailedEvent(int status) {
+            this.status = status;
         }
     }
+
+    class DisconnectedEvent {
+        final int status;
+
+        public DisconnectedEvent(int status) {
+            this.status = status;
+        }
+    }
+
+    class DiscoveredServicesEvent {
+        final CBService[] services;
+        final int status;
+
+        public DiscoveredServicesEvent(CBService[] services, int status) {
+            this.services = services;
+            this.status = status;
+        }
+    }
+
     class CharacteristicEvent {
-        final CBPeripheralInterace peripheral;
-        final BluetoothGattCharacteristic characteristic;
-        final BLEError error;
+        final CBCharacteristic characteristic;
+        final int status;
 
-        public CharacteristicEvent(CBPeripheralInterace peripheral, BluetoothGattCharacteristic characteristic, BLEError error) {
-            this.peripheral = peripheral;
+        public CharacteristicEvent(CBCharacteristic characteristic, int status) {
             this.characteristic = characteristic;
-            this.error = error;
+            this.status = status;
         }
     }
 
-    Observable<CBPeripheralInterace> didDiscoverServices();
-    Observable<DiscoveredCharacteristic> didDiscoverCharacteristicsForService();
-    Observable<CharacteristicEvent> didWriteValueForCharacteristic();
-    Observable<CharacteristicEvent> didUpdateNotificationStateForCharacteristic();
-    Observable<CharacteristicEvent> didUpdateValueForCharacteristic();
+    Observable<ConnectedEvent> observableConnected();
+    Observable<ConnectionFailedEvent> observableConnectionFailed();
+    Observable<DisconnectedEvent> observableDisconnected();
+    Observable<DiscoveredServicesEvent> observableDiscoveredServices();
+    Observable<CharacteristicEvent> observableWrite();
+    Observable<CharacteristicEvent> observableNotification();
 }

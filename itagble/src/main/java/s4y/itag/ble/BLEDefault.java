@@ -5,7 +5,7 @@ import s4y.rasat.Handler;
 
 public class BLEDefault implements BLEInterface {
     static final int TIMEOUT = 60;
-    private final CBCentralManagerInterface manager;
+    private final BLECentralManagerInterface manager;
     private final BLEConnectionsInterface connections;
     private final BLEAlertInterface alert;
     private final BLEFindMeInterface findMe;
@@ -13,7 +13,7 @@ public class BLEDefault implements BLEInterface {
     private final Channel<BLEState> channelState = new Channel<>();
 
     BLEDefault (
-            CBCentralManagerFactoryInterface managerFactory,
+            BLECentralManagerInterface manager,
             BLEConnectionFactoryInterface connectionFactory,
             BLEConnectionsControlFactoryInterface connectionsControlFactory,
             BLEConnectionsFactoryInterface connectionsFactory,
@@ -21,12 +21,13 @@ public class BLEDefault implements BLEInterface {
             BLEFindMeInterface findMe,
             BLEFindMeControl findMeControl,
             CBCentralManagerDelegate managerDelegate,
-            BLEManagerObservablesInterface managerObservables,
+            BLECentralManagerObservablesInterface managerObservables,
             BLEPeripheralObservablesFactoryInterface peripheralObservablesFactory,
             BLEScannerFactoryInterface scannerFactory,
             BLEConnectionsStoreFactoryInterface storeFactory
     ){
-        this.manager = managerFactory.manager(managerDelegate);
+        this.manager = manager;
+        this.manager.setDelegate(managerDelegate);
         final BLEConnectionsStoreInterface store = storeFactory.store(connectionFactory, findMeControl, manager, peripheralObservablesFactory);
         this.connections = connectionsFactory.connections(store, managerObservables);
         // this is cycle dependency ugly resolving
@@ -66,7 +67,7 @@ public class BLEDefault implements BLEInterface {
 
     @Override
     public BLEState state() {
-        return manager.state() == CBManagerState.poweredOn ? BLEState.ON : BLEState.OFF;
+        return manager.state() == BLECentralManagerState.poweredOn ? BLEState.ON : BLEState.OFF;
     }
 
     @Override

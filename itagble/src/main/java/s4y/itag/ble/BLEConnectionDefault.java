@@ -28,8 +28,8 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
     final private BLEConnectionsControlInterface connectionsControl;
     private CBPeripheralInterace peripheral;
     @NonNull
-    final private CBCentralManagerInterface manager;
-    final private BLEManagerObservablesInterface managerObservables;
+    final private BLECentralManagerInterface manager;
+    final private BLECentralManagerObservablesInterface managerObservables;
     final private BLEPeripheralObservablesInterface peripheralObservables;
 
     private String id;
@@ -48,9 +48,9 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
     BLEConnectionDefault(@NonNull Context context,
                          @NonNull BLEConnectionsControlInterface connectionsControl,
                          @NonNull BLEFindMeControl findMeControl,
-                         @NonNull CBCentralManagerInterface manager,
+                         @NonNull BLECentralManagerInterface manager,
                          @NonNull BLEPeripheralObservablesFactoryInterface peripheralObservablesFactory,
-                         @NonNull BLEManagerObservablesFactoryInterface managerObservablesFactory,
+                         @NonNull BLECentralManagerObservablesInterface managerObservables,
                          @NonNull String id) {
         this.context = context;
         this.connectionsControl = connectionsControl;
@@ -58,7 +58,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         this.id = id;
         this.manager = manager;
         this.peripheralObservables = peripheralObservablesFactory.observables();
-        this.managerObservables = managerObservablesFactory.observables();
+        this.managerObservables = managerObservables;
         peripheralObservables.didUpdateValueForCharacteristic().subscribe(new Handler<BLEPeripheralObservablesInterface.CharacteristicEvent>() {
             @Override
             public void handle(BLEPeripheralObservablesInterface.CharacteristicEvent event) {
@@ -88,16 +88,16 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
     BLEConnectionDefault(@NonNull Context context,
                          @NonNull BLEConnectionsControlInterface connectionsControl,
                          @NonNull BLEFindMeControl findMeControl,
-                         @NonNull CBCentralManagerInterface manager,
+                         @NonNull BLECentralManagerInterface manager,
                          @NonNull BLEPeripheralObservablesFactoryInterface peripheralObservablesFactory,
-                         @NonNull BLEManagerObservablesFactoryInterface managerObservablesFactory,
+                         @NonNull BLECentralManagerObservablesInterface managerObservables,
                          @NonNull CBPeripheralInterace peripheral) {
         this(context,
                 connectionsControl,
                 findMeControl,
                 manager,
                 peripheralObservablesFactory,
-                managerObservablesFactory,
+                managerObservables,
                 peripheral.identifier().toString()
         );
         setPeripheral(peripheral);
@@ -105,6 +105,10 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
 
     private void setPeripheral(CBPeripheralInterace peripheral) {
         this.peripheral = peripheral;
+        if (this.peripheral.delegate() == null) {
+            // NOTE: hacky factoring the delegate for sake of simplicity
+            this.peripheral.setDelegagte((CBPeripheralDelegate) this.peripheralObservables);
+        }
         if (disposableImmediateAlert != null) {
             disposableImmediateAlert.dispose();
         }
@@ -178,15 +182,16 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         return BLEError.ok;
     }
 
-    private void markDisconnected() {
-        if (gatt != null) {
-            gatt.close();
+    /*
+        private void markDisconnected() {
+            if (gatt != null) {
+                gatt.close();
+            }
+            gatt = null;
+            // observableAlertVolume.broadcast(AlertVolume.NO_ALERT);
+            connectionsControl.setState(id, BLEConnectionState.disconnected);
         }
-        gatt = null;
-        // observableAlertVolume.broadcast(AlertVolume.NO_ALERT);
-        connectionsControl.setState(id, BLEConnectionState.disconnected);
-    }
-
+    */
     private final Object lockWaitForDiscover = new Object();
     private boolean lockWaitForDiscoverTimeout;
 
@@ -194,7 +199,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         // TODO: another scan
         connectionsControl.setState(id, BLEConnectionState.discovering);
 
-        Disposable<BLEManagerObservablesInterface.CBPeripheralDiscoveredEvent> disposable =
+        Disposable<BLECentralManagerObservablesInterface.DiscoveredEvent> disposable =
                 managerObservables.didDiscoverPeripheral().subscribe(event -> {
                     if (peripheral.identifier().equals(event.peripheral.identifier())) {
                         setPeripheral(event.peripheral);
@@ -220,10 +225,49 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         return lockWaitForDiscoverTimeout ? BLEError.timeout : BLEError.ok;
     }
 
-    private final ThreadWait<CBPeripheralDefault.ConnectionStateChange> monitorConnect = new ThreadWait<>();
-    private final ThreadWait<CBPeripheralDefault.ConnectionStateChange> monitorDisconnect = new ThreadWait<>();
-    private final ThreadWait<CBPeripheralDefault.ServicesDiscovered> monitorServicesDiscovered = new ThreadWait<>();
-    private final ThreadWait<CBPeripheralDefault.CharacteristicWrite> monitorCharacteristicWrite = new ThreadWait<>();
+    static enum ConnectionState {
+
+    }
+    static class ConnectionStateChange {
+        final CBPeripheralInterace peripheral;
+        final boolean connected;
+        final int status;
+
+        ConnectionStateChange(CBPeripheralInterace peripheral, int status, int newState) {
+            this.peripheral = peripheral;
+            this.status = status;
+            this.newState = newState;
+        }
+    }
+
+    static class ServicesDiscovered {
+        final BluetoothGatt gatt;
+        final int status;
+
+        ServicesDiscovered(BluetoothGatt gatt, int status) {
+            this.gatt = gatt;
+            this.status = status;
+        }
+    }
+
+    static class CharacteristicWrite {
+        final BluetoothGatt gatt;
+        final BluetoothGattCharacteristic characteristic;
+        final int status;
+
+        CharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            this.gatt = gatt;
+            this.characteristic = characteristic;
+            this.status = status;
+        }
+    }
+
+    private BluetoothGattCharacteristic characteristicToWrite = null;
+
+    private final ThreadWait<ConnectionStateChange> monitorConnect = new ThreadWait<>();
+    private final ThreadWait<ConnectionStateChange> monitorDisconnect = new ThreadWait<>();
+    private final ThreadWait<ServicesDiscovered> monitorServicesDiscovered = new ThreadWait<>();
+    private final ThreadWait<CharacteristicWrite> monitorCharacteristicWrite = new ThreadWait<>();
 
     private BLEError waitForConnect(int timeoutSec) throws BLEException {
         if (peripheral == null)
@@ -234,22 +278,33 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         }
         connectionsControl.setState(id, BLEConnectionState.connecting);
 
-        try (Disposable<CBPeripheralInterace> disposable = managerObservables.didConnectPeripheral().subscribe(
-                new Handler<CBPeripheralInterace>() {
-                    @Override
-                    public void handle(CBPeripheralInterace event) {
+        Disposable<CBPeripheralInterace> disposableConnect =
+                managerObservables
+                        .didConnectPeripheral()
+                        .subscribe(monitorConnect::setPayload);
 
-                    }
-                }
-        )){
-int a;
-a=1;
-        }
-        monitorConnect.waitFor(
-                () -> gatt = peripheral.connectGatt(context, true, gattCallback),
-                timeoutSec);
-        if (monitorConnect.isTimedOut()) {
-            return BLEError.timeout;
+        Disposable<BLECentralManagerObservablesInterface.CBPeripheralConnectedEvent> disposableDisconnect =
+                managerObservables
+                        .didDisconnectPeripheral()
+                        .subscribe(new Handler<BLECentralManagerObservablesInterface.CBPeripheralConnectedEvent>() {
+                            @Override
+                            public void handle(BLECentralManagerObservablesInterface.CBPeripheralConnectedEvent event) {
+                                if (event !=)
+                                monitorConnect.setPayload(new ConnectionStateChange(event.peripheral, event.error));
+                            }
+                        });
+
+        try {
+            monitorConnect.waitFor(
+                    () -> manager.connect(peripheral)
+                    //gatt = peripheral.connectGatt(context, true, gattCallback),
+                    ,
+                    timeoutSec);
+            if (monitorConnect.isTimedOut()) {
+                return BLEError.timeout;
+            }
+        } finally {
+
         }
 
         // Handle error during connection
@@ -552,7 +607,9 @@ a=1;
         return lastStatus;
     }
 
-    Channel<AlertUpdateNotificationEvent> immediateAlertUpdateNotificationChannel(){
+    Channel<AlertUpdateNotificationEvent> immediateAlertUpdateNotificationChannel() {
         return immediateAlertUpdateNotificationChannel;
-    };
+    }
+
+    ;
 }

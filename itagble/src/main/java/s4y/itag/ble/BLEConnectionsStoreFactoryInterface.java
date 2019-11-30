@@ -4,7 +4,7 @@ public interface BLEConnectionsStoreFactoryInterface {
     BLEConnectionsStoreInterface store(
             BLEConnectionFactoryInterface connectionFactory,
             BLEFindMeControl findMeDelegate,
-            CBCentralManagerInterface manager,
+            BLECentralManagerInterface manager,
             BLEPeripheralObservablesFactoryInterface peripheralObservablesFactory
     );
 }

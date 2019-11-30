@@ -4,6 +4,7 @@ public enum BLEError {
     ok,
     timeout,
     noPeripheral,
+    noManager,
     noGatt,
     noImmediateAlertCharacteristic,
     noFindMeAlertCharacteristic,

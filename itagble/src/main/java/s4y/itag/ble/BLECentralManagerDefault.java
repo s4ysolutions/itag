@@ -5,26 +5,30 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
-import s4y.rasat.Channel;
+import androidx.annotation.NonNull;
 
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 
-class CBCentralManagerDefault implements CBCentralManagerInterface {
+class BLECentralManagerDefault implements BLECentralManagerInterface {
     private final Context context;
-    private final CBCentralManagerDelegate delegate;
+    private final BLECentralManagerObservables observables = new BLECentralManagerObservables();
 
-    private final Channel<BLEDiscoveryResult> didDiscoverPeripheral = new Channel<>();
     private final BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] data) {
-            didDiscoverPeripheral.broadcast(new BLEDiscoveryResult(bluetoothDevice, rssi, data));
+            observables
+                    .observablePeripheralDiscovered
+                    .broadcast(new BLECentralManagerObservablesInterface.DiscoveredEvent(
+                            new BLEPeripheralDefault(context, bluetoothDevice),
+                            data,
+                            rssi
+                    ));
         }
     };
 
-    CBCentralManagerDefault(Context context, CBCentralManagerDelegate delegate) {
+    BLECentralManagerDefault(Context context) {
         this.context = context;
-        this.delegate = delegate;
     }
 
     private BluetoothManager getManager() {
@@ -43,7 +47,7 @@ class CBCentralManagerDefault implements CBCentralManagerInterface {
     }
 
     @Override
-    public CBManagerState state() {
+    public BLECentralManagerState state() {
         return null;
     }
 
@@ -72,17 +76,13 @@ class CBCentralManagerDefault implements CBCentralManagerInterface {
         }
     }
 
-    public BluetoothDevice retrievePeripheral(String uuid) {
-        return BluetoothAdapter.getDefaultAdapter().getRemoteDevice(uuid);
+    public CBPeripheralInterace retrievePeripheral(@NonNull String id) {
+        BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(id);
+        return new BLEPeripheralDefault(context, device);
     }
 
     @Override
-    public Channel<BLEDiscoveryResult> observableDidDiscoverPeripheral() {
-        return didDiscoverPeripheral;
-    }
-
-    @Override
-    public boolean isConnected(BluetoothDevice device){
+    public boolean isConnected(BluetoothDevice device) {
         BluetoothManager bluetoothManager = getManager();
         if (bluetoothManager == null)
             return false;
@@ -90,4 +90,10 @@ class CBCentralManagerDefault implements CBCentralManagerInterface {
         return state == STATE_CONNECTED;
         // List<BluetoothDevice> devices = bluetoothManager.getConnectedDevices(BluetoothProfile.STATE_CONNECTED);
     }
+
+    @Override
+    public BLECentralManagerObservablesInterface observables() {
+        return observables;
+    }
+
 }

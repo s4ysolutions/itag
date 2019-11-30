@@ -1,7 +1,7 @@
 package s4y.rasat;
 
 public class Channel<T> {
-    final private Observable<T> observable;
+    public final Observable<T> observable;
 
     public Channel(T value) {
         this.observable = new Observable<>(value);

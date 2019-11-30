@@ -4,7 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 public class BLEScannerDefault implements BLEScannerInterface {
-    private final CBCentralManagerInterface manager;
+    private final BLECentralManagerInterface manager;
     private final BLEConnectionsInterface connections;
     private final SubjectNext<Integer> subjectTimer = new SubjectNext<>();
     private final Handler handlerTimer = new Handler(Looper.getMainLooper());
@@ -22,7 +22,7 @@ public class BLEScannerDefault implements BLEScannerInterface {
         }
     };
 
-    BLEScannerDefault(BLEConnectionsInterface connections, CBCentralManagerInterface manager){
+    BLEScannerDefault(BLEConnectionsInterface connections, BLECentralManagerInterface manager){
         this.manager = manager;
         this.connections = connections;
     }

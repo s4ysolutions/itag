@@ -1,5 +1,5 @@
 package s4y.itag.ble;
 
 interface BLEConnectionsFactoryInterface {
-    BLEConnectionsInterface connections(BLEConnectionsStoreInterface store, BLEManagerObservablesInterface managerObservables);
+    BLEConnectionsInterface connections(BLEConnectionsStoreInterface store, BLECentralManagerObservablesInterface managerObservables);
 }
