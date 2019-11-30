@@ -1,9 +1,8 @@
 package s4y.itag.ble;
 
 import s4y.rasat.Channel;
-import s4y.rasat.Handler;
 
-public class BLEDefault implements BLEInterface {
+class BLEDefault implements BLEInterface {
     static final int TIMEOUT = 60;
     private final BLECentralManagerInterface manager;
     private final BLEConnectionsInterface connections;
@@ -19,17 +18,13 @@ public class BLEDefault implements BLEInterface {
             BLEConnectionsFactoryInterface connectionsFactory,
             BLEAlertFactoryInterface alertFactory,
             BLEFindMeInterface findMe,
-            BLEFindMeControl findMeControl,
-            CBCentralManagerDelegate managerDelegate,
-            BLECentralManagerObservablesInterface managerObservables,
-            BLEPeripheralObservablesFactoryInterface peripheralObservablesFactory,
+            BLEFindMeControlInterface findMeControl,
             BLEScannerFactoryInterface scannerFactory,
             BLEConnectionsStoreFactoryInterface storeFactory
     ){
         this.manager = manager;
-        this.manager.setDelegate(managerDelegate);
-        final BLEConnectionsStoreInterface store = storeFactory.store(connectionFactory, findMeControl, manager, peripheralObservablesFactory);
-        this.connections = connectionsFactory.connections(store, managerObservables);
+        final BLEConnectionsStoreInterface store = storeFactory.store(connectionFactory, findMeControl, manager);
+        this.connections = connectionsFactory.connections(store);
         // this is cycle dependency ugly resolving
         // connections <- store <- connectionsControl <- connections
         // as a result store.setConnections is must
@@ -37,12 +32,6 @@ public class BLEDefault implements BLEInterface {
         this.alert = alertFactory.alert(store);
         this.findMe = findMe;
         this.scanner = scannerFactory.scanner(connections, manager);
-        managerObservables.getWillRestoreState().subscribe(new Handler<BLEPeripheralInterace[]>() {
-            @Override
-            public void onNext(BLEPeripheralInterace[] peripherals) {
-                store.restorePeripherals(peripherals);
-            }
-        });
     }
 
     @Override

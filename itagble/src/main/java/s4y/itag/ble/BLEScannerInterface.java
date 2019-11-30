@@ -1,12 +1,12 @@
 package s4y.itag.ble;
 
-import s4y.itag.ble.observables.Subject;
+import s4y.rasat.Observable;
 
-public interface BLEScannerInterface {
+interface BLEScannerInterface {
     boolean isScanning();
     int scanningTimeout();
-    Subject<Integer> getTimerSubject();
-    Subject<BLEDiscoveryResult> getDiscoverySubject();
+    Observable<Integer> observableTimer();
+    Observable<BLEScanResult> observableScan();
 
     void start(int timeout, String[] forceCancelIds);
     void stop();

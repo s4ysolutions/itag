@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-public class AlertUpdateNotificationEvent {
+class AlertUpdateNotificationEvent {
     final String id;
     final AlertVolume volume;
 

@@ -6,12 +6,26 @@ import androidx.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BLEConnectionsStoreDefault implements BLEConnectionsStoreInterface {
+class BLEConnectionsStoreDefault implements BLEConnectionsStoreInterface {
     private final Map<String, BLEConnectionInterface> map = new HashMap<>();
+    private final BLEConnectionFactoryInterface connectionFactory;
+    private BLEConnectionsControlInterface connectionsControl;
+    private final BLEFindMeControlInterface findMeControl;
+    private final BLECentralManagerInterface manager;
 
-    public BLEConnectionsStoreDefault() {
+    BLEConnectionsStoreDefault(BLEConnectionFactoryInterface connectionFactory,
+                               BLEFindMeControlInterface findMeControl,
+                               BLECentralManagerInterface manager) {
+        this.connectionFactory = connectionFactory;
+        this.findMeControl = findMeControl;
+        this.manager = manager;
     }
 
+
+    @Override
+    public void setConnectionsControl(BLEConnectionsControlInterface connectionsControl) {
+        this.connectionsControl = connectionsControl;
+    }
 
     @Nullable
     @Override
@@ -20,8 +34,17 @@ public class BLEConnectionsStoreDefault implements BLEConnectionsStoreInterface 
     }
 
     @NonNull
-    @Override
     public BLEConnectionInterface getOrMake(String id) {
-        return null;
+        BLEConnectionInterface connection = map.get(id);
+        if (connection == null) {
+            connection = connectionFactory.connection(connectionsControl, findMeControl, manager, id);
+            map.put(id, connection);
+        }
+        return connection;
+    }
+
+    @Override
+    public void restorePeripherals(BLEPeripheralInterace[] peripherals) {
+
     }
 }

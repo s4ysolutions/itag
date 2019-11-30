@@ -11,7 +11,7 @@ import s4y.rasat.Observable;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
-public class BLEConnectionDefault implements BLEConnectionInterface {
+class BLEConnectionDefault implements BLEConnectionInterface {
     private static final UUID IMMEDIATE_ALERT_SERVICE = UUID.fromString("00001802-0000-1000-8000-00805f9b34fb");
     private static final UUID FINDME_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
     private static final UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
@@ -30,10 +30,10 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
     private final Channel<Boolean> findMeChannel = new Channel<>(false);
     private final Channel<Boolean> lostChannel = new Channel<>(true);
     @NonNull
-    final private BLEFindMeControl findMeControl;
+    final private BLEFindMeControlInterface findMeControl;
 
     BLEConnectionDefault(@NonNull BLEConnectionsControlInterface connectionsControl,
-                         @NonNull BLEFindMeControl findMeControl,
+                         @NonNull BLEFindMeControlInterface findMeControl,
                          @NonNull BLECentralManagerInterface manager,
                          @NonNull String id) {
         this.connectionsControl = connectionsControl;
@@ -43,7 +43,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     BLEConnectionDefault(@NonNull BLEConnectionsControlInterface connectionsControl,
-                         @NonNull BLEFindMeControl findMeControl,
+                         @NonNull BLEFindMeControlInterface findMeControl,
                          @NonNull BLECentralManagerInterface manager,
                          @NonNull BLEPeripheralInterace peripheral) {
         this(connectionsControl,
@@ -190,6 +190,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
         }
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private BLEError waitForScan(int timeoutSec) {
         if (isConnected()) {
             return BLEError.ok;
@@ -203,8 +204,8 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
                                 if (peripheral == null) {
                                     monitorScan.setPayload(null);
                                 }
-                                if (id.equals(event.peripheral.identifier())) {
-                                    monitorScan.setPayload(event.peripheral);
+                                if (id.equals(event.device.identifier())) {
+                                    monitorScan.setPayload(event.device);
                                 }
                             })
             );
@@ -251,7 +252,7 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
             return BLEError.noPeripheral;
         }
 
-        // connect as soon as a peripheral scanned
+        // connect as soon as a device scanned
         BLEError error = waitForConnect(timeout);
 
         connectionsControl.setState(id,
@@ -297,6 +298,11 @@ public class BLEConnectionDefault implements BLEConnectionInterface {
                     ? BLEError.ok
                     : BLEError.badStatus;
         }
+    }
+
+    @Override
+    public BLEError disconnect() {
+        return disconnect(0);
     }
 
     private BLEError writeInt8(@NonNull BLECharacteristic characteristic, int value, int timeoutSec) {

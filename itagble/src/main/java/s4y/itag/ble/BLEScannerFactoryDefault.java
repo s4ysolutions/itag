@@ -1,5 +1,9 @@
 package s4y.itag.ble;
 
-public class BLEScannerFactoryDefault implements BLEScannerFactoryInterface {
+class BLEScannerFactoryDefault implements BLEScannerFactoryInterface {
 
+    @Override
+    public BLEScannerInterface scanner(BLEConnectionsInterface connections, BLECentralManagerInterface manager) {
+        return new BLEScannerDefault(connections, manager);
+    }
 }

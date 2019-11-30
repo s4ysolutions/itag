@@ -1,4 +1,8 @@
 package s4y.itag.ble;
 
-public class BLEAlertFactoryDefault implements BLEAlertFactoryInterface {
+class BLEAlertFactoryDefault implements BLEAlertFactoryInterface {
+    @Override
+    public BLEAlertInterface alert(BLEConnectionsStoreInterface store) {
+        return new BLEAlertDefault(store);
+    }
 }

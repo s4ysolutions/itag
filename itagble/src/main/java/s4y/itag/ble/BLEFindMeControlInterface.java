@@ -1,5 +1,5 @@
 package s4y.itag.ble;
 
-public interface BLEFindMeControl {
+interface BLEFindMeControlInterface {
     void onClick(String id);
 }

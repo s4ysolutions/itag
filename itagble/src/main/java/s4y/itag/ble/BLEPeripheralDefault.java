@@ -135,7 +135,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace, AutoCloseable {
         }
     };
 
-    BLEPeripheralDefault(Context context, BLECentralManagerInterface manager, BluetoothDevice device) {
+    BLEPeripheralDefault(@NonNull Context context, @NonNull BLECentralManagerInterface manager, @NonNull BluetoothDevice device) {
         this.context = context;
         this.device = device;
         this.manager = manager;

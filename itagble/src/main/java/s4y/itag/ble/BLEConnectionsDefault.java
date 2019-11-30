@@ -7,10 +7,15 @@ import java.util.Map;
 
 import s4y.rasat.Channel;
 
-public class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsControlInterface {
+class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsControlInterface, AutoCloseable {
 
     private final Channel<BLEStateNotification> stateChannel = new Channel<>();
     private final Map<String, BLEConnectionState> states = new HashMap<>();
+    private final BLEConnectionsStoreInterface store;
+
+    public BLEConnectionsDefault(BLEConnectionsStoreInterface store) {
+        this.store = store;
+    }
 
     @Override
     public Channel<BLEStateNotification> getStateChannel() {
@@ -23,22 +28,30 @@ public class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnec
     }
 
     @Override
-    public void connect(String id) {
-
+    public void connect(String id) throws InterruptedException {
+        connect(id, 0);
     }
 
     @Override
-    public void connect(String id, int timeoutSec) {
-
+    public void connect(String id, int timeoutSec) throws InterruptedException {
+        BLEConnectionInterface connection = store.getOrMake(id);
+        connection.connect(timeoutSec);
     }
 
     @Override
     public void disconnect(String id) {
-
+        BLEConnectionInterface connection = store.getOrMake(id);
+        connection.disconnect();
     }
 
     @Override
     public void setState(@NonNull String id, BLEConnectionState state) {
+        states.put(id, state);
+        stateChannel.broadcast(new BLEStateNotification(id, state));
+    }
+
+    @Override
+    public void close() throws Exception {
 
     }
 }

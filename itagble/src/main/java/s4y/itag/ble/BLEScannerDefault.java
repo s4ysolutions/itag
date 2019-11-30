@@ -3,17 +3,20 @@ package s4y.itag.ble;
 import android.os.Handler;
 import android.os.Looper;
 
-public class BLEScannerDefault implements BLEScannerInterface {
+import s4y.rasat.Channel;
+import s4y.rasat.Observable;
+
+class BLEScannerDefault implements BLEScannerInterface {
     private final BLECentralManagerInterface manager;
     private final BLEConnectionsInterface connections;
-    private final SubjectNext<Integer> subjectTimer = new SubjectNext<>();
+    private final Channel<Integer> channelTimer = new Channel<>();
     private final Handler handlerTimer = new Handler(Looper.getMainLooper());
     private int timeout = 0;
     private final Runnable runnableTimer = new Runnable() {
         @Override
         public void run() {
             timeout --;
-            subjectTimer.onNext(timeout);
+            channelTimer.broadcast(timeout);
             if (timeout <= 0) {
                 handlerTimer.removeCallbacks(this);
             }else{
@@ -38,13 +41,13 @@ public class BLEScannerDefault implements BLEScannerInterface {
     }
 
     @Override
-    public Subject<Integer> getTimerSubject() {
-        return subjectTimer;
+    public Observable<Integer> observableTimer() {
+        return channelTimer.observable;
     }
 
     @Override
-    public Subject<BLEDiscoveryResult> getDiscoverySubject() {
-        return manager.getObservables().getDidDiscoverPeripheral();
+    public Observable<BLEScanResult> observableScan() {
+        return manager.observables().observablePeripheralDiscovered();
     }
 
     @Override
@@ -62,6 +65,7 @@ public class BLEScannerDefault implements BLEScannerInterface {
 
     @Override
     public void stop() {
+        handlerTimer.removeCallbacks(runnableTimer);
         manager.stopScan();
     }
 }

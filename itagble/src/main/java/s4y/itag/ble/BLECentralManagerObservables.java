@@ -4,10 +4,10 @@ import s4y.rasat.Channel;
 import s4y.rasat.Observable;
 
 class BLECentralManagerObservables implements BLECentralManagerObservablesInterface {
-    final Channel<DiscoveredEvent> observablePeripheralDiscovered = new Channel<>();
+    final Channel<BLEScanResult> observablePeripheralDiscovered = new Channel<>();
 
     @Override
-    public Observable<DiscoveredEvent> observablePeripheralDiscovered() {
+    public Observable<BLEScanResult> observablePeripheralDiscovered() {
         return observablePeripheralDiscovered.observable;
     }
 }

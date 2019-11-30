@@ -1,9 +1,5 @@
 package s4y.itag.ble;
 
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-
 import s4y.rasat.Channel;
 import s4y.rasat.Observable;
 

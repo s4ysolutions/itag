@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-public enum BLEError {
+enum BLEError {
     ok,
     timeout,
     noPeripheral,

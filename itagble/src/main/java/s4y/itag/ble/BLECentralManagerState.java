@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-public enum BLECentralManagerState {
+enum BLECentralManagerState {
     unknown,
     resetting,
     unsupported,

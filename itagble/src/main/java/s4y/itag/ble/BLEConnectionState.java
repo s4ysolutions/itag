@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-public enum BLEConnectionState {
+enum BLEConnectionState {
     unknown,
     disconnected,
     connecting,

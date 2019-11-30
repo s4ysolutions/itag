@@ -11,7 +11,7 @@ import java.util.Set;
 
 import s4y.rasat.Channel;
 
-public class BLEFindMeDefault implements BLEFindMeInterface, BLEFindMeControl {
+class BLEFindMeDefault implements BLEFindMeInterface, BLEFindMeControlInterface {
     private static final int CLICK_INTERVAL = 600;
     private static final int CLICK_COUNT = 2;
 

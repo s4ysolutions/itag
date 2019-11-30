@@ -1,4 +1,8 @@
 package s4y.itag.ble;
 
-public class BLEConnectionsControlFactoryDefault implements BLEConnectionsControlFactoryInterface {
+class BLEConnectionsControlFactoryDefault implements BLEConnectionsControlFactoryInterface {
+    @Override
+    public BLEConnectionsControlInterface connectionsControl(BLEConnectionsInterface connections) {
+        return (BLEConnectionsControlInterface)connections;
+    }
 }

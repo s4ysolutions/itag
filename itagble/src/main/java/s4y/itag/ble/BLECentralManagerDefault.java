@@ -19,10 +19,13 @@ class BLECentralManagerDefault implements BLECentralManagerInterface {
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] data) {
             observables
                     .observablePeripheralDiscovered
-                    .broadcast(new BLECentralManagerObservablesInterface.DiscoveredEvent(
-                            new BLEPeripheralDefault(context,  BLECentralManagerDefault.this, bluetoothDevice),
-                            data,
-                            rssi
+                    .broadcast(new BLEScanResult(
+                            new BLEPeripheralDefault(
+                                    context,
+                                    BLECentralManagerDefault.this,
+                                    bluetoothDevice),
+                            rssi,
+                            data
                     ));
         }
     };
