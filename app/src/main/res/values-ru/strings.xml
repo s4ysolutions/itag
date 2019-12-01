@@ -79,4 +79,5 @@
     <string name="about_ok">Перейти в Play Market</string>
     <string name="disable_wt_ok">Удалить Простопуть.рф</string>
     <string name="gold">Золотистый</string>
+    <string name="unknown">Без имени</string>
 </resources>

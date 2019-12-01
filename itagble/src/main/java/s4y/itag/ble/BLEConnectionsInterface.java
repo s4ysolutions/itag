@@ -4,7 +4,7 @@ import java.util.Map;
 
 import s4y.rasat.Channel;
 
-interface BLEConnectionsInterface {
+public interface BLEConnectionsInterface {
     class BLEStateNotification {
         final String id;
         final BLEConnectionState state;

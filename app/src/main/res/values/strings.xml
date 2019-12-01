@@ -2,7 +2,6 @@
     <string name="app_name">iTag One</string>
     <string name="empty" translatable="false" />
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_no_ble_fragment">Your device has no Bluetooth adapter</string>
 
     <string name="request_permission_title">Permission required</string>
@@ -36,6 +35,7 @@
 
     <string name="rssi">Signal strength: %d</string>
 
+    <string name="unknown">Unknown</string>
     <string name="white">White</string>
     <string name="black">Black</string>
     <string name="red">Red</string>

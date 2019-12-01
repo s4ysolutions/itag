@@ -44,9 +44,12 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.core:core:1.1.0'
     implementation 'androidx.fragment:fragment:1.1.0'
+    implementation "androidx.preference:preference:1.1.0"
     implementation 'com.google.firebase:firebase-core:17.2.1'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
     implementation project(':waytoday')
+    implementation project(':rasat')
+    implementation project(':itagble')
 
     testImplementation 'androidx.test.ext:junit:1.1.1'
     testImplementation 'androidx.test:rules:1.2.0'

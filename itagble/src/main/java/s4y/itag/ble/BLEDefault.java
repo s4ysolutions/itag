@@ -1,8 +1,27 @@
 package s4y.itag.ble;
 
+import android.content.Context;
+
 import s4y.rasat.Channel;
 
-class BLEDefault implements BLEInterface {
+public class BLEDefault implements BLEInterface {
+    private static BLEInterface _shared;
+    public static BLEInterface shared(Context context) {
+        if (_shared == null) {
+            _shared = new BLEDefault(
+                    new BLEConnectionFactoryDefault(),
+                    new BLEConnectionsControlFactoryDefault(),
+                    new BLEConnectionsFactoryDefault(),
+                    new BLECentralManagerDefault(context),
+                    new BLEFindMeDefault(),
+                    new BLEScannerFactoryDefault(),
+                    new BLEAlertFactoryDefault(),
+                    new BLEFindMeControlFactoryDefault(),
+                    new BLEConnectionsStoreFactoryDefault()
+            );
+        }
+        return _shared;
+    }
     static final int TIMEOUT = 60;
     private final BLECentralManagerInterface manager;
     private final BLEConnectionsInterface connections;
@@ -11,18 +30,19 @@ class BLEDefault implements BLEInterface {
     private final BLEScannerInterface scanner;
     private final Channel<BLEState> channelState = new Channel<>();
 
-    BLEDefault (
-            BLECentralManagerInterface manager,
+    private BLEDefault(
             BLEConnectionFactoryInterface connectionFactory,
             BLEConnectionsControlFactoryInterface connectionsControlFactory,
             BLEConnectionsFactoryInterface connectionsFactory,
-            BLEAlertFactoryInterface alertFactory,
+            BLECentralManagerInterface manager,
             BLEFindMeInterface findMe,
-            BLEFindMeControlInterface findMeControl,
             BLEScannerFactoryInterface scannerFactory,
+            BLEAlertFactoryInterface alertFactory,
+            BLEFindMeControlFactoryInterface findMeControlFactory,
             BLEConnectionsStoreFactoryInterface storeFactory
     ){
         this.manager = manager;
+        BLEFindMeControlInterface findMeControl = findMeControlFactory.findMeControll(findMe);
         final BLEConnectionsStoreInterface store = storeFactory.store(connectionFactory, findMeControl, manager);
         this.connections = connectionsFactory.connections(store);
         // this is cycle dependency ugly resolving
