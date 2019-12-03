@@ -31,7 +31,7 @@ import s4y.itag.preference.AlarmDelayPreference;
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
-public class ITagGatt {
+class ITagGatt {
     private static final int DOUBLE_TAG_CLICK_DELAY = 500;
 
     private static final String LT = ITagGatt.class.getName();
@@ -438,7 +438,7 @@ public class ITagGatt {
         mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mAddr);
         if (mDevice != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && workaraund133) {
-                ITagApplication.handleError(new Exception("The device seems to have a problem. Anti lost feature may fail."));
+                ITagApplication.handleError(new Exception("The peripheral seems to have a problem. Anti lost feature may fail."));
                 if (context == null) {
                     // must never happen, but see https://github.com/s4ysolutions/itag/issues/32
                     // 3 lines below is quick fix and investigation tool
@@ -529,7 +529,7 @@ public class ITagGatt {
 
         if (mServiceImmediateAlert == null) {
             // TODO: replace with string resource
-            ITagApplication.handleError(new Exception("The connected device does not seem to be iTag, sorry"));
+            ITagApplication.handleError(new Exception("The connected peripheral does not seem to be iTag, sorry"));
             ITagApplication.faNotITag();
             return;
         }
@@ -553,7 +553,7 @@ public class ITagGatt {
 
         if (mServiceImmediateAlert == null) {
             // TODO: replace with string resource
-            ITagApplication.handleError(new Exception("The connected device does not seem to be iTag, sorry"));
+            ITagApplication.handleError(new Exception("The connected peripheral does not seem to be iTag, sorry"));
             return;
         }
 

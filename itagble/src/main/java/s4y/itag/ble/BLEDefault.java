@@ -2,6 +2,8 @@ package s4y.itag.ble;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import s4y.rasat.Channel;
 
 public class BLEDefault implements BLEInterface {
@@ -74,9 +76,10 @@ public class BLEDefault implements BLEInterface {
         return scanner;
     }
 
+    @NonNull
     @Override
     public BLEState state() {
-        return manager.state() == BLECentralManagerState.poweredOn ? BLEState.ON : BLEState.OFF;
+        return manager.state();
     }
 
     @Override

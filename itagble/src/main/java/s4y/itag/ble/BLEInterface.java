@@ -1,5 +1,7 @@
 package s4y.itag.ble;
 
+import androidx.annotation.NonNull;
+
 import s4y.rasat.Channel;
 
 public interface BLEInterface {
@@ -7,6 +9,6 @@ public interface BLEInterface {
     BLEConnectionsInterface connections();
     BLEFindMeInterface findMe();
     BLEScannerInterface scanner();
-    BLEState state();
+    @NonNull BLEState state();
     Channel<BLEState> observableState();
 }

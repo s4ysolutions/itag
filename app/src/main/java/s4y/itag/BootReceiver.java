@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
-import s4y.itag.ble.ITagsService;
+import s4y.itag.itag.ITagsService;
 
 public class BootReceiver extends BroadcastReceiver {
 

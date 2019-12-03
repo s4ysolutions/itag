@@ -1,43 +1,32 @@
-package s4y.itag.tag;
+package s4y.itag.itag;
 
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import s4y.itag.ITagApplication;
 import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
 import s4y.rasat.Channel;
 import s4y.rasat.Observable;
 
-public class TagStoreDefault implements TagStoreInterface, Serializable {
-    private static final long serialVersionUID = 1575220516;
-
-    private static TagStoreInterface _shared;
-
-    static TagStoreInterface shared(Context context) {
-        if (_shared == null) {
-            _shared = new TagStoreDefault(context);
-        }
-        return _shared;
-    }
-
+public class ITagsStoreDefault implements ITagsStoreInterface {
     private final Context context;
     private final BLEInterface ble;
     private final List<String> ids;
     private final Set<String> idsForever;
-    private final Map<String, TagInterface> tags = new HashMap<>();
+    private final Map<String, ITagInterface> tags = new HashMap<>();
 
     private final Channel<StoreOp> channel = new Channel<>();
 
-    private TagStoreDefault(Context context) {
+    public ITagsStoreDefault(Context context) {
         this.context = context;
         this.ble = BLEDefault.shared(context);
         ids = new PreferenceIDs(context).get();
@@ -45,7 +34,7 @@ public class TagStoreDefault implements TagStoreInterface, Serializable {
 
         for (String id : idsForever) {
             // TODO: hardcoded reference to Default implementation
-            TagInterface tag = new PreferenceTagDefault(context, id).get();
+            ITagInterface tag = new PreferenceTagDefault(context, id).get();
             if (tag != null) {
                 tags.put(id, tag);
             }
@@ -65,12 +54,12 @@ public class TagStoreDefault implements TagStoreInterface, Serializable {
 
     @Nullable
     @Override
-    public TagInterface byId(@NonNull String id) {
+    public ITagInterface byId(@NonNull String id) {
         return tags.get(id);
     }
 
     @Override
-    public TagInterface byPos(int pos) {
+    public ITagInterface byPos(int pos) {
         if (pos >= ids.size()) {
             return null;
         }
@@ -78,8 +67,8 @@ public class TagStoreDefault implements TagStoreInterface, Serializable {
     }
 
     @Override
-    public TagInterface everById(@NonNull String id) {
-        TagInterface active = byId(id);
+    public ITagInterface everById(@NonNull String id) {
+        ITagInterface active = byId(id);
         if (active != null) {
             return active;
         }
@@ -106,7 +95,7 @@ public class TagStoreDefault implements TagStoreInterface, Serializable {
         if (pos >= 0) {
             ids.remove(pos);
             new PreferenceIDs(context).set(ids);
-            TagInterface tag = tags.get(id);
+            ITagInterface tag = tags.get(id);
             if (tag != null) {
                 channel.broadcast(new StoreOp(StoreOpType.forget, tag));
             }
@@ -114,7 +103,7 @@ public class TagStoreDefault implements TagStoreInterface, Serializable {
     }
 
     @Override
-    public void remember(@NonNull TagInterface tag) {
+    public void remember(@NonNull ITagInterface tag) {
         if (!ids.contains(tag.id())) {
             ids.add(tag.id());
             new PreferenceIDs(context).set(ids);
@@ -125,14 +114,14 @@ public class TagStoreDefault implements TagStoreInterface, Serializable {
             new PreferenceIDsForever(context).set(idsForever);
         }
 
-        TagInterface existing = everById(tag.id());
+        ITagInterface existing = everById(tag.id());
         if (existing != null) {
             tag.copyFromTag(existing);
         }
 
         tags.put(tag.id(), tag);
         // TODO: hardcoded reference to Default implementation
-        new PreferenceTagDefault(context, tag.id()).set((TagDefault) tag);
+        new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.remember, tag));
     }
 
@@ -143,53 +132,53 @@ public class TagStoreDefault implements TagStoreInterface, Serializable {
 
     @Override
     public void setAlert(@NonNull String id, boolean alert) {
-        TagInterface tag = tags.get(id);
+        ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
         }
         tag.setAlerting(alert);
-        new PreferenceTagDefault(context, tag.id()).set((TagDefault) tag);
+        new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
     }
 
     @Override
     public void setColor(@NonNull String id, @NonNull TagColor color) {
-        TagInterface tag = tags.get(id);
+        ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
         }
         tag.setColor(color);
-        new PreferenceTagDefault(context, tag.id()).set((TagDefault) tag);
+        new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
     }
 
     @Override
     public void setName(@NonNull String id, String name) {
-        TagInterface tag = tags.get(id);
+        ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
         }
         tag.setName(name);
-        new PreferenceTagDefault(context, tag.id()).set((TagDefault) tag);
+        new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
     }
 
     @Override
     public void connectAll() {
-        for (TagInterface tag : tags.values()) {
+        for (ITagInterface tag : tags.values()) {
             new Thread(() -> {
                 try {
                     ble.connections().connect(tag.id());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            },"BLE Connect "+tag.id()+"-"+System.currentTimeMillis()).start();
+            },"BLEDefault Connect "+tag.id()+"-"+System.currentTimeMillis()).start();
         }
     }
 
     @Override
     public void stopAlertAll() {
-        for (TagInterface tag : tags.values()) {
+        for (ITagInterface tag : tags.values()) {
             if (tag.isAlertig()) {
                 ITag.handler.post(() -> ble.alert().stopAlert(tag.id(), ITag.BLE_TIMEOUT));
             }

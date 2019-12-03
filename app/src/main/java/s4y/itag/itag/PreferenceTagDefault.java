@@ -1,10 +1,10 @@
-package s4y.itag.tag;
+package s4y.itag.itag;
 
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-class PreferenceTagDefault extends PreferenceTag<TagDefault> {
+class PreferenceTagDefault extends PreferenceTag<ITagDefault> {
     PreferenceTagDefault(@NonNull Context context, String id) {
         super(context, id);
     }

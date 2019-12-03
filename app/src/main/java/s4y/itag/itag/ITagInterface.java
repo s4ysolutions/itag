@@ -1,10 +1,10 @@
-package s4y.itag.tag;
+package s4y.itag.itag;
 
 import androidx.annotation.NonNull;
 
 import java.util.Map;
 
-public interface TagInterface {
+public interface ITagInterface {
     @NonNull
     String id();
     String name();
@@ -13,7 +13,9 @@ public interface TagInterface {
     void setColor(TagColor color);
     boolean isAlertig();
     void setAlerting(boolean alerting);
-    void copyFromTag(TagInterface tag);
+    int alarmDelay();
+    void setAlarmDelay(int alarmDelay);
+    void copyFromTag(ITagInterface tag);
     @NonNull
     Map<String,Object> toDict();
     @NonNull

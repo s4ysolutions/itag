@@ -1,32 +1,36 @@
-package s4y.itag.tag;
+package s4y.itag.itag;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 import s4y.itag.ITagApplication;
 import s4y.itag.R;
 
-public class TagDefault implements TagInterface {
-    @NonNull
+public class ITagDefault implements ITagInterface, Serializable {
+private static final long serialVersionUID = 1575220516;
+@NonNull
     private final String id;
     @NonNull
     private String name;
     @NonNull
     private TagColor color;
     private boolean alert;
+    private int alarmDelay;
 
-    TagDefault(@NonNull String id, @Nullable String name, @Nullable TagColor color, @Nullable Boolean alert) {
+    ITagDefault(@NonNull String id, @Nullable String name, @Nullable TagColor color, @Nullable Boolean alert, @Nullable Integer alarmDelay) {
         this.id = id;
         this.name = name == null ? ITagApplication.context.getString(R.string.unknown):name;
         this.color = color == null? TagColor.black : color;
         this.alert = alert == null ? false : alert;
+        this.alarmDelay = alarmDelay == null ? 7: alarmDelay;
     }
 
-    public TagDefault(@NonNull String id, Map<String, Object> dict) {
-        this(id, (String)dict.get("name"), (TagColor)dict.get("color"), (Boolean)dict.get("alert"));
+    public ITagDefault(@NonNull String id, Map<String, Object> dict) {
+        this(id, (String)dict.get("name"), (TagColor)dict.get("color"), (Boolean)dict.get("alert"), (Integer)dict.get("alarmDelay"));
     }
 
     @NonNull
@@ -68,7 +72,17 @@ public class TagDefault implements TagInterface {
     }
 
     @Override
-    public void copyFromTag(@NonNull TagInterface tag) {
+    public int alarmDelay() {
+        return alarmDelay;
+    }
+
+    @Override
+    public void setAlarmDelay(int alarmDelay) {
+        this.alarmDelay = alarmDelay;
+    }
+
+    @Override
+    public void copyFromTag(@NonNull ITagInterface tag) {
         name = tag.name();
         alert = tag.isAlertig();
         color = tag.color();

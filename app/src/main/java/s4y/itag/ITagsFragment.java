@@ -69,7 +69,7 @@ public class ITagsFragment extends Fragment
         RssiView rssiView = itagLayout.findViewById(R.id.rssi);
         int rssi = -1000;
         if (mainActivity.mITagsServiceBound && mainActivity.mBluetoothAdapter.enable()) {
-            ITagsService service = mainActivity.mITagsService;
+            ITagsService service = mainActivity.iTagsService;
             ITagGatt gatt = service.getGatt(device.addr, false);
             if (gatt.isError()) {
                 statusDrawableId = R.drawable.bt_setup;
@@ -234,7 +234,7 @@ public class ITagsFragment extends Fragment
         stopRssi();
         if (mainActivity != null && mainActivity.mITagsServiceBound) {
             mIsRssiStarted = true;
-            ITagsService service = mainActivity.mITagsService;
+            ITagsService service = mainActivity.iTagsService;
             for (ITagDevice device : ITagsDb.getDevices(getActivity())) {
                 ITagGatt gatt = service.getGatt(device.addr, false);
                 if (gatt.isConnected()) {

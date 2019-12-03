@@ -80,7 +80,7 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
             MainActivity mainActivity = getActivity();
             if (mainActivity != null) {
                 if (mainActivity.mITagsServiceBound) {
-                    ITagsService service = mainActivity.mITagsService;
+                    ITagsService service = mainActivity.iTagsService;
                     final ITagDevice device = (ITagDevice) getTag();
                     ITagGatt gatt = service.getGatt(device.addr, true);
                     if (gatt.isFindingITag()) {
@@ -102,7 +102,7 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
         if (mainActivity == null) return;
         if (!mainActivity.mITagsServiceBound) return;
 
-        final ITagsService service = mainActivity.mITagsService;
+        final ITagsService service = mainActivity.iTagsService;
         final ITagDevice device = (ITagDevice) getTag();
         final ITagGatt gatt = service.getGatt(device.addr, true);
 
@@ -140,7 +140,7 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
                 final ITagDevice device = (ITagDevice) getTag();
                 MainActivity mainActivity = getActivity();
                 if (mainActivity != null && mainActivity.mITagsServiceBound) {
-                    ITagsService service = mainActivity.mITagsService;
+                    ITagsService service = mainActivity.iTagsService;
                     ITagGatt gatt = service.getGatt(device.addr, false);
                     if (gatt.isConnected() || gatt.isConnecting()) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());

@@ -17,7 +17,7 @@ import androidx.annotation.NonNull;
 import s4y.itag.BuildConfig;
 import s4y.itag.ITagApplication;
 
-public class ITagsDb {
+class ITagsDb {
     private static final String DB_FILE_NAME="dbv1";
     private static final String DB_OLD_FILE_NAME="dboldv1";
     public interface DbListener {

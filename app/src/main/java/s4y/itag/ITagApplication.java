@@ -14,17 +14,20 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 
 import androidx.annotation.NonNull;
 
+import s4y.itag.itag.ITag;
+
 public final class ITagApplication extends Application {
     private final static String LT = ITagApplication.class.getName();
     // context is not used outside Application so there's a hope there will be no memory leak
-    // context is used once in ITagGatt:423 for debug purposes
     @SuppressLint("StaticFieldLeak")
     public static Context context;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        faAppCreated();
         context = this;
+        ITag.initITag(context);
     }
 
     static public void handleError(@NonNull Throwable th, boolean toast) {
@@ -34,7 +37,9 @@ public final class ITagApplication extends Application {
                 Crashlytics.logException(th);
             } else {
                 Log.e(LT, "Toasted", th);
-                Toast.makeText(context, th.getMessage(), Toast.LENGTH_LONG).show();
+                if (toast) {
+                    Toast.makeText(context, th.getMessage(), Toast.LENGTH_LONG).show();
+                }
                 Crashlytics.logException(th);
             }
         });
@@ -221,10 +226,6 @@ public final class ITagApplication extends Application {
 
     static public void faWtOn300() {
         fa("itag_wt_on300");
-    }
-
-    static public void faWtOn3600() {
-        fa("itag_wt_on3600");
     }
 
     static public void faWtChangeID() {

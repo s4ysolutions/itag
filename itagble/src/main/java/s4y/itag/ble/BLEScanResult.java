@@ -1,14 +1,12 @@
 package s4y.itag.ble;
 
-import android.bluetooth.BluetoothDevice;
+public class BLEScanResult {
+    public final BLEPeripheralInterace peripheral;
+    public final int rssi;
+    public final byte[] data;
 
-class BLEScanResult {
-    final BLEPeripheralInterace device;
-    final int rssi;
-    final byte[] data;
-
-    BLEScanResult(BLEPeripheralInterace device, int rssi, byte[] data) {
-        this.device = device;
+    BLEScanResult(BLEPeripheralInterace peripheral, int rssi, byte[] data) {
+        this.peripheral = peripheral;
         this.rssi = rssi;
         this.data = data;
     }

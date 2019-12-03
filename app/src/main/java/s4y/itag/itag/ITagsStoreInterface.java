@@ -1,22 +1,22 @@
-package s4y.itag.tag;
+package s4y.itag.itag;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import s4y.rasat.Observable;
 
-public interface TagStoreInterface {
+public interface ITagsStoreInterface {
     int count();
     @NonNull
     Observable<StoreOp> observable();
     @Nullable
-    TagInterface byId(@NonNull String id);
-    TagInterface byPos(int pos);
-    TagInterface everById(@NonNull String id);
+    ITagInterface byId(@NonNull String id);
+    ITagInterface byPos(int pos);
+    ITagInterface everById(@NonNull String id);
     @NonNull
     String[] forgottenIDs();
     void forget(@NonNull String id);
-    void remember(@NonNull TagInterface tag);
+    void remember(@NonNull ITagInterface tag);
     boolean remembered(@NonNull String id);
     void setAlert(@NonNull String id,boolean alert);
     void setColor(@NonNull String id,@NonNull TagColor color);

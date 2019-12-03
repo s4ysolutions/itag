@@ -33,7 +33,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace, AutoCloseable {
     private final BLECentralManagerInterface manager;
     private BluetoothGatt gatt = null;
     private BLEPeripheralObservables observables = new BLEPeripheralObservables();
-    private HandlerThread thread = new HandlerThread("BLE Callback");
+    private HandlerThread thread = new HandlerThread("BLEDefault Callback");
     private Handler handler = new Handler(thread.getLooper());
     private BLEService[] services = new BLEService[]{};
 
@@ -245,6 +245,14 @@ class BLEPeripheralDefault implements BLEPeripheralInterace, AutoCloseable {
 
     public BLEService[] services() {
         return services;
+    }
+
+    public String name() {
+       return device.getName();
+    }
+
+    public String address() {
+        return device.getAddress();
     }
 
 }

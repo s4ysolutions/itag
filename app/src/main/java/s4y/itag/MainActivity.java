@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
@@ -35,28 +34,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import s4y.itag.ble.ITagDevice;
-import s4y.itag.ble.ITagGatt;
-import s4y.itag.ble.ITagsDb;
-import s4y.itag.ble.ITagsService;
-import s4y.itag.ble.LeScanResult;
-import s4y.itag.ble.LeScanner;
-import s4y.itag.ble.MediaPlayerUtils;
 import s4y.itag.history.HistoryRecord;
+import s4y.itag.itag.ITag;
+import s4y.itag.itag.ITagsService;
+import s4y.itag.itag.ITagsStoreDefault;
+import s4y.rasat.DisposableBag;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsGPSUpdater;
 
 public class MainActivity extends FragmentActivity implements
-        LeScanner.LeScannerListener,
-        ITagsDb.DbListener,
         LocationsGPSUpdater.RequestGPSPermissionListener {
     static public final int REQUEST_ENABLE_LOCATION = 2;
-    public BluetoothAdapter mBluetoothAdapter;
-    public ITagsService mITagsService;
     public boolean mITagsServiceBound;
+    public ITagsService iTagsService;
     public static boolean sIsShown = false;
+    private static final String LT = MainActivity.class.getName();
 
-    private static final String LT = ITagsService.class.getName();
+    private final DisposableBag disposableBag = new DisposableBag();
 
     public interface ServiceBoundListener {
         void onBoundingChanged(@NonNull final MainActivity activity);
@@ -94,26 +88,23 @@ public class MainActivity extends FragmentActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         /*
-        // ATTENTION: This was auto-generated to handle app links.
+        // ATTENTION: This was auto-generated to handle app linksI
         Intent appLinkIntent = getIntent();
         String appLinkAction = appLinkIntent.getAction();
         Uri appLinkData = appLinkIntent.getData();
         */
-        final BluetoothManager bluetoothManager =
-                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        if (bluetoothManager != null)
-            mBluetoothAdapter = bluetoothManager.getAdapter();
+        // TODO: what's this?
         SharedPreferences preferences = (getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
         preferences.edit().putBoolean("loadOnBoot", true).apply();
     }
 
     private void setupProgressBar() {
         ProgressBar pb = findViewById(R.id.progress);
-        if (LeScanner.isScanning) {
+        if (ITag.ble.scanner().isScanning()) {
             pb.setVisibility(View.VISIBLE);
             pb.setIndeterminate(false);
-            pb.setMax(LeScanner.TIMEOUT);
-            pb.setProgress(LeScanner.tick);
+            pb.setMax(ITag.SCAN_TIMEOUT);
+            pb.setProgress(ITag.ble.scanner().observableTimer().value());
         } else {
             pb.setVisibility(View.GONE);
         }
@@ -146,7 +137,7 @@ public class MainActivity extends FragmentActivity implements
         final FragmentManager fragmentManager = getSupportFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         Fragment fragment = null;
-        if (LeScanner.isScanning) {
+        if (ITag.ble.scanner().isScanning()) {
             setupProgressBar();
             mEnableAttempts = 0;
             if (mSelectedFragment != FragmentType.SCANNER) {
@@ -202,8 +193,8 @@ public class MainActivity extends FragmentActivity implements
 
     @Override
     public void onBackPressed() {
-        if (LeScanner.isScanning && mBluetoothAdapter != null) {
-            LeScanner.stopScan(mBluetoothAdapter);
+        if (ITag.ble.scanner().isScanning() && mBluetoothAdapter != null) {
+            ITag.ble.scanner().stop();
         } else {
             super.onBackPressed();// your code.
         }
@@ -225,10 +216,10 @@ public class MainActivity extends FragmentActivity implements
     };
 
     protected void setBinder(@NonNull IBinder binder) {
-        mITagsService = ((ITagsService.GattBinder) binder).getService();
+        iTagsService = ((ITagsService.GattBinder) binder).getService();
         mITagsServiceBound = true;
-//            mITagsService.connectAll();
-        mITagsService.removeFromForeground();
+//            iTagsService.connectAll();
+        iTagsService.removeFromForeground();
         setupContent();
         notifyServiceBoundChanged();
     }
@@ -242,8 +233,8 @@ public class MainActivity extends FragmentActivity implements
         if (hasFocus != mHasFocus) {
             mHasFocus = hasFocus;
             if (mIsServiceStartedUnbind) {
-                if (mHasFocus && mITagsService != null) {
-                    mITagsService.removeFromForeground();
+                if (mHasFocus && iTagsService != null) {
+                    iTagsService.removeFromForeground();
                 }
             }
         }
@@ -258,6 +249,15 @@ public class MainActivity extends FragmentActivity implements
         setupContent();
         Intent intent = new Intent(this, ITagsService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        disposableBag.add(ITag.ble.scanner().observableScan().subscribe(
+                new Handler<BLEScanResult>() {
+                    @Override
+                    public void handle(BLEScanResult event) {
+                       // TODO:
+                    }
+                }
+        ));
+        disposableBag.add(ITagsStoreDefault.)
         LeScanner.addListener(this);
         ITagsDb.addListener(this);
         mIsServiceStartedUnbind = ITagsService.start(this, !mHasFocus);
@@ -273,7 +273,7 @@ public class MainActivity extends FragmentActivity implements
                 ITagsService.start(this, true);
             } else {
                 if (mITagsServiceBound) {
-                    mITagsService.addToForeground();
+                    iTagsService.addToForeground();
                 }
             }
         } else {
@@ -292,7 +292,7 @@ public class MainActivity extends FragmentActivity implements
     public void onRemember(@NonNull View sender) {
         BluetoothDevice device = (BluetoothDevice) sender.getTag();
         if (device == null) {
-            ITagApplication.handleError(new Exception("No BLE device"));
+            ITagApplication.handleError(new Exception("No BLEDefault device"));
             return;
         }
         if (!ITagsDb.has(device)) {
@@ -383,7 +383,7 @@ public class MainActivity extends FragmentActivity implements
         }
         // NOTE: will reconnect if not connected
         //       ergo error reset here
-        ITagGatt gatt = mITagsService.getGatt(device.addr, false);
+        ITagGatt gatt = iTagsService.getGatt(device.addr, false);
         boolean needNotify = true;
         if (gatt.isFindingITag()) {
             gatt.stopFindITag();
@@ -442,7 +442,7 @@ public class MainActivity extends FragmentActivity implements
     }
 
     public void onWaytoday(@NonNull View sender) {
-        if (!mITagsServiceBound || mITagsService == null)
+        if (!mITagsServiceBound || iTagsService == null)
             return;
         final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         String tid = sp.getString("tid", "");
@@ -463,18 +463,18 @@ public class MainActivity extends FragmentActivity implements
             AlertDialog.Builder builder;
             switch (item.getItemId()) {
                 case R.id.wt_sec_1:
-                    mITagsService.startWayToday(1);
+                    iTagsService.startWayToday(1);
                     ITagApplication.faWtOn1();
                     break;
                 case R.id.wt_min_5:
-                    mITagsService.startWayToday(300000);
+                    iTagsService.startWayToday(300000);
                     break;
                 case R.id.wt_hour_1:
-                    mITagsService.startWayToday(3600000);
+                    iTagsService.startWayToday(3600000);
                     ITagApplication.faWtOn300();
                     break;
                 case R.id.wt_off:
-                    mITagsService.stopWayToday();
+                    iTagsService.stopWayToday();
                     ITagApplication.faWtOff();
                     break;
                 case R.id.wt_new_tid:
@@ -521,7 +521,7 @@ public class MainActivity extends FragmentActivity implements
                             .setMessage(R.string.disable_wt_msg)
                             .setPositiveButton(R.string.disable_wt_ok, (dialog, id) -> {
                                 ITagApplication.faWtRemove();
-                                mITagsService.stopWayToday();
+                                iTagsService.stopWayToday();
                                 sp.edit().putBoolean("wt_disabled", true).apply();
                                 final View v = findViewById(R.id.btn_waytoday);
                                 if (v != null) {

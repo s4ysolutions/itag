@@ -11,7 +11,7 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
 /**
- * Instrumented test, which will execute on an Android device.
+ * Instrumented test, which will execute on an Android peripheral.
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */

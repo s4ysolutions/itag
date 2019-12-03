@@ -204,8 +204,8 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                                 if (peripheral == null) {
                                     monitorScan.setPayload(null);
                                 }
-                                if (id.equals(event.device.identifier())) {
-                                    monitorScan.setPayload(event.device);
+                                if (id.equals(event.peripheral.identifier())) {
+                                    monitorScan.setPayload(event.peripheral);
                                 }
                             })
             );
@@ -230,7 +230,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                 connectionsControl.setState(id, BLEConnectionState.connecting);
                 return BLEError.ok;
             }
-            // try fast connect to known device
+            // try fast connect to known peripheral
             waitForConnect(Math.max(15, timeout));
             if (isConnected()) {
                 connectionsControl.setState(id, BLEConnectionState.connecting);
@@ -239,20 +239,20 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         }
 
         do {
-            // scan for not cached/not known device
+            // scan for not cached/not known peripheral
             waitForScan(timeout == 0 ? 25 : 15);
             if (peripheral == null) {
                 Thread.sleep(5000);
             }
         } while (peripheral == null && timeout == 0);
 
-        // failed to scan for the device
+        // failed to scan for the peripheral
         if (peripheral == null) {
             connectionsControl.setState(id, BLEConnectionState.disconnected);
             return BLEError.noPeripheral;
         }
 
-        // connect as soon as a device scanned
+        // connect as soon as a peripheral scanned
         BLEError error = waitForConnect(timeout);
 
         connectionsControl.setState(id,

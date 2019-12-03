@@ -39,7 +39,7 @@ import s4y.waytoday.upload.UploadJobService;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 
-public class ITagsService extends Service implements
+class ITagsService extends Service implements
         ITagGatt.ITagChangeListener,
         ITagsDb.DbListener,
         LocationsTracker.ILocationListener,

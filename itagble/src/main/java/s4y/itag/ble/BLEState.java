@@ -1,6 +1,7 @@
 package s4y.itag.ble;
 
 public enum BLEState {
-    ON,
-    OFF
+    NO_ADAPTER,
+    NOT_ENABLED,
+    OK
 }

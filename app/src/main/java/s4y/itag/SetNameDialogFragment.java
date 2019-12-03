@@ -15,12 +15,10 @@ import androidx.fragment.app.DialogFragment;
 
 import java.util.Objects;
 
-import s4y.itag.ble.ITagDevice;
-import s4y.itag.ble.ITagsDb;
-import s4y.itag.preference.AlarmDelayPreference;
+import s4y.itag.itag.ITagInterface;
 
 public class SetNameDialogFragment extends DialogFragment {
-    public static ITagDevice device;
+    public static ITagInterface iTag;
 
     @NonNull
     @Override
@@ -29,50 +27,46 @@ public class SetNameDialogFragment extends DialogFragment {
         final LayoutInflater inflater = Objects.requireNonNull(getActivity()).getLayoutInflater();
         @SuppressLint("InflateParams") final View view = inflater.inflate(R.layout.fragment_set_name, null);
         final TextView textName = view.findViewById(R.id.text_name);
-        textName.setText(device.name);
+        textName.setText(iTag.name());
         final RadioGroup grpAlarm = view.findViewById(R.id.alarm_delay);
         final RadioButton btnAlarm0 = view.findViewById(R.id.alarm_delay_0);
         final RadioButton btnAlarm3 = view.findViewById(R.id.alarm_delay_3);
         final RadioButton btnAlarm5 = view.findViewById(R.id.alarm_delay_5);
         final RadioButton btnAlarm10 = view.findViewById(R.id.alarm_delay_10);
+        /*
         final AlarmDelayPreference alarmDelayPreference =
                 new AlarmDelayPreference(this.getContext(), device);
+                *
+         */
         grpAlarm.clearCheck();
-        switch (alarmDelayPreference.get()) {
-            case 0:
-                btnAlarm0.setChecked(true);
-                break;
-            case 3:
-                btnAlarm3.setChecked(true);
-                break;
-            case 5:
-                btnAlarm5.setChecked(true);
-                break;
-            case 10:
-                btnAlarm10.setChecked(true);
-                break;
-            default:
-                btnAlarm5.setChecked(true);
+        int alarm =iTag.alarmDelay();
+        if (alarm<3) {
+            btnAlarm0.setChecked(true);
+        }else if (alarm < 5){
+            btnAlarm3.setChecked(true);
+        }else if (alarm <10) {
+            btnAlarm5.setChecked(true);
+        }else {
+            btnAlarm10.setChecked(true);
         }
+
         builder.setTitle(R.string.change_name)
                 .setView(view)
                 .setPositiveButton(android.R.string.ok, (dialog, id) -> {
-                    device.name = textName.getText().toString();
-                    ITagsDb.save(getActivity());
-                    ITagsDb.notifyChange();
+                    iTag.setName(textName.getText().toString());
                     ITagApplication.faNameITag();
                     switch (grpAlarm.getCheckedRadioButtonId()) {
                         case R.id.alarm_delay_0:
-                            alarmDelayPreference.set(0);
+                            iTag.setAlarmDelay(0);
                             break;
                         case R.id.alarm_delay_3:
-                            alarmDelayPreference.set(3);
+                            iTag.setAlarmDelay(3);
                             break;
                         case R.id.alarm_delay_5:
-                            alarmDelayPreference.set(5);
+                            iTag.setAlarmDelay(5);
                             break;
                         default:
-                            alarmDelayPreference.set(10);
+                            iTag.setAlarmDelay(10);
                             break;
                     }
                 })

@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-interface BLEPeripheralInterace {
+public interface BLEPeripheralInterace {
     String identifier();
     void connect();
     void disconnect();
@@ -9,4 +9,6 @@ interface BLEPeripheralInterace {
     BLEPeripheralState state();
     BLEService[] services();
     BLEPeripheralObservablesInterface observables();
+    String name();
+    String address();
 }

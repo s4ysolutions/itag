@@ -14,7 +14,7 @@ import s4y.itag.ITagApplication;
 
 import static android.content.Context.AUDIO_SERVICE;
 
-public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
     private final MediaPlayer mPlayer;
     private int mVolumeLevel = -1;
 

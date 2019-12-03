@@ -6,8 +6,7 @@ import java.io.Serializable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-public final class ITagDevice implements Serializable {
+final class ITagDevice implements Serializable {
     private static final long serialVersionUID = 1345673754421L;
     public enum Color {
         BLACK,

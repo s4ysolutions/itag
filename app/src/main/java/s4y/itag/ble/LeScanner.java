@@ -21,7 +21,7 @@ import s4y.itag.ITagApplication;
 import s4y.itag.MainActivity;
 import s4y.itag.R;
 
-public final class LeScanner {
+final class LeScanner {
     static public int TIMEOUT = 30;
     static public boolean isScanning;
     static public int tick;

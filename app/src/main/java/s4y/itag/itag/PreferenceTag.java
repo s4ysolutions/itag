@@ -1,10 +1,8 @@
-package s4y.itag.tag;
+package s4y.itag.itag;
 
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-
-import java.io.Serializable;
 
 import s4y.itag.preference.SerializablePreferenceNullable;
 

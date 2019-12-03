@@ -1,4 +1,4 @@
-package s4y.itag.tag;
+package s4y.itag.itag;
 
 import android.content.Context;
 
@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import s4y.itag.preference.SerializablePreferenceNotNull;
-import s4y.itag.preference.SerializablePreferenceNullable;
 
 class PreferenceIDsForever extends SerializablePreferenceNotNull<Set<String>> {
 

@@ -2,7 +2,7 @@ package s4y.itag.ble;
 
 import android.bluetooth.BluetoothDevice;
 
-public class LeScanResult {
+class LeScanResult {
     final public BluetoothDevice device;
     public int rssi;
     final byte[] scanRecord;

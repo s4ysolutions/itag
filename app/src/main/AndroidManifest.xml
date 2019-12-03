@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="s4y.itag"
-    android:versionCode="121"
-    android:versionName="1.121"
+    android:versionCode="122"
+    android:versionName="2.0"
     >
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -56,7 +56,7 @@
         </activity>
 
         <service
-            android:name=".ble.ITagsService"
+            android:name=".itag.ITagsService"
             android:enabled="true"
             android:exported="false" />
         <service

@@ -5,7 +5,7 @@ import android.content.Context;
 import s4y.itag.ble.ITagDevice;
 import s4y.itag.ble.ITagGatt;
 
-public class AlarmDelayPreference extends IntPreference {
+class AlarmDelayPreference extends IntPreference {
     protected AlarmDelayPreference(Context context, String addr) {
         super(context, "ad_" + addr, 300);
     }

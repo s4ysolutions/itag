@@ -1,4 +1,4 @@
-package s4y.itag.tag;
+package s4y.itag.itag;
 
 public enum  TagColor {
     black,

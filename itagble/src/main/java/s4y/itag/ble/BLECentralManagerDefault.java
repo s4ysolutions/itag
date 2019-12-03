@@ -49,9 +49,16 @@ class BLECentralManagerDefault implements BLECentralManagerInterface {
         return true;
     }
 
+    @NonNull
     @Override
-    public BLECentralManagerState state() {
-        return null;
+    public BLEState state() {
+        BluetoothAdapter bluetoothAdapter = getAdapter();
+        if (bluetoothAdapter == null)
+            return BLEState.NO_ADAPTER;
+        if (bluetoothAdapter.isEnabled())
+            return BLEState.OK;
+        else
+            return BLEState.NOT_ENABLED;
     }
 
     private boolean isScanning = false;
