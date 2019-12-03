@@ -11,7 +11,7 @@ public interface ITagInterface {
     void setName(String name);
     TagColor color();
     void setColor(TagColor color);
-    boolean isAlertig();
+    boolean isAlertDisconnected();
     void setAlerting(boolean alerting);
     int alarmDelay();
     void setAlarmDelay(int alarmDelay);

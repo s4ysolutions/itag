@@ -20,11 +20,20 @@ import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+
+import s4y.itag.ble.BLEConnectionState;
+import s4y.itag.ble.BLEState;
 import s4y.itag.ble.ITagDevice;
 import s4y.itag.ble.ITagGatt;
 import s4y.itag.ble.ITagsDb;
 import s4y.itag.ble.ITagsService;
 import s4y.itag.history.HistoryRecord;
+import s4y.itag.itag.ITag;
+import s4y.itag.itag.ITagInterface;
+import s4y.itag.itag.StoreOp;
+import s4y.itag.itag.TagColor;
+import s4y.rasat.DisposableBag;
+import s4y.rasat.Handler;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsTracker;
 
@@ -34,8 +43,6 @@ import s4y.waytoday.locations.LocationsTracker;
  */
 public class ITagsFragment extends Fragment
         implements
-        ITagsDb.DbListener,
-        ITagGatt.ITagChangeListener,
         MainActivity.ServiceBoundListener,
         HistoryRecord.HistoryRecordListener,
         LocationsTracker.ITrackingStateListener,
@@ -44,83 +51,110 @@ public class ITagsFragment extends Fragment
     private Animation mLocationAnimation;
     private Animation mITagAnimation;
     private String trackID = "";
+    private DisposableBag disposableBag = new DisposableBag();
 
     public ITagsFragment() {
         // Required empty public constructor
     }
 
-    private void setupTag(int n, @NonNull final ITagDevice device, final View itagLayout) {
+    private void setupTag(int n, @NonNull final ITagInterface itag, final View itagLayout) {
         final View btnForget = itagLayout.findViewById(R.id.btn_forget);
-        btnForget.setTag(device);
+        btnForget.setTag(itag);
         final View btnColor = itagLayout.findViewById(R.id.btn_color);
-        btnColor.setTag(device);
+        btnColor.setTag(itag);
         final View btnSetName = itagLayout.findViewById(R.id.btn_set_name);
-        btnSetName.setTag(device);
+        btnSetName.setTag(itag);
         final ImageView btnAlert = itagLayout.findViewById(R.id.btn_alert);
-        btnAlert.setImageResource(device.linked ? R.drawable.alert : R.drawable.noalert);
-        btnAlert.setTag(device);
+        btnAlert.setImageResource(itag.isAlertDisconnected() ? R.drawable.alert : R.drawable.noalert);
+        btnAlert.setTag(itag);
 
         MainActivity mainActivity = (MainActivity) getActivity();
         if (mainActivity == null)
             return;
-        int statusDrawableId = R.drawable.bt_disabled;
-        int statusTextId = R.string.bt_disabled;
         Animation animShake = null;
         RssiView rssiView = itagLayout.findViewById(R.id.rssi);
         int rssi = -1000;
-        if (mainActivity.mITagsServiceBound && mainActivity.mBluetoothAdapter.enable()) {
-            ITagsService service = mainActivity.iTagsService;
-            ITagGatt gatt = service.getGatt(device.addr, false);
-            if (gatt.isError()) {
-                statusDrawableId = R.drawable.bt_setup;
-                statusTextId = R.string.bt_setup;
-            } else if (gatt.isConnecting()) {
-                statusDrawableId = R.drawable.bt_connecting;
-                statusTextId = R.string.bt_connecting;
-            } else if (gatt.isTransmitting()) {
-                statusDrawableId = R.drawable.bt_call;
-                statusTextId = R.string.bt_call;
-            } else if (gatt.isConnected()) {
-                statusDrawableId = R.drawable.bt;
-                statusTextId = R.string.bt;
-                rssi = gatt.mRssi;
-            } else {
-                statusTextId = R.string.bt_unk;
+        int statusDrawableId;
+        int statusTextId;
+        BLEConnectionState state = ITag.ble.connections().getStates().get(itag.id());
+        if (ITag.ble.state() == BLEState.OK && state != null) {
+            switch (state) {
+                case unknown:
+                case disconnected:
+                case disconnecting:
+                    if (itag.isAlertDisconnected()) {
+                        statusDrawableId = R.drawable.bt_connecting;
+                        statusTextId = R.string.bt_unk;
+                    } else {
+                        statusDrawableId = R.drawable.bt_disabled;
+                        statusTextId = R.string.bt_disabled;
+                    }
+                    break;
+                case connected:
+                    statusDrawableId = R.drawable.bt;
+                    statusTextId = R.string.bt;
+                    rssi = gatt.mRssi;
+                    break;
+                case connecting:
+                case discovering:
+                case discoveringServices:
+                case discoveringCharacteristics:
+                    if (itag.isAlertDisconnected()) {
+                        statusDrawableId = R.drawable.bt_connecting;
+                        statusTextId = R.string.bt_unk;
+                    } else {
+                        statusDrawableId = R.drawable.bt_setup;
+                        statusTextId = R.string.bt_connecting;
+                    }
+                    break;
+                case writting:
+                case reading:
+                    statusDrawableId = R.drawable.bt_call;
+                    statusTextId = R.string.bt_call;
+                    break;
+                default:
+                    statusDrawableId = R.drawable.bt_disabled;
+                    statusTextId = R.string.bt_disabled;
             }
-            if (gatt.isFindingITag() ||
-                    gatt.isFindingPhone() ||
-                    gatt.isError() && device.linked && mainActivity.mITagsServiceBound) {
+            if (ITag.ble.alert().isAlerting(itag.id()) ||
+                    ITag.ble.findMe().isFindMe(itag.id()) ||
+                    itag.isAlertDisconnected() && state != BLEConnectionState.connected
+            ) {
                 Log.d(LT, "Start animate because gatt.isFindingITag");
                 animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
             }
+        } else {
+            statusDrawableId = R.drawable.bt_disabled;
+            statusTextId = R.string.bt_disabled;
         }
         rssiView.setRssi(rssi);
 
         int imageId;
-        switch (device.color) {
-            case BLACK:
+        switch (itag.color()) {
+            case black:
                 imageId = R.drawable.itag_black;
                 break;
-            case RED:
+            case red:
                 imageId = R.drawable.itag_red;
                 break;
-            case GREEN:
+            case green:
                 imageId = R.drawable.itag_green;
                 break;
-            case GOLD:
+            case gold:
                 imageId = R.drawable.itag_gold;
                 break;
-            case BLUE:
+            case blue:
                 imageId = R.drawable.itag_blue;
                 break;
             default:
                 imageId = R.drawable.itag_white;
+                break;
         }
 
         final ImageView imageITag = itagLayout.findViewById(R.id.image_itag);
         // imageITag.setOnLongClickListener(mOnLongClickListener);
         imageITag.setImageResource(imageId);
-        imageITag.setTag(device);
+        imageITag.setTag(itag);
         if (animShake == null) {
             Log.d(LT, "No animations appointed");
             animShake = imageITag.getAnimation();
@@ -138,17 +172,17 @@ public class ITagsFragment extends Fragment
 
         final TextView textName = itagLayout.findViewById(R.id.text_name);
 //        textName.setText(device.name!=null && device.name.length()>0 ?device.name:device.addr);
-        textName.setText(device.name);
+        textName.setText(itag.name());
 
         final TextView textStatus = itagLayout.findViewById(R.id.text_status);
         textStatus.setText(statusTextId);
 
         final ImageView imageLocation = itagLayout.findViewById(R.id.location);
-        imageLocation.setTag(device);
+        imageLocation.setTag(itag);
 
         Map<String, HistoryRecord> records = HistoryRecord.getHistoryRecords(getActivity());
 
-        if (records.get(device.addr) == null) {
+        if (records.get(itag.id()) == null) {
             mLocationAnimation.cancel();
             imageLocation.setVisibility(View.GONE);
         } else {
@@ -176,7 +210,7 @@ public class ITagsFragment extends Fragment
             root.removeView(tagsLayout);
             index = root.indexOfChild(tagsLayout);
         }
-        final int s = ITagsDb.getDevices(getActivity()).size();
+        final int s = ITag.store.count();
         final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
         tagsLayout = activity.getLayoutInflater().inflate(rid, root, false);
         root.addView(tagsLayout, index);
@@ -195,15 +229,15 @@ public class ITagsFragment extends Fragment
 //                tid2.setText(trackID);
             }
         } else {
-            setupTag(1, ITagsDb.getDevices(getActivity()).get(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
+            setupTag(1, ITag.store.byPos(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
             if (s > 1) {
-                setupTag(2, ITagsDb.getDevices(getActivity()).get(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
+                setupTag(2, ITag.store.byPos(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
             }
             if (s > 2) {
-                setupTag(3, ITagsDb.getDevices(getActivity()).get(2), tagsLayout.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
+                setupTag(3, ITag.store.byPos(2), tagsLayout.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
             }
             if (s > 3) {
-                setupTag(4, ITagsDb.getDevices(getActivity()).get(3), tagsLayout.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
+                setupTag(4, ITag.store.byPos(3), tagsLayout.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
             }
         }
     }
@@ -265,12 +299,17 @@ public class ITagsFragment extends Fragment
         Activity activity = getActivity();
         if (activity == null)
             return;
-        ITagApplication.faITagsView(ITagsDb.getDevices(activity).size());
+        ITagApplication.faITagsView(ITag.store.count());
         startRssi();
         ViewGroup root = (ViewGroup) Objects.requireNonNull(getView());
         setupTags(root);
         MainActivity.addServiceBoundListener(this);
-        ITagsDb.addListener(this);
+        disposableBag.add(ITag.store.observable().subscribe(new Handler<StoreOp>() {
+            @Override
+            public void handle(StoreOp event) {
+
+            }
+        }));
         ITagGatt.addOnITagChangeListener(this);
         HistoryRecord.addListener(this);
 
@@ -290,8 +329,7 @@ public class ITagsFragment extends Fragment
             Log.d(LT, "onPause");
         }
         HistoryRecord.removeListener(this);
-        ITagGatt.removeOnITagChangeListener(this);
-        ITagsDb.removeListener(this);
+        disposableBag.dispose();
         LocationsTracker.removeOnTrackingStateListener(this);
         MainActivity.removeServiceBoundListener(this);
         IDService.removeOnTrackIDChangeListener(this);

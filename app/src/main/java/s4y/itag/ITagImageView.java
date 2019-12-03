@@ -8,16 +8,14 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageView;
 
-import s4y.itag.ble.ITagDevice;
-import s4y.itag.ble.ITagGatt;
-import s4y.itag.ble.ITagsService;
+import s4y.itag.ble.BLEConnectionsInterface;
 
-public class ITagImageView extends ImageView implements GestureDetector.OnGestureListener {
+public class ITagImageView extends AppCompatImageView implements GestureDetector.OnGestureListener {
     private GestureDetector mGestureDetector;
 
     public ITagImageView(Context context) {
@@ -32,12 +30,6 @@ public class ITagImageView extends ImageView implements GestureDetector.OnGestur
 
     public ITagImageView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setup();
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public ITagImageView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
         setup();
     }
 

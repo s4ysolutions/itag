@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import s4y.itag.ITagApplication;
 import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
 import s4y.rasat.Channel;
@@ -179,7 +178,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     @Override
     public void stopAlertAll() {
         for (ITagInterface tag : tags.values()) {
-            if (tag.isAlertig()) {
+            if (tag.isAlertDisconnected()) {
                 ITag.handler.post(() -> ble.alert().stopAlert(tag.id(), ITag.BLE_TIMEOUT));
             }
         }
