@@ -10,6 +10,7 @@ interface BLECentralManagerInterface {
     void stopScan();
     boolean canScan();
     @NonNull BLEState state();
+    BLEError enable();
 
     BLEPeripheralInterace retrievePeripheral(@NonNull String id);
     boolean connected(BluetoothDevice device);

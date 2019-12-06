@@ -1,13 +1,13 @@
 package s4y.itag.ble;
 
 public class BLEScanResult {
-    public final BLEPeripheralInterace peripheral;
+    public final String id;
+    public final String name;
     public final int rssi;
-    public final byte[] data;
 
-    BLEScanResult(BLEPeripheralInterace peripheral, int rssi, byte[] data) {
-        this.peripheral = peripheral;
+    BLEScanResult(String id, String name, int rssi) {
+        this.id = id;
+        this.name = name;
         this.rssi = rssi;
-        this.data = data;
     }
-}
+};

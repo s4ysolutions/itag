@@ -1,4 +1,4 @@
-package s4y.itag.ble;
+package s4y.itag;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
@@ -6,21 +6,11 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import androidx.annotation.NonNull;
-import s4y.itag.ITagApplication;
-
 import static android.content.Context.AUDIO_SERVICE;
 
 class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
     private final MediaPlayer mPlayer;
     private int mVolumeLevel = -1;
-
-    @NonNull
-    private
-    Map<String, ITagGatt> mSoundingITags = new HashMap<String, ITagGatt>(4);
 
 
     private MediaPlayerUtils() {
@@ -54,7 +44,7 @@ class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.On
         mPlayer.reset();
     }
 
-    public void startSoundDisconnected(Context context, ITagGatt gatt) {
+    public void startSoundDisconnected(Context context) {
         stopSound(context);
         AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
 
@@ -83,7 +73,6 @@ class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.On
             mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
             mPlayer.prepareAsync();
             //           mPlayer.start();
-            mSoundingITags.put(gatt.mAddr, gatt);
         } catch (IOException e) {
             ITagApplication.handleError(e, true);
         } finally {
@@ -98,7 +87,7 @@ class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.On
     }
 
 
-    void startFindPhone(Context context, ITagGatt gatt) {
+    void startFindPhone(Context context) {
         AssetFileDescriptor afd = null;
         stopSound(context);
         try {
@@ -118,7 +107,6 @@ class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.On
             mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
             mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
             mPlayer.prepareAsync();
-            mSoundingITags.put(gatt.mAddr,gatt);
         } catch (IOException e) {
             ITagApplication.handleError(e, true);
         } finally {
@@ -134,7 +122,6 @@ class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.On
 
     public void stopSound(Context context) {
         stopFindingPhones();
-        mSoundingITags.clear();
         MediaPlayerUtils.getInstance().stop();
         if (mVolumeLevel >= 0) {
             AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
@@ -146,7 +133,7 @@ class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.On
     }
 
     public boolean isSound(String addr) {
-        return mPlayer.isPlaying() && mSoundingITags.containsKey(addr);
+        return mPlayer.isPlaying();
     }
 
     public boolean isSound() {
@@ -154,10 +141,5 @@ class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.On
     }
 
     private void stopFindingPhones(){
-        for (ITagGatt gatt:mSoundingITags.values()){
-            if (gatt != null && gatt.isFindingPhone()) {
-                gatt.stopFindPhone();
-            }
-        }
     };
 }

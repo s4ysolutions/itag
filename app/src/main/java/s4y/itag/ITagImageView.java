@@ -129,6 +129,7 @@ public class ITagImageView extends AppCompatImageView implements GestureDetector
         if (Math.abs(velocityX) > Math.abs(velocityY)) {
             float move = Math.abs(e2.getX() - e1.getX());
             if (move > 16) {
+                /*
                 final ITagDevice device = (ITagDevice) getTag();
                 MainActivity mainActivity = getActivity();
                 if (mainActivity != null && mainActivity.mITagsServiceBound) {
@@ -152,6 +153,8 @@ public class ITagImageView extends AppCompatImageView implements GestureDetector
                     }
                 }
                 return true;
+
+                 */
             }
         }
         return false;

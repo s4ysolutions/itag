@@ -1,9 +1,12 @@
 package s4y.itag;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+
+import androidx.preference.PreferenceManager;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,8 +16,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -23,17 +24,10 @@ import androidx.fragment.app.Fragment;
 
 import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEState;
-import s4y.itag.ble.ITagDevice;
-import s4y.itag.ble.ITagGatt;
-import s4y.itag.ble.ITagsDb;
-import s4y.itag.ble.ITagsService;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
-import s4y.itag.itag.StoreOp;
-import s4y.itag.itag.TagColor;
 import s4y.rasat.DisposableBag;
-import s4y.rasat.Handler;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsTracker;
 
@@ -43,7 +37,6 @@ import s4y.waytoday.locations.LocationsTracker;
  */
 public class ITagsFragment extends Fragment
         implements
-        MainActivity.ServiceBoundListener,
         HistoryRecord.HistoryRecordListener,
         LocationsTracker.ITrackingStateListener,
         IDService.IIDSeriviceListener {
@@ -93,7 +86,7 @@ public class ITagsFragment extends Fragment
                 case connected:
                     statusDrawableId = R.drawable.bt;
                     statusTextId = R.string.bt;
-                    rssi = gatt.mRssi;
+                    rssi = 0;
                     break;
                 case connecting:
                 case discovering:
@@ -249,33 +242,24 @@ public class ITagsFragment extends Fragment
 
         mLocationAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shadow_location);
         mITagAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        trackID = sp.getString("tid", "");
+        Context context = getContext();
+        if (context != null) {
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
+            trackID = sp.getString("tid", "");
+        }
 
         return inflater.inflate(R.layout.fragment_itags, container, false);
     }
 
-    private final List<ITagGatt> mRssiGatt = new ArrayList<>(8);
-
-    private boolean mIsRssiStarted;
-
     // TODO: ugly
     private void startRssi() {
-        MainActivity mainActivity = (MainActivity) getActivity();
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "startRssi, bound=" + (mainActivity != null && mainActivity.mITagsServiceBound));
+            Log.d(LT, "startRssi");
         }
         stopRssi();
-        if (mainActivity != null && mainActivity.mITagsServiceBound) {
-            mIsRssiStarted = true;
-            ITagsService service = mainActivity.iTagsService;
-            for (ITagDevice device : ITagsDb.getDevices(getActivity())) {
-                ITagGatt gatt = service.getGatt(device.addr, false);
-                if (gatt.isConnected()) {
-                    gatt.startListenRssi();
-                    mRssiGatt.add(gatt);
-                }// wait for ITagChange and start listen then
-            }
+        for (int i = 0; i < ITag.store.count(); i++) {
+            ITagInterface itag = ITag.store.byPos(i);
+            ITag.ble.connections().enableRSSI(itag.id());
         }
     }
 
@@ -283,11 +267,10 @@ public class ITagsFragment extends Fragment
         if (BuildConfig.DEBUG) {
             Log.d(LT, "stopRssi");
         }
-        for (ITagGatt gatt : mRssiGatt) {
-            gatt.stopListenRssi();
+        for (int i = 0; i < ITag.store.count(); i++) {
+            ITagInterface itag = ITag.store.byPos(i);
+            ITag.ble.connections().disconnect(itag.id());
         }
-        mIsRssiStarted = false;
-        mRssiGatt.clear();
     }
 
     @Override
@@ -301,16 +284,12 @@ public class ITagsFragment extends Fragment
             return;
         ITagApplication.faITagsView(ITag.store.count());
         startRssi();
-        ViewGroup root = (ViewGroup) Objects.requireNonNull(getView());
+        final ViewGroup root = (ViewGroup) Objects.requireNonNull(getView());
         setupTags(root);
-        MainActivity.addServiceBoundListener(this);
-        disposableBag.add(ITag.store.observable().subscribe(new Handler<StoreOp>() {
-            @Override
-            public void handle(StoreOp event) {
-
-            }
+        disposableBag.add(ITag.store.observable().subscribe(event -> {
+// TODO:
+            setupTags(root);
         }));
-        ITagGatt.addOnITagChangeListener(this);
         HistoryRecord.addListener(this);
 
         final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -331,87 +310,8 @@ public class ITagsFragment extends Fragment
         HistoryRecord.removeListener(this);
         disposableBag.dispose();
         LocationsTracker.removeOnTrackingStateListener(this);
-        MainActivity.removeServiceBoundListener(this);
         IDService.removeOnTrackIDChangeListener(this);
-        stopRssi();
         super.onPause();
-    }
-
-    @Override
-    public void onDbChange() {
-        setupTags((ViewGroup) Objects.requireNonNull(getView()));
-    }
-
-    @Override
-    public void onDbAdd(ITagDevice device) {
-
-    }
-
-    @Override
-    public void onDbRemove(ITagDevice device) {
-
-    }
-
-    @Override
-    public void onITagChange(@NonNull ITagGatt gatt) {
-        Activity activity = getActivity();
-        if (activity == null)
-            return;
-
-        activity.runOnUiThread(() -> {
-            // handle cases like "onBound", connectAll, etc
-            if (BuildConfig.DEBUG) {
-                Log.d(LT, "onITagChange mIsRssiStarted=" + mIsRssiStarted + " addr=" + gatt.mAddr);
-            }
-            if (!mIsRssiStarted) {
-                startRssi();
-            }
-            View view = getView();
-            if (view != null)
-                setupTags((ViewGroup) view);
-        });
-    }
-
-    @Override
-    public void onITagRssi(@NonNull ITagGatt gatt, int rssi) {
-        final View view = getView();
-        if (view != null) {
-            Activity activity = getActivity();
-            if (activity == null)
-                return;
-
-            activity.runOnUiThread(() -> setupTags((ViewGroup) view));
-        }
-    }
-
-    @Override
-    public void onITagClicked(@NonNull ITagGatt gatt) {
-    }
-
-    @Override
-    public void onITagDoubleClicked(@NonNull ITagGatt gatt) {
-    }
-
-    @Override
-    public void onITagFindingPhone(@NonNull ITagGatt gatt, boolean on) {
-        View view = getView();
-        if (view != null) {
-            Activity activity = getActivity();
-            if (activity == null)
-                return;
-            activity.runOnUiThread(() -> setupTags((ViewGroup) view));
-        }
-    }
-
-
-    @Override
-    public void onBoundingChanged(@NonNull MainActivity activity) {
-        if (activity.mITagsServiceBound) {
-            startRssi(); // nothing bad in extra call
-        }
-        final View view = getView();
-        if (view != null)
-            setupTags((ViewGroup) view);
     }
 
     @Override

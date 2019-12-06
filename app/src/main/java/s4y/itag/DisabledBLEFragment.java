@@ -14,7 +14,6 @@ import android.view.ViewGroup;
  */
 public class DisabledBLEFragment extends Fragment {
 
-
     public DisabledBLEFragment() {
         // Required empty public constructor
     }

@@ -1,4 +1,4 @@
-package s4y.itag.ble;
+package s4y.itag;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -17,7 +17,7 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -25,11 +25,9 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
-import s4y.itag.BuildConfig;
-import s4y.itag.ITagApplication;
-import s4y.itag.MainActivity;
-import s4y.itag.R;
+
 import s4y.itag.history.HistoryRecord;
+import s4y.itag.itag.ITag;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsGPSUpdater;
 import s4y.waytoday.locations.LocationsTracker;
@@ -40,8 +38,6 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 
 class ITagsService extends Service implements
-        ITagGatt.ITagChangeListener,
-        ITagsDb.DbListener,
         LocationsTracker.ILocationListener,
         IDService.IIDSeriviceListener {
     private static final int FOREGROUND_ID = 1;
@@ -56,7 +52,6 @@ class ITagsService extends Service implements
     private static final String LT = ITagsService.class.getName();
 
     @NonNull
-    private HashMap<String, ITagGatt> mGatts = new HashMap<>(4);
 
     @Override
     public void onLocation(@NonNull Location location) {
@@ -93,14 +88,9 @@ class ITagsService extends Service implements
                     if (BuildConfig.DEBUG) {
                         Log.d(LT, "ACTION_STATE_CHANGED STATE_ON");
                     }
-                    new Handler().postDelayed(() -> connectAll(), 1000);
                 } else if (bluetoothState == BluetoothAdapter.STATE_OFF) {
                     if (BuildConfig.DEBUG) {
                         Log.d(LT, "ACTION_STATE_CHANGED STATE_OFF");
-                    }
-                    for (ITagGatt gatt : mGatts.values()) {
-                        if (gatt != null)
-                            gatt.disconnect(true);
                     }
                 }
             }
@@ -137,12 +127,9 @@ class ITagsService extends Service implements
         if (BuildConfig.DEBUG) {
             Log.d(LT, "onCreate");
         }
-        ITagGatt.addOnITagChangeListener(this);
-        ITagsDb.addListener(this);
 
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         this.registerReceiver(mBluetoothReceiver, filter);
-        connectAll();
         gpsLocatonUpdater = new LocationsGPSUpdater(this);
         LocationsTracker.addOnLocationListener(this);
         IDService.addOnTrackIDChangeListener(this);
@@ -162,37 +149,11 @@ class ITagsService extends Service implements
         }
         LocationsTracker.removeOnLocationListener(this);
         this.unregisterReceiver(mBluetoothReceiver);
-        ITagGatt.removeOnITagChangeListener(this);
-        ITagsDb.removeListener(this);
-        for (ITagGatt gatt : mGatts.values()) {
-            gatt.disconnect();
-        }
 
         LocationsTracker.stop();
         super.onDestroy();
     }
 
-    @NonNull
-    public ITagGatt getGatt(@NonNull final String addr, boolean connect) {
-        ITagGatt gatt = mGatts.get(addr);
-        if (gatt == null) {
-            gatt = new ITagGatt(addr);
-            mGatts.put(addr, gatt);
-
-        }
-        if (connect) {
-            if (!gatt.isConnected() && !gatt.isConnecting()) {
-                gatt.connect(this);
-            }
-        }
-        return gatt;
-    }
-
-    public void connectAll() {
-        for (ITagDevice device : ITagsDb.getDevices(this)) {
-            getGatt(device.addr, true);
-        }
-    }
 
     public void addToForeground() {
         createNotificationChannel();
@@ -236,7 +197,7 @@ class ITagsService extends Service implements
     }
 
     public static boolean start(@NonNull Context context, boolean foreground) {
-        if (ITagsDb.getDevices(context).size() > 0) {
+        if (ITag.store.count() > 0) {
             Intent intent = new Intent(context, ITagsService.class);
             if (foreground) {
                 intent.putExtra(RUN_IN_FOREGROUND, true);
@@ -281,19 +242,6 @@ class ITagsService extends Service implements
         }
     }
 
-    private class Disconnection {
-        final ITagGatt gatt;
-        final String name;
-        final long ts;
-
-        public Disconnection(final ITagGatt gatt, final ITagDevice device) {
-            this.gatt = gatt;
-            this.name = device.name;
-            ts = System.currentTimeMillis();
-        }
-    }
-
-    private Map<String, Disconnection> mDisconnections = new HashMap<>(4);
 
     private void createDisconnectNotification(String name) {
         createNotificationChannel();
@@ -320,102 +268,6 @@ class ITagsService extends Service implements
         if (notificationManager != null) {
             notificationManager.notify(NOTIFICATION_DISCONNECT_ID, notification);
         }
-    }
-
-    @Override
-    public void onITagChange(@NonNull ITagGatt gatt) {
-        ITagDevice device = ITagsDb.findByAddr(gatt.mAddr);
-        // Sounds if disconnected
-        if (gatt.isError() && device != null) {
-            HistoryRecord.add(ITagsService.this, gatt);
-            if (device.linked) {
-                MediaPlayerUtils.getInstance().startSoundDisconnected(this, gatt);
-            }
-            mDisconnections.put(gatt.mAddr, new Disconnection(gatt, device));
-        } else {
-            if (gatt.mIsConnected) {
-                HistoryRecord.clear(this, gatt.mAddr);
-                Disconnection disconnection = mDisconnections.get(gatt.mAddr);
-                if (disconnection != null) {
-                    mDisconnections.remove(gatt.mAddr);
-                    long duration = System.currentTimeMillis() - disconnection.ts;
-                    if (duration < 5000) {
-                        ITagApplication.faSuspiciousDisconnect5();
-                    } else if (duration < 10000) {
-                        ITagApplication.faSuspiciousDisconnect10();
-                    } else if (duration < 30000) {
-                        ITagApplication.faSuspiciousDisconnect30();
-                    } else {
-                        ITagApplication.faSuspiciousDisconnectLong();
-                    }
-                }
-            }
-        }
-        if (mDisconnections.size() <= 0) {
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (notificationManager != null) {
-                notificationManager.cancel(NOTIFICATION_DISCONNECT_ID);
-            }
-            MediaPlayerUtils.getInstance().stopSound(this);
-        } else {
-            String name = null;
-            long ts = 0;
-
-            for (Disconnection disconnection : mDisconnections.values()) {
-                if (disconnection.ts > ts) name = disconnection.name;
-            }
-            if (name != null)
-                createDisconnectNotification(name);
-        }
-    }
-
-    @Override
-    public void onITagClicked(@NonNull ITagGatt gatt) {
-        if (gatt.isFindingITag()) {
-            gatt.stopFindITag();
-        }
-        gatt.stopFindPhone();
-        MediaPlayerUtils.getInstance().stopSound(this);
-    }
-
-    @Override
-    public void onITagDoubleClicked(@NonNull ITagGatt gatt) {
-        if (gatt.isFindingITag()) {
-            gatt.stopFindITag();
-        }
-        gatt.startFindPhone();
-        MediaPlayerUtils.getInstance().startFindPhone(this, gatt);
-    }
-
-    @Override
-    public void onITagFindingPhone(@NonNull ITagGatt gatt, boolean on) {
-
-    }
-
-    @Override
-    public void onITagRssi(@NonNull ITagGatt gatt, int rssi) {
-
-    }
-
-    @Override
-    public void onDbChange() {
-
-    }
-
-    @Override
-    public void onDbAdd(@NonNull ITagDevice device) {
-        getGatt(device.addr, true);
-    }
-
-    @Override
-    public void onDbRemove(@NonNull ITagDevice device) {
-        ITagGatt toRemove = mGatts.get(device.addr);
-        if (toRemove != null) {
-            if (toRemove.isConnected() || toRemove.isConnecting()) {
-                toRemove.disconnect();
-            }
-        }
-        mGatts.remove(device.addr);
     }
 
     public void startWayToday(int frequency) {

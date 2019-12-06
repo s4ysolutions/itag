@@ -19,18 +19,18 @@ private static final long serialVersionUID = 1575220516;
     @NonNull
     private TagColor color;
     private boolean alert;
-    private int alarmDelay;
+    private int alertDelay;
 
-    ITagDefault(@NonNull String id, @Nullable String name, @Nullable TagColor color, @Nullable Boolean alert, @Nullable Integer alarmDelay) {
+    private ITagDefault(@NonNull String id, @Nullable String name, @Nullable TagColor color, @Nullable Boolean alert, @Nullable Integer alertDelay) {
         this.id = id;
         this.name = name == null ? ITagApplication.context.getString(R.string.unknown):name;
         this.color = color == null? TagColor.black : color;
         this.alert = alert == null ? false : alert;
-        this.alarmDelay = alarmDelay == null ? 7: alarmDelay;
+        this.alertDelay = alertDelay == null ? 7: alertDelay;
     }
 
     public ITagDefault(@NonNull String id, Map<String, Object> dict) {
-        this(id, (String)dict.get("name"), (TagColor)dict.get("color"), (Boolean)dict.get("alert"), (Integer)dict.get("alarmDelay"));
+        this(id, (String)dict.get("name"), (TagColor)dict.get("color"), (Boolean)dict.get("alert"), (Integer)dict.get("alertDelay"));
     }
 
     @NonNull
@@ -67,18 +67,18 @@ private static final long serialVersionUID = 1575220516;
     }
 
     @Override
-    public void setAlerting(boolean alerting) {
+    public void setAlertDisconnected(boolean alerting) {
         this.alert = alerting;
     }
 
     @Override
-    public int alarmDelay() {
-        return alarmDelay;
+    public int alertDelay() {
+        return alertDelay;
     }
 
     @Override
-    public void setAlarmDelay(int alarmDelay) {
-        this.alarmDelay = alarmDelay;
+    public void setAlertDelay(int alertDelay) {
+        this.alertDelay = alertDelay;
     }
 
     @Override

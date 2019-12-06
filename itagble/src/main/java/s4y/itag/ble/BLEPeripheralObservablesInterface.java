@@ -9,7 +9,7 @@ interface BLEPeripheralObservablesInterface {
     class ConnectionFailedEvent {
         final int status;
 
-        public ConnectionFailedEvent(int status) {
+        ConnectionFailedEvent(int status) {
             this.status = status;
         }
     }
@@ -17,7 +17,7 @@ interface BLEPeripheralObservablesInterface {
     class DisconnectedEvent {
         final int status;
 
-        public DisconnectedEvent(int status) {
+        DisconnectedEvent(int status) {
             this.status = status;
         }
     }
@@ -26,7 +26,7 @@ interface BLEPeripheralObservablesInterface {
         final BLEService[] services;
         final int status;
 
-        public DiscoveredServicesEvent(BLEService[] services, int status) {
+        DiscoveredServicesEvent(BLEService[] services, int status) {
             this.services = services;
             this.status = status;
         }
@@ -42,10 +42,21 @@ interface BLEPeripheralObservablesInterface {
         }
     }
 
+    public class RSSIEvent {
+        public final int rssi;
+        public final int status;
+
+        RSSIEvent(int rssi, int status) {
+            this.rssi = rssi;
+            this.status = status;
+        }
+    }
+
     Observable<ConnectedEvent> observableConnected();
     Observable<ConnectionFailedEvent> observableConnectionFailed();
     Observable<DisconnectedEvent> observableDisconnected();
     Observable<DiscoveredServicesEvent> observableDiscoveredServices();
     Observable<CharacteristicEvent> observableWrite();
     Observable<CharacteristicEvent> observableNotification();
+    Observable<RSSIEvent> observableRSSI();
 }

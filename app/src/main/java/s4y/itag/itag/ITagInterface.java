@@ -12,9 +12,9 @@ public interface ITagInterface {
     TagColor color();
     void setColor(TagColor color);
     boolean isAlertDisconnected();
-    void setAlerting(boolean alerting);
-    int alarmDelay();
-    void setAlarmDelay(int alarmDelay);
+    void setAlertDisconnected(boolean alerting);
+    int alertDelay();
+    void setAlertDelay(int alarmDelay);
     void copyFromTag(ITagInterface tag);
     @NonNull
     Map<String,Object> toDict();

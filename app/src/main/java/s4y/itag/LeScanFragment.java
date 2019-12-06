@@ -41,11 +41,11 @@ public class LeScanFragment extends Fragment {
             }
             BLEScanResult r = getItem(position);
             assert r != null;
-            String addr = r.peripheral.address();
+            String addr = r.id;
 
             TextView tv;
             tv = convertView.findViewById(R.id.text_name);
-            tv.setText(r.peripheral.name());
+            tv.setText(r.name);
             tv = convertView.findViewById(R.id.text_addr);
             tv.setText(addr);
 
@@ -57,7 +57,7 @@ public class LeScanFragment extends Fragment {
                 if (result == null) {
                     continue;
                 }
-                if (addr.equals(result.peripheral.address())) {
+                if (addr.equals(result.name)) {
                     int rssi = result.rssi;
                     rssiView.setRssi(rssi);
                     if (getActivity() != null && isAdded()) {
@@ -74,7 +74,7 @@ public class LeScanFragment extends Fragment {
 
 
             ImageView btn = convertView.findViewById(R.id.btn_connect);
-            btn.setTag(r.peripheral);
+            btn.setTag(r.id);
 
             if (position % 2 == 1) {
                 convertView.findViewById(R.id.item_root).setBackgroundColor(0xffe0e0e0);
@@ -134,7 +134,7 @@ public class LeScanFragment extends Fragment {
                             return;
                         }
 
-                        if (a.peripheral.address().equals(result.peripheral.address())) {
+                        if (a.id.equals(result.id)) {
                            return;
                         }
                     }

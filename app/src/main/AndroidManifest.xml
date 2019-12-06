@@ -56,7 +56,7 @@
         </activity>
 
         <service
-            android:name=".itag.ITagsService"
+            android:name=".ITagsService"
             android:enabled="true"
             android:exported="false" />
         <service

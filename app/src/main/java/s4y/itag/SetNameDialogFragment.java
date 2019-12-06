@@ -39,7 +39,7 @@ public class SetNameDialogFragment extends DialogFragment {
                 *
          */
         grpAlarm.clearCheck();
-        int alarm =iTag.alarmDelay();
+        int alarm =iTag.alertDelay();
         if (alarm<3) {
             btnAlarm0.setChecked(true);
         }else if (alarm < 5){
@@ -57,16 +57,16 @@ public class SetNameDialogFragment extends DialogFragment {
                     ITagApplication.faNameITag();
                     switch (grpAlarm.getCheckedRadioButtonId()) {
                         case R.id.alarm_delay_0:
-                            iTag.setAlarmDelay(0);
+                            iTag.setAlertDelay(0);
                             break;
                         case R.id.alarm_delay_3:
-                            iTag.setAlarmDelay(3);
+                            iTag.setAlertDelay(3);
                             break;
                         case R.id.alarm_delay_5:
-                            iTag.setAlarmDelay(5);
+                            iTag.setAlertDelay(5);
                             break;
                         default:
-                            iTag.setAlarmDelay(10);
+                            iTag.setAlertDelay(10);
                             break;
                     }
                 })

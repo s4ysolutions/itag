@@ -13,7 +13,7 @@ class BLEScannerDefault implements BLEScannerInterface {
     private final Channel<Integer> channelTimer = new Channel<>();
     private final Channel<Boolean> channelActive = new Channel<>();
     private final Channel<BLEScanResult> channelScan = new Channel<>();
-    // private final List<BLEScanResult> resultList = new ArrayList<>();
+    // private final List<BLEDiscoveryResult> resultList = new ArrayList<>();
     private final Handler handlerTimer = new Handler(Looper.getMainLooper());
     private int timeout = 0;
     private final Runnable runnableTimer = new Runnable() {
@@ -37,11 +37,6 @@ class BLEScannerDefault implements BLEScannerInterface {
     @Override
     public boolean isScanning() {
         return manager.isScanning();
-    }
-
-    @Override
-    public int scanningTimeout() {
-        return timeout;
     }
 
     @Override
@@ -69,7 +64,7 @@ class BLEScannerDefault implements BLEScannerInterface {
         //                        resultList.add(result);
         disposableBag.add(
                 manager.observables().observablePeripheralDiscovered().subscribe(
-                        channelScan::broadcast
+                        event -> channelScan.broadcast(new BLEScanResult(event.peripheral.address(), event.peripheral.name(), event.rssi))
                 ));
         channelActive.broadcast(true);
         for (String id : forceCancelIds) {

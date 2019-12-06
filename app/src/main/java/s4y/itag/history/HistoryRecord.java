@@ -26,7 +26,8 @@ import androidx.annotation.NonNull;
 import s4y.itag.BuildConfig;
 import s4y.itag.ITagApplication;
 import s4y.itag.R;
-import s4y.itag.ble.ITagGatt;
+import s4y.itag.ble.BLEConnectionState;
+import s4y.itag.itag.ITag;
 
 
 public final class HistoryRecord implements Serializable {
@@ -138,14 +139,12 @@ public final class HistoryRecord implements Serializable {
         private final Context context;
         private final LocationManager locationManager;
         private final String addr;
-        private final ITagGatt gatt;
         private final long ts;
 
-        public HistoryLocationListener(Context context, LocationManager locationManager, String addr, ITagGatt gatt) {
+        public HistoryLocationListener(Context context, LocationManager locationManager, String addr) {
             this.context = context;
             this.locationManager = locationManager;
             this.addr = addr;
-            this.gatt = gatt;
             this.ts = System.currentTimeMillis();
         }
 
@@ -156,7 +155,7 @@ public final class HistoryRecord implements Serializable {
             ITagApplication.faRemovedGpsRequestBySuccess();
             if (BuildConfig.DEBUG)
                 Log.d(LT, "GPS removeUpdates on location changed" + addr);
-            if (isListening && !gatt.isConnected() && location.getTime() < ts + LOCATION_TIMEOUT)
+            if (isListening && ITag.ble.connections().getStates().get(addr)== BLEConnectionState.connected && location.getTime() < ts + LOCATION_TIMEOUT)
                 add(context, new HistoryRecord(addr, location));
             ITagApplication.faGotGpsLocation();
         }
@@ -177,11 +176,9 @@ public final class HistoryRecord implements Serializable {
         }
     }
 
-    public static void add(final Context context, final ITagGatt gatt) {
-        if (gatt == null)
-            return;
+    public static void add(final Context context, String id) {
 
-        final String addr = gatt.mAddr;
+        final String addr = id;
         final LocationManager locationManager = (LocationManager) context
                 .getSystemService(Context.LOCATION_SERVICE);
 
@@ -224,7 +221,7 @@ public final class HistoryRecord implements Serializable {
 
         if (isGPSEnabled && !sLocationListeners.containsKey(addr) && !gotBestLocation) {
             LocationListener locationListener =
-                    new HistoryLocationListener(context, locationManager, addr, gatt);
+                    new HistoryLocationListener(context, locationManager, addr);
 
             try {
                 locationManager.requestLocationUpdates(

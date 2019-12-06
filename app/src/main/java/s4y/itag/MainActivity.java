@@ -4,20 +4,18 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.ActivityNotFoundException;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.preference.PreferenceManager;
+
+import androidx.preference.PreferenceManager;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
@@ -25,63 +23,35 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
-import s4y.itag.itag.ITagsService;
-import s4y.itag.itag.ITagsStoreDefault;
+import s4y.itag.itag.ITagInterface;
+import s4y.itag.itag.StoreOp;
+import s4y.itag.itag.TagColor;
 import s4y.rasat.DisposableBag;
+import s4y.rasat.Handler;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsGPSUpdater;
 
 public class MainActivity extends FragmentActivity implements
         LocationsGPSUpdater.RequestGPSPermissionListener {
+    static public final int REQUEST_ENABLE_BT = 1;
     static public final int REQUEST_ENABLE_LOCATION = 2;
-    public boolean mITagsServiceBound;
     public ITagsService iTagsService;
     public static boolean sIsShown = false;
     private static final String LT = MainActivity.class.getName();
 
     private final DisposableBag disposableBag = new DisposableBag();
-
-    public interface ServiceBoundListener {
-        void onBoundingChanged(@NonNull final MainActivity activity);
-    }
-
-    private static final List<ServiceBoundListener> mServiceBoundListeners =
-            new ArrayList<>(2);
-
-    public static void addServiceBoundListener(ServiceBoundListener listener) {
-        if (BuildConfig.DEBUG) {
-            if (mServiceBoundListeners.contains(listener)) {
-                ITagApplication.handleError(new Error("Add duplicate ITagChangeListener listener"));
-            }
-        }
-        mServiceBoundListeners.add(listener);
-    }
-
-    public static void removeServiceBoundListener(ServiceBoundListener listener) {
-        if (BuildConfig.DEBUG) {
-            if (!mServiceBoundListeners.contains(listener)) {
-                ITagApplication.handleError(new Error("Remove nonexisting ITagChangeListener listener"));
-            }
-        }
-        mServiceBoundListeners.remove(listener);
-    }
-
-    private void notifyServiceBoundChanged() {
-        for (ServiceBoundListener listener : mServiceBoundListeners) {
-            listener.onBoundingChanged(this);
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,11 +116,11 @@ public class MainActivity extends FragmentActivity implements
             }
         } else {
             setupProgressBar();
-            if (mBluetoothAdapter == null) {
+            if (ITag.ble.state() == BLEState.NO_ADAPTER) {
                 fragment = new NoBLEFragment();
                 mSelectedFragment = FragmentType.OTHER;
             } else {
-                if (mBluetoothAdapter.isEnabled()) {
+                if (ITag.ble.state() == BLEState.OK) {
                     setNotFirstLaunch();
                     mEnableAttempts = 0;
                     if (mSelectedFragment != FragmentType.ITAGS) {
@@ -158,8 +128,7 @@ public class MainActivity extends FragmentActivity implements
                         mSelectedFragment = FragmentType.ITAGS;
                     }
                 } else {
-                    if (mEnableAttempts < 3 && isFirstLaunch()) {
-                        mBluetoothAdapter.enable();
+                    if (mEnableAttempts < 60 && isFirstLaunch()) {
                         mEnableAttempts++;
                         if (BuildConfig.DEBUG) {
                             Log.d(LT, "setupContent BT disabled, enable attempt=" + mEnableAttempts);
@@ -167,6 +136,7 @@ public class MainActivity extends FragmentActivity implements
                         if (mEnableAttempts == 1) {
                             Toast.makeText(this, R.string.try_enable_bt, Toast.LENGTH_LONG).show();
                         }
+                        ITag.ble.enable();
                         try {
                             // A bit against rules but ok in this situation
                             Thread.sleep(500);
@@ -180,6 +150,10 @@ public class MainActivity extends FragmentActivity implements
                         }
                         fragment = new DisabledBLEFragment();
                         mSelectedFragment = FragmentType.OTHER;
+                        /*
+                        Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                        startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+                         */
                     }
                 }
             }
@@ -193,37 +167,12 @@ public class MainActivity extends FragmentActivity implements
 
     @Override
     public void onBackPressed() {
-        if (ITag.ble.scanner().isScanning() && mBluetoothAdapter != null) {
+        if (ITag.ble.scanner().isScanning()) {
             ITag.ble.scanner().stop();
         } else {
             super.onBackPressed();// your code.
         }
     }
-
-    @NonNull
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className,
-                                       @NonNull IBinder binder) {
-            setBinder(binder);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mITagsServiceBound = false;
-            notifyServiceBoundChanged();
-        }
-    };
-
-    protected void setBinder(@NonNull IBinder binder) {
-        iTagsService = ((ITagsService.GattBinder) binder).getService();
-        mITagsServiceBound = true;
-//            iTagsService.connectAll();
-        iTagsService.removeFromForeground();
-        setupContent();
-        notifyServiceBoundChanged();
-    }
-
 
     private boolean mHasFocus = false;
 
@@ -247,90 +196,55 @@ public class MainActivity extends FragmentActivity implements
         super.onResume();
         sIsShown = true;
         setupContent();
-        Intent intent = new Intent(this, ITagsService.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
         disposableBag.add(ITag.ble.scanner().observableScan().subscribe(
-                new Handler<BLEScanResult>() {
-                    @Override
-                    public void handle(BLEScanResult event) {
-                       // TODO:
-                    }
+                event -> {
+                    // TODO:
                 }
         ));
-        disposableBag.add(ITagsStoreDefault.)
-        LeScanner.addListener(this);
-        ITagsDb.addListener(this);
-        mIsServiceStartedUnbind = ITagsService.start(this, !mHasFocus);
-        // run the service on the activity start if there are remebered itags
+        disposableBag.add(ITag.store.observable().subscribe(new Handler<StoreOp>() {
+            @Override
+            public void handle(StoreOp event) {
+                switch (event.op) {
+                    case forget:
+                        break;
+                }
+            }
+        }));
     }
-
 
     @Override
     protected void onPause() {
+        disposableBag.dispose();
         sIsShown = false;
-        if (ITagsDb.getDevices(this).size() > 0) {
-            if (!mIsServiceStartedUnbind) {
-                ITagsService.start(this, true);
-            } else {
-                if (mITagsServiceBound) {
-                    iTagsService.addToForeground();
-                }
-            }
-        } else {
-            ITagsService.stop(this);
-        }
-        try {
-            unbindService(mConnection);
-        } catch (IllegalArgumentException e) {
-            ITagApplication.handleError(e, false);
-        }
-        ITagsDb.removeListener(this);
-        LeScanner.removeListener(this);
         super.onPause();
     }
 
-    public void onRemember(@NonNull View sender) {
-        BluetoothDevice device = (BluetoothDevice) sender.getTag();
-        if (device == null) {
-            ITagApplication.handleError(new Exception("No BLEDefault device"));
-            return;
-        }
-        if (!ITagsDb.has(device)) {
-            if (BuildConfig.DEBUG) {
-                if (mBluetoothAdapter == null) {
-                    ITagApplication.handleError(new Exception("onRemember mBluetoothAdapter=null"));
-                    return;
-                }
-            }
-            ITagsDb.remember(this, device);
-            LeScanner.stopScan(mBluetoothAdapter);
-        }
-    }
-
     public void onForget(@NonNull View sender) {
-        ITagDevice device = (ITagDevice) sender.getTag();
-        if (device == null) {
-            ITagApplication.handleError(new Exception("No device"));
+        String id = (String) sender.getTag();
+        if (id == null) {
+            ITagApplication.handleError(new Exception("No iTag ID to forget"), true);
             return;
         }
-        if (ITagsDb.has(device)) {
+        ITagInterface itag = ITag.store.byId(id);
+        if (itag != null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(R.string.confirm_forget)
                     .setTitle(R.string.confirm_title)
-                    .setPositiveButton(android.R.string.yes, (dialog, which) -> ITagsDb.forget(this, device))
+                    .setPositiveButton(android.R.string.yes, (dialog, which) -> ITag.store.forget(itag))
                     .setNegativeButton(android.R.string.no, (dialog, which) -> dialog.cancel())
                     .show();
         }
     }
 
     public void onLocationClick(@NonNull View sender) {
-        ITagDevice device = (ITagDevice) sender.getTag();
-        if (device == null) {
-            ITagApplication.handleError(new Exception("No device"));
+        String id = (String) sender.getTag();
+        if (id == null) {
+            ITagApplication.handleError(new Exception("No Tag ID onLocationClick"));
             return;
         }
 
-        HistoryRecord record = HistoryRecord.getHistoryRecords(this).get(device.addr);
+        HistoryRecord record = HistoryRecord.getHistoryRecords(this).get(id);
         if (record != null) {
             ITagApplication.faShowLastLocation();
             long ts;
@@ -374,49 +288,21 @@ public class MainActivity extends FragmentActivity implements
     }
 
     public void onITagClick(@NonNull View sender) {
-        if (!mITagsServiceBound)
-            return;
-        ITagDevice device = (ITagDevice) sender.getTag();
-        if (device == null) {
-            ITagApplication.handleError(new Exception("No device"));
+        String id = (String) sender.getTag();
+        if (id == null) {
+            ITagApplication.handleError(new Exception("No ID in onITagClick"));
             return;
         }
-        // NOTE: will reconnect if not connected
-        //       ergo error reset here
-        ITagGatt gatt = iTagsService.getGatt(device.addr, false);
-        boolean needNotify = true;
-        if (gatt.isFindingITag()) {
-            gatt.stopFindITag();
-            needNotify = false;
-        }
-        if (gatt.isError()) {
-            gatt.connect(this);
-            needNotify = false;
-        }
-        if (gatt.isFindingPhone()) {
-            gatt.stopFindPhone();
-        }
-        if (mITagsServiceBound && MediaPlayerUtils.getInstance().isSound()) {
+        if (MediaPlayerUtils.getInstance().isSound()) {
             MediaPlayerUtils.getInstance().stopSound(this);
-        }
-        if (needNotify) {
-            gatt.findITag();
-            // Toast.makeText(this, R.string.help_longpress, Toast.LENGTH_SHORT).show();
         }
     }
 
     public void onStartStopScan(View ignored) {
-        if (BuildConfig.DEBUG) {
-            if (mBluetoothAdapter == null) {
-                ITagApplication.handleError(new Exception("onStartStopScan mBluetoothAdapter=null"));
-                return;
-            }
-        }
-
-        if (LeScanner.isScanning) {
-            LeScanner.stopScan(mBluetoothAdapter);
+        if (ITag.ble.scanner().isScanning()) {
+            ITag.ble.scanner().start(ITag.SCAN_TIMEOUT, new String[]{});
         } else {
-            LeScanner.startScan(mBluetoothAdapter, this);
+            ITag.ble.scanner().stop();
         }
     }
 
@@ -428,7 +314,6 @@ public class MainActivity extends FragmentActivity implements
                 case R.id.exit:
                     SharedPreferences preferences = (getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
                     preferences.edit().putBoolean("loadOnBoot", false).apply();
-                    ITagsService.stop(this);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         finishAndRemoveTask();
                     } else {
@@ -442,8 +327,6 @@ public class MainActivity extends FragmentActivity implements
     }
 
     public void onWaytoday(@NonNull View sender) {
-        if (!mITagsServiceBound || iTagsService == null)
-            return;
         final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         String tid = sp.getString("tid", "");
         boolean on = sp.getBoolean("wt", false);
@@ -463,18 +346,18 @@ public class MainActivity extends FragmentActivity implements
             AlertDialog.Builder builder;
             switch (item.getItemId()) {
                 case R.id.wt_sec_1:
-                    iTagsService.startWayToday(1);
+                    // iTagsService.startWayToday(1);
                     ITagApplication.faWtOn1();
                     break;
                 case R.id.wt_min_5:
-                    iTagsService.startWayToday(300000);
+                    // iTagsService.startWayToday(300000);
                     break;
                 case R.id.wt_hour_1:
-                    iTagsService.startWayToday(3600000);
+                    // iTagsService.startWayToday(3600000);
                     ITagApplication.faWtOn300();
                     break;
                 case R.id.wt_off:
-                    iTagsService.stopWayToday();
+                    // iTagsService.stopWayToday();
                     ITagApplication.faWtOff();
                     break;
                 case R.id.wt_new_tid:
@@ -521,7 +404,7 @@ public class MainActivity extends FragmentActivity implements
                             .setMessage(R.string.disable_wt_msg)
                             .setPositiveButton(R.string.disable_wt_ok, (dialog, id) -> {
                                 ITagApplication.faWtRemove();
-                                iTagsService.stopWayToday();
+                                // iTagsService.stopWayToday();
                                 sp.edit().putBoolean("wt_disabled", true).apply();
                                 final View v = findViewById(R.id.btn_waytoday);
                                 if (v != null) {
@@ -541,9 +424,14 @@ public class MainActivity extends FragmentActivity implements
     }
 
     public void onChangeColor(@NonNull View sender) {
-        final ITagDevice device = (ITagDevice) sender.getTag();
-        if (device == null) {
-            ITagApplication.handleError(new Exception("No device"));
+        final String id = (String) sender.getTag();
+        if (id == null) {
+            ITagApplication.handleError(new Exception("No ID in onChangeColor"));
+            return;
+        }
+        ITagInterface itag = ITag.store.byId(id);
+        if (itag == null) {
+            ITagApplication.handleError(new Exception("No itag"));
             return;
         }
         final PopupMenu popupMenu = new PopupMenu(this, sender);
@@ -551,26 +439,24 @@ public class MainActivity extends FragmentActivity implements
         popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.black:
-                    device.color = ITagDevice.Color.BLACK;
+                    itag.setColor(TagColor.black);
                     break;
                 case R.id.white:
-                    device.color = ITagDevice.Color.WHITE;
+                    itag.setColor(TagColor.white);
                     break;
                 case R.id.red:
-                    device.color = ITagDevice.Color.RED;
+                    itag.setColor(TagColor.red);
                     break;
                 case R.id.green:
-                    device.color = ITagDevice.Color.GREEN;
+                    itag.setColor(TagColor.green);
                     break;
                 case R.id.gold:
-                    device.color = ITagDevice.Color.GOLD;
+                    itag.setColor(TagColor.gold);
                     break;
                 case R.id.blue:
-                    device.color = ITagDevice.Color.BLUE;
+                    itag.setColor(TagColor.blue);
                     break;
             }
-            ITagsDb.save(MainActivity.this);
-            ITagsDb.notifyChange();
             ITagApplication.faColorITag();
             return true;
         });
@@ -578,29 +464,51 @@ public class MainActivity extends FragmentActivity implements
     }
 
     public void onLink(@NonNull View sender) {
-        ITagDevice device = (ITagDevice) sender.getTag();
-        device.linked = !device.linked;
-        ITagsDb.save(MainActivity.this);
-        ITagsDb.notifyChange();
-        if (device.linked)
+        final String id = (String) sender.getTag();
+        if (id == null) {
+            ITagApplication.handleError(new Exception("No ID in onLink"));
+            return;
+        }
+        ITagInterface itag = ITag.store.byId(id);
+        if (itag == null) {
+            ITagApplication.handleError(new Exception("No itag"));
+            return;
+        }
+        itag.setAlertDisconnected(itag.isAlertDisconnected());
+        if (itag.isAlertDisconnected())
             ITagApplication.faUnmuteTag();
         else
             ITagApplication.faMuteTag();
-        if (mITagsServiceBound && MediaPlayerUtils.getInstance().isSound() && !device.linked) {
-            MediaPlayerUtils.getInstance().stopSound(this);
-        }
     }
 
 
     public void onSetName(@NonNull View sender) {
-        final ITagDevice device = (ITagDevice) sender.getTag();
-        if (device == null) {
-            ITagApplication.handleError(new Exception("No device"));
+        final String id = (String) sender.getTag();
+        if (id == null) {
+            ITagApplication.handleError(new Exception("No ID in onChangeColor"));
+            return;
+        }
+        ITagInterface itag = ITag.store.byId(id);
+        if (itag == null) {
+            ITagApplication.handleError(new Exception("No itag"));
             return;
         }
 
-        SetNameDialogFragment.device = device;
+        SetNameDialogFragment.iTag = itag;
         new SetNameDialogFragment().show(getSupportFragmentManager(), "setname");
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            //noinspection SwitchStatementWithTooFewBranches
+            switch (requestCode) {
+                case REQUEST_ENABLE_BT:
+                    setupContent();
+                    break;
+            }
+        }
     }
 
     /*
@@ -624,42 +532,6 @@ public class MainActivity extends FragmentActivity implements
 
         }
     */
-
-    @Override
-    public void onStartScan() {
-        setupContent();
-    }
-
-    @Override
-    public void onNewDeviceScanned(LeScanResult result) {
-        setupContent();
-    }
-
-    @Override
-    public void onTick(int tick, int max) {
-        setupProgressBar();
-    }
-
-    @Override
-    public void onStopScan() {
-        setupContent();
-    }
-
-
-    @Override
-    public void onDbChange() {
-        setupContent();
-    }
-
-    @Override
-    public void onDbAdd(ITagDevice device) {
-
-    }
-
-    @Override
-    public void onDbRemove(ITagDevice device) {
-
-    }
 
     public void onOpenBTSettings(View ignored) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);

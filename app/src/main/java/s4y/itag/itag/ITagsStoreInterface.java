@@ -16,6 +16,7 @@ public interface ITagsStoreInterface {
     @NonNull
     String[] forgottenIDs();
     void forget(@NonNull String id);
+    void forget(@NonNull ITagInterface tag);
     void remember(@NonNull ITagInterface tag);
     boolean remembered(@NonNull String id);
     void setAlert(@NonNull String id,boolean alert);

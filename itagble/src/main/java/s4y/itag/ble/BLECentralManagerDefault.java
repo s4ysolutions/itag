@@ -19,7 +19,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface {
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] data) {
             observables
                     .observablePeripheralDiscovered
-                    .broadcast(new BLEScanResult(
+                    .broadcast(new BLEDiscoveryResult(
                             new BLEPeripheralDefault(
                                     context,
                                     BLECentralManagerDefault.this,
@@ -59,6 +59,16 @@ class BLECentralManagerDefault implements BLECentralManagerInterface {
             return BLEState.OK;
         else
             return BLEState.NOT_ENABLED;
+    }
+
+    @Override
+    public BLEError enable() {
+        BluetoothAdapter adapter = getAdapter();
+        if (adapter == null) {
+            return BLEError.noAdapter;
+        }
+        adapter.enable();
+        return BLEError.ok;
     }
 
     private boolean isScanning = false;

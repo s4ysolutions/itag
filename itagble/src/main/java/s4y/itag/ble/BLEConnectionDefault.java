@@ -29,6 +29,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private final Channel<AlertVolume> immediateAlertUpdateNotificationChannel = new Channel<>(AlertVolume.NO_ALERT);
     private final Channel<Boolean> findMeChannel = new Channel<>(false);
     private final Channel<Boolean> lostChannel = new Channel<>(true);
+    private final Channel<Integer> rssiChannel = new Channel<>(0);
     @NonNull
     final private BLEFindMeControlInterface findMeControl;
 
@@ -80,7 +81,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                     .observableConnected()
                     .subscribe(event -> {
                         if (findMeCharacteristic() != null && peripheral != null) {
-                           peripheral.setNotify(findMeCharacteristic(), true);
+                            peripheral.setNotify(findMeCharacteristic(), true);
                         }
                         if (!lostChannel.observable.value()) {
                             lostChannel.broadcast(true);
@@ -92,6 +93,14 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                     .subscribe(event -> {
                         if (event.status != GATT_SUCCESS && lostChannel.observable.value()) {
                             lostChannel.broadcast(false);
+                        }
+                    }));
+            disposables.add(this.peripheral
+                    .observables()
+                    .observableRSSI()
+                    .subscribe(event -> {
+                        if (event.status == GATT_SUCCESS) {
+                            rssiChannel.broadcast(event.rssi);
                         }
                     }));
         }
@@ -347,6 +356,25 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
+    public void enableRSSI() {
+        if (peripheral != null) {
+            peripheral.enableRSSI();
+        }
+    }
+
+    @Override
+    public void disableRSSI() {
+        if (peripheral != null) {
+            peripheral.disableRSSI();
+        }
+    }
+
+    @Override
+    public boolean rssi() {
+        return peripheral != null && peripheral.rssi();
+    }
+
+    @Override
     public Observable<AlertVolume> observableImmediateAlert() {
         return immediateAlertUpdateNotificationChannel.observable;
     }
@@ -360,6 +388,9 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     public Observable<Boolean> observableLost() {
         return lostChannel.observable;
     }
+
+    @Override
+    public Observable<Integer> observableRSSI() { return rssiChannel.observable; }
 
     @Override
     public int getLastStatus() {

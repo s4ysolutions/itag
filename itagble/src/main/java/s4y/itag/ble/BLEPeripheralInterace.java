@@ -1,14 +1,19 @@
 package s4y.itag.ble;
 
-public interface BLEPeripheralInterace {
+interface BLEPeripheralInterace {
     String identifier();
+    String name();
+    String address();
+    BLEPeripheralState state();
+    BLEService[] services();
+
+    BLEPeripheralObservablesInterface observables();
+
     void connect();
     void disconnect();
     BLEError writeInt8(BLECharacteristic characteristic, int value);
     BLEError setNotify(BLECharacteristic characteristic, boolean enable);
-    BLEPeripheralState state();
-    BLEService[] services();
-    BLEPeripheralObservablesInterface observables();
-    String name();
-    String address();
+    void enableRSSI();
+    void disableRSSI();
+    boolean rssi();
 }

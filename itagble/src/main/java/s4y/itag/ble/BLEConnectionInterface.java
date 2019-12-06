@@ -6,6 +6,7 @@ interface BLEConnectionInterface {
     Observable<AlertVolume> observableImmediateAlert();
     Observable<Boolean> observableFindeMe();
     Observable<Boolean> observableLost();
+    Observable<Integer> observableRSSI();
 
     boolean isConnected();
     BLEError connect() throws InterruptedException;
@@ -14,5 +15,8 @@ interface BLEConnectionInterface {
     BLEError connect(int timeout) throws InterruptedException;
     BLEError writeImmediateAlert(AlertVolume volume, int timeout);
     BLEError writeImmediateAlert(AlertVolume volume);
+    void enableRSSI();
+    void disableRSSI();
+    boolean rssi();
     int getLastStatus();
 }

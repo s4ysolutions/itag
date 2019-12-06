@@ -39,6 +39,22 @@ class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsCo
     }
 
     @Override
+    public void enableRSSI(String id) {
+        BLEConnectionInterface connection = store.get(id);
+        if (connection != null) {
+            connection.enableRSSI();
+        }
+    }
+
+    @Override
+    public void disableRSSI(String id) {
+        BLEConnectionInterface connection = store.get(id);
+        if (connection != null) {
+            connection.disableRSSI();
+        }
+    }
+
+    @Override
     public void disconnect(String id) {
         BLEConnectionInterface connection = store.getOrMake(id);
         connection.disconnect();

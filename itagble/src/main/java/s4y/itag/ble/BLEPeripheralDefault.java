@@ -3,7 +3,6 @@ package s4y.itag.ble;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
@@ -87,7 +86,6 @@ class BLEPeripheralDefault implements BLEPeripheralInterace, AutoCloseable {
                                 () -> observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(status))
                         );
                     }
-                    ;
                 }
             } else {
                 close();
@@ -131,6 +129,15 @@ class BLEPeripheralDefault implements BLEPeripheralInterace, AutoCloseable {
                         setState(BLEPeripheralState.connected);
                         observables.channelDiscoveredServices.broadcast(new BLEPeripheralObservablesInterface.DiscoveredServicesEvent(services, status));
                     }
+            );
+        }
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            handler.post(
+                    () -> observables.channelRSSI.broadcast(
+                            new BLEPeripheralObservablesInterface.RSSIEvent(rssi, status)
+                    )
             );
         }
     };
@@ -243,16 +250,49 @@ class BLEPeripheralDefault implements BLEPeripheralInterace, AutoCloseable {
         g.close();
     }
 
+    private static final int RSSI_INTERVAL_MS = 1000;
+
+    @NonNull
+    private Runnable mRssiRunable = new Runnable() {
+        @Override
+        public void run() {
+            if (state() == BLEPeripheralState.connected) { // https://github.com/s4ysolutions/itag/issues/14
+                gatt.readRemoteRssi();
+            }
+            handler.postDelayed(this, RSSI_INTERVAL_MS );
+        }
+    };
+
+    private int rssiCount = 0;
+    @Override
+    public void enableRSSI() {
+       rssiCount++;
+       if (rssiCount == 1) {
+           handler.post(mRssiRunable);
+       }
+    }
+
+    @Override
+    public void disableRSSI() {
+        if (rssiCount > 0) {
+            rssiCount--;
+            handler.removeCallbacks(mRssiRunable);
+        }
+    }
+
     public BLEService[] services() {
         return services;
     }
 
     public String name() {
-       return device.getName();
+        return device.getName();
     }
 
     public String address() {
         return device.getAddress();
     }
 
+    public boolean rssi(){
+        return rssiCount > 0;
+    };
 }

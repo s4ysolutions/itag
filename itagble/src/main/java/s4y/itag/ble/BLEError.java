@@ -4,7 +4,7 @@ enum BLEError {
     ok,
     timeout,
     noPeripheral,
-    noManager,
+    noAdapter,
     noGatt,
     notConnected,
     noImmediateAlertCharacteristic,

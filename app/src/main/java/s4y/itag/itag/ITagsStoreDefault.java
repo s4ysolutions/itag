@@ -25,7 +25,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
 
     private final Channel<StoreOp> channel = new Channel<>();
 
-    public ITagsStoreDefault(Context context) {
+    ITagsStoreDefault(Context context) {
         this.context = context;
         this.ble = BLEDefault.shared(context);
         ids = new PreferenceIDs(context).get();
@@ -102,6 +102,11 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
+    public void forget(@NonNull ITagInterface tag) {
+       forget(tag.id());
+    }
+
+    @Override
     public void remember(@NonNull ITagInterface tag) {
         if (!ids.contains(tag.id())) {
             ids.add(tag.id());
@@ -135,7 +140,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
         if (tag == null) {
             return;
         }
-        tag.setAlerting(alert);
+        tag.setAlertDisconnected(alert);
         new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
     }
