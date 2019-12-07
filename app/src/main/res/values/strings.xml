@@ -22,6 +22,7 @@
     <string name="scanning">Scanning for iTags&#8230;</string>
     <string name="scanning_new">Scanning for new iTags&#8230;</string>
     <string name="scanning_more">Scanning for more iTags&#8230;</string>
+    <string name="scanning_stopped">Scanning finished</string>
 
     <string name="color">Change iTag color</string>
     <string name="color_label">Color</string>

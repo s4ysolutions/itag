@@ -14,6 +14,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.preference.PreferenceManager;
 
 import android.util.Log;
@@ -41,10 +43,8 @@ import s4y.itag.itag.TagColor;
 import s4y.rasat.DisposableBag;
 import s4y.rasat.Handler;
 import s4y.waytoday.idservice.IDService;
-import s4y.waytoday.locations.LocationsGPSUpdater;
 
-public class MainActivity extends FragmentActivity implements
-        LocationsGPSUpdater.RequestGPSPermissionListener {
+public class MainActivity extends FragmentActivity {
     static public final int REQUEST_ENABLE_BT = 1;
     static public final int REQUEST_ENABLE_LOCATION = 2;
     public ITagsService iTagsService;
@@ -79,7 +79,6 @@ public class MainActivity extends FragmentActivity implements
             pb.setVisibility(View.GONE);
         }
     }
-
 
     private enum FragmentType {
         OTHER,
@@ -150,10 +149,6 @@ public class MainActivity extends FragmentActivity implements
                         }
                         fragment = new DisabledBLEFragment();
                         mSelectedFragment = FragmentType.OTHER;
-                        /*
-                        Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                        startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-                         */
                     }
                 }
             }
@@ -197,9 +192,15 @@ public class MainActivity extends FragmentActivity implements
         sIsShown = true;
         setupContent();
         disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
-        disposableBag.add(ITag.ble.scanner().observableScan().subscribe(
+        disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
                 event -> {
-                    // TODO:
+                    setupContent();
+                    setupProgressBar();
+                }
+        ));
+        disposableBag.add(ITag.ble.scanner().observableTimer().subscribe(
+                event -> {
+                    setupProgressBar();
                 }
         ));
         disposableBag.add(ITag.store.observable().subscribe(new Handler<StoreOp>() {
@@ -300,9 +301,26 @@ public class MainActivity extends FragmentActivity implements
 
     public void onStartStopScan(View ignored) {
         if (ITag.ble.scanner().isScanning()) {
-            ITag.ble.scanner().start(ITag.SCAN_TIMEOUT, new String[]{});
-        } else {
             ITag.ble.scanner().stop();
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setMessage(R.string.request_location_permission)
+                                .setTitle(R.string.request_permission_title)
+                                .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
+                                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
+                                .show();
+                        return;
+                    } else {
+                        // isScanRequestAbortedBecauseOfPermission=true;
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
+                        return;
+                    }
+                }
+            }
+            ITag.ble.scanner().start(ITag.SCAN_TIMEOUT, new String[]{});
         }
     }
 
@@ -511,27 +529,19 @@ public class MainActivity extends FragmentActivity implements
         }
     }
 
-    /*
-    1. do not want to use appcompat
-    2. v28 of appcompat is not compatible with com.google.firebase:firebase-core:16.0.4
-        @Override
-        protected void onRequestPermissionsResult(int requestCode, int resultCode, Intent data) {
-            super.onActivityResult(requestCode, resultCode, data);
-            if (resultCode == RESULT_OK) {
-                switch (requestCode) {
-                    case REQUEST_ENABLE_BT:
-                        setupContent();
-                        break;
-                    case REQUEST_ENABLE_LOCATION:
-                        if (LeScanner.isScanRequestAbortedBecauseOfPermission && mBluetoothAdapter != null) {
-                            LeScanner.startScan(mBluetoothAdapter, this);
-                        }
-                        break;
-                }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            switch (requestCode) {
+                case REQUEST_ENABLE_BT:
+                    setupContent();
+                    break;
+                case REQUEST_ENABLE_LOCATION:
+                    onStartStopScan(null);
+                    break;
             }
-
         }
-    */
+    }
 
     public void onOpenBTSettings(View ignored) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -542,22 +552,5 @@ public class MainActivity extends FragmentActivity implements
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         //No call for super(). Bug on API Level > 11. issue #54
-    }
-
-    @Override
-    public void onGPSPermissionRequest() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage(R.string.request_location_permission)
-                        .setTitle(R.string.request_permission_title)
-                        .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
-                        .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
-                        .show();
-            } else {
-                // isScanRequestAbortedBecauseOfPermission=true;
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
-            }
-        }
     }
 }

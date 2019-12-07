@@ -80,4 +80,5 @@
     <string name="disable_wt_ok">تعطيل Way.Today</string>
     <string name="gold">ذهبي</string>
     <string name="unknown">غير مسمى</string>
+    <string name="scanning_stopped">تم الانتهاء</string>
 </resources>

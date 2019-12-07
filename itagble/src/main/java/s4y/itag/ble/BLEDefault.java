@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import androidx.annotation.NonNull;
 
 import s4y.rasat.Channel;
+import s4y.rasat.ChannelDistinct;
 import s4y.rasat.Observable;
 
 public class BLEDefault implements BLEInterface {
@@ -38,7 +39,7 @@ public class BLEDefault implements BLEInterface {
     private final BLEAlertInterface alert;
     private final BLEFindMeInterface findMe;
     private final BLEScannerInterface scanner;
-    private final Channel<BLEState> channelState = new Channel<>();
+    private final ChannelDistinct<BLEState> channelState;
     private final Context context;
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
         @Override
@@ -65,6 +66,7 @@ public class BLEDefault implements BLEInterface {
             BLEConnectionsStoreFactoryInterface storeFactory
     ) {
         this.manager = manager;
+        this.channelState = new ChannelDistinct<>(manager.state());
         BLEFindMeControlInterface findMeControl = findMeControlFactory.findMeControll(findMe);
         final BLEConnectionsStoreInterface store = storeFactory.store(connectionFactory, findMeControl, manager);
         this.connections = connectionsFactory.connections(store);

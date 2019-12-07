@@ -176,12 +176,16 @@ public class LeScanFragment extends Fragment {
         final ListView listView = root.findViewById(R.id.results_list);
         final Adapter adapter = ((Adapter) (listView.getAdapter()));
         final TextView tv = root.findViewById(R.id.text_scanning);
-        if (adapter.getCount() > 0) {
-            tv.setText(R.string.scanning_more);
-        } else if (ITag.store.count() > 0) {
-            tv.setText(R.string.scanning_new);
-        } else {
-            tv.setText(R.string.scanning);
+        if (ITag.ble.scanner().observableTimer().value() > 0) {
+            if (adapter.getCount() > 0) {
+                tv.setText(R.string.scanning_more);
+            } else if (ITag.store.count() > 0) {
+                tv.setText(R.string.scanning_new);
+            } else {
+                tv.setText(R.string.scanning);
+            }
+        }else{
+            tv.setText(R.string.scanning_stopped);
         }
     }
 }

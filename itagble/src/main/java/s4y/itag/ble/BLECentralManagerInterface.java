@@ -1,6 +1,7 @@
 package s4y.itag.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 
 import androidx.annotation.NonNull;
 
@@ -16,4 +17,8 @@ interface BLECentralManagerInterface {
     boolean connected(BluetoothDevice device);
 
     BLECentralManagerObservablesInterface observables();
+
+    void postOperation(Runnable runnable);
+    void postOperation(Runnable runnable, long delay);
+    void cancelOperation(Runnable runnable);
 }

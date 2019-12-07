@@ -1,28 +1,35 @@
 package s4y.itag.ble;
 
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 
 import s4y.rasat.Channel;
+import s4y.rasat.ChannelDistinct;
 import s4y.rasat.DisposableBag;
 import s4y.rasat.Observable;
 
 class BLEScannerDefault implements BLEScannerInterface {
     private final BLECentralManagerInterface manager;
     private final BLEConnectionsInterface connections;
-    private final Channel<Integer> channelTimer = new Channel<>();
-    private final Channel<Boolean> channelActive = new Channel<>();
+    private final Channel<Integer> channelTimer = new Channel<>(0);
+    private final Channel<Boolean> channelActive = new ChannelDistinct<>(false);
     private final Channel<BLEScanResult> channelScan = new Channel<>();
     // private final List<BLEDiscoveryResult> resultList = new ArrayList<>();
     private final Handler handlerTimer = new Handler(Looper.getMainLooper());
+    private Handler handlerStart;
     private int timeout = 0;
     private final Runnable runnableTimer = new Runnable() {
         @Override
         public void run() {
-            timeout--;
             channelTimer.broadcast(timeout);
-            if (timeout <= 0) {
-                handlerTimer.removeCallbacks(this);
+            timeout--;
+            if (timeout < 0) {
+                if (handlerStart == null) {
+                    stop();
+                } else {
+                    handlerStart.post(() -> stop());
+                }
             } else {
                 handlerTimer.postDelayed(this, 1000);
             }
@@ -58,6 +65,12 @@ class BLEScannerDefault implements BLEScannerInterface {
 
     @Override
     public void start(int timeout, String[] forceCancelIds) {
+        Thread thread = Thread.currentThread();
+        if (thread instanceof HandlerThread) {
+            handlerStart = new Handler(((HandlerThread) Thread.currentThread()).getLooper());
+        } else {
+            handlerStart = null;
+        }
         stop();
         if (!manager.canScan())
             return;
@@ -66,18 +79,19 @@ class BLEScannerDefault implements BLEScannerInterface {
                 manager.observables().observablePeripheralDiscovered().subscribe(
                         event -> channelScan.broadcast(new BLEScanResult(event.peripheral.address(), event.peripheral.name(), event.rssi))
                 ));
-        channelActive.broadcast(true);
         for (String id : forceCancelIds) {
             connections.disconnect(id);
         }
         this.timeout = timeout;
         manager.scanForPeripherals();
-        handlerTimer.postDelayed(runnableTimer, 1000);
+        handlerTimer.post(runnableTimer);
+        channelActive.broadcast(true);
     }
 
     @Override
     public void stop() {
         handlerTimer.removeCallbacks(runnableTimer);
+        handlerStart = null;
         manager.stopScan();
      //   resultList.clear();
         disposableBag.dispose();

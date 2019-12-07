@@ -17,7 +17,7 @@
     <string name="manage_alert">Разрешить звуковой сигнал при утере брелка</string>
     <string name="scanning">Поиск брелков&#8230;</string>
     <string name="scanning_new">Поиск новых брелков &#8230;</string>
-    <string name="scanning_more">Продолжить поиск брелков&#8230;</string>
+    <string name="scanning_more">Поиск брелков&#8230;</string>
     <string name="color">Сменить цвет брелка</string>
     <string name="color_label">Цвет</string>
     <string name="start_scan">Поиск устройства</string>
@@ -80,4 +80,5 @@
     <string name="disable_wt_ok">Удалить Простопуть.рф</string>
     <string name="gold">Золотистый</string>
     <string name="unknown">Без имени</string>
+    <string name="scanning_stopped">Поиск завершен</string>
 </resources>

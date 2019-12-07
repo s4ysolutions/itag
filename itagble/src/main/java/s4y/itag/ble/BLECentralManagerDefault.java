@@ -4,19 +4,28 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 
-class BLECentralManagerDefault implements BLECentralManagerInterface {
+class BLECentralManagerDefault implements BLECentralManagerInterface, AutoCloseable {
+    private static final String L = BLECentralManagerDefault.class.getName();
     private final Context context;
-    private final BLECentralManagerObservables observables = new BLECentralManagerObservables();
+    private final HandlerThread operationsThread = new HandlerThread("BLE Central Manager operations");
+    private final Handler operationsHandler;
 
+    private final BLECentralManagerObservables observables = new BLECentralManagerObservables();
     private final BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] data) {
+            if (BuildConfig.DEBUG) {
+                Log.d(L,"onLeScan address="+bluetoothDevice.getAddress()+" rsss="+String.valueOf(rssi));
+            }
             observables
                     .observablePeripheralDiscovered
                     .broadcast(new BLEDiscoveryResult(
@@ -32,6 +41,8 @@ class BLECentralManagerDefault implements BLECentralManagerInterface {
 
     BLECentralManagerDefault(Context context) {
         this.context = context;
+        operationsThread.start();
+        operationsHandler = new Handler(operationsThread.getLooper());
     }
 
     private BluetoothManager getManager() {
@@ -73,24 +84,28 @@ class BLECentralManagerDefault implements BLECentralManagerInterface {
 
     private boolean isScanning = false;
 
+    private boolean isScanning(BluetoothAdapter adapter) {
+        return  adapter != null && isScanning;
+    }
+
     public boolean isScanning() {
-        return isScanning;
+        BluetoothAdapter adapter = getAdapter();
+        return  adapter != null && isScanning;
     }
 
     public void scanForPeripherals() {
-        if (isScanning) {
-            stopScan();
-        }
         BluetoothAdapter adapter = getAdapter();
         if (adapter != null) {
-            adapter.startLeScan(leScanCallback);
-            isScanning = true;
+            if (!isScanning(adapter)) {
+                adapter.startLeScan(leScanCallback);
+                isScanning = true;
+            }
         }
     }
 
     public void stopScan() {
         BluetoothAdapter adapter = getAdapter();
-        if (adapter != null) {
+        if (isScanning(adapter)) {
             adapter.stopLeScan(leScanCallback);
             isScanning = false;
         }
@@ -116,4 +131,23 @@ class BLECentralManagerDefault implements BLECentralManagerInterface {
         return observables;
     }
 
+    @Override
+    public void postOperation(Runnable runnable) {
+        operationsHandler.post(runnable);
+    }
+
+    @Override
+    public void postOperation(Runnable runnable, long delay) {
+        operationsHandler.postDelayed(runnable, delay);
+    }
+
+    @Override
+    public void cancelOperation(Runnable runnable) {
+        operationsHandler.removeCallbacks(runnable);
+    }
+
+    @Override
+    public void close() {
+        operationsThread.quit();
+    }
 }
