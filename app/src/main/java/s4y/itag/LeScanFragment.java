@@ -16,6 +16,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import s4y.itag.ble.BLEScanResult;
 import s4y.itag.itag.ITag;
@@ -26,6 +28,7 @@ import s4y.rasat.DisposableBag;
  */
 public class LeScanFragment extends Fragment {
     private final DisposableBag disposableBag = new DisposableBag();
+    private final Map<String, Integer> id2rssi = new HashMap<>();
 
     private class Adapter extends ArrayAdapter<BLEScanResult> {
         Adapter() {
@@ -57,8 +60,9 @@ public class LeScanFragment extends Fragment {
                 if (result == null) {
                     continue;
                 }
-                if (addr.equals(result.name)) {
-                    int rssi = result.rssi;
+                if (addr.equals(result.id)) {
+                    Integer rssiLast = id2rssi.get(result.id);
+                    int rssi = rssiLast == null  ? result.rssi : rssiLast;
                     rssiView.setRssi(rssi);
                     if (getActivity() != null && isAdded()) {
                         // issue #38 Fragment not attached to Activity
@@ -105,7 +109,7 @@ public class LeScanFragment extends Fragment {
         return root.findViewById(R.id.results_list);
     }
 
-    private Adapter adapter(ListView listView){
+    private Adapter adapter(ListView listView) {
         if (listView == null) {
             return null;
         }
@@ -128,17 +132,21 @@ public class LeScanFragment extends Fragment {
                         return;
                     }
 
-                    for (int i=0; i < adapter.getCount(); i++){
+                    boolean found = false;
+                    for (int i = 0; i < adapter.getCount(); i++) {
                         BLEScanResult a = adapter.getItem(i);
                         if (a == null) {
                             return;
                         }
-
                         if (a.id.equals(result.id)) {
-                           return;
+                            id2rssi.put(a.id, result.rssi);
+                            found = true;
+                            break;
                         }
                     }
-                    adapter.add(result);
+                    if (!found) {
+                        adapter.add(result);
+                    }
                     adapter.notifyDataSetChanged();
                     updateResultsList();
                 })
@@ -184,7 +192,7 @@ public class LeScanFragment extends Fragment {
             } else {
                 tv.setText(R.string.scanning);
             }
-        }else{
+        } else {
             tv.setText(R.string.scanning_stopped);
         }
     }
