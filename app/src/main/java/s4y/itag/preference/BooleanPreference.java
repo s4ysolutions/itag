@@ -5,14 +5,14 @@ import android.content.SharedPreferences;
 
 import androidx.preference.PreferenceManager;
 
-public abstract class BooleanPreference {
+public class BooleanPreference {
     private final SharedPreferences preferences;
     private final String key;
     private final boolean defaultValue;
 
-    protected BooleanPreference(Context context,
-                                String key,
-                                boolean defaultValue) {
+    public BooleanPreference(Context context,
+                             String key,
+                             boolean defaultValue) {
         this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
         this.key = key;
         this.defaultValue = defaultValue;

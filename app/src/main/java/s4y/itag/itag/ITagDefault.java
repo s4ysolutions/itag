@@ -9,6 +9,7 @@ import java.util.Map;
 
 import s4y.itag.ITagApplication;
 import s4y.itag.R;
+import s4y.itag.ble.BLEScanResult;
 
 public class ITagDefault implements ITagInterface, Serializable {
 private static final long serialVersionUID = 1575220516;
@@ -21,12 +22,16 @@ private static final long serialVersionUID = 1575220516;
     private boolean alert;
     private int alertDelay;
 
-    private ITagDefault(@NonNull String id, @Nullable String name, @Nullable TagColor color, @Nullable Boolean alert, @Nullable Integer alertDelay) {
+    public ITagDefault(@NonNull String id, @Nullable String name, @Nullable TagColor color, @Nullable Boolean alert, @Nullable Integer alertDelay) {
         this.id = id;
         this.name = name == null ? ITagApplication.context.getString(R.string.unknown):name;
         this.color = color == null? TagColor.black : color;
         this.alert = alert == null ? false : alert;
         this.alertDelay = alertDelay == null ? 7: alertDelay;
+    }
+
+    public ITagDefault(@NonNull BLEScanResult scanResult) {
+        this(scanResult.id, scanResult.name, null, null, null);
     }
 
     public ITagDefault(@NonNull String id, Map<String, Object> dict) {

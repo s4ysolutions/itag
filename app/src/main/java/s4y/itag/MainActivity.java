@@ -34,9 +34,11 @@ import androidx.fragment.app.FragmentTransaction;
 import java.util.List;
 import java.util.Locale;
 
+import s4y.itag.ble.BLEScanResult;
 import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
+import s4y.itag.itag.ITagDefault;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.StoreOp;
 import s4y.itag.itag.TagColor;
@@ -89,6 +91,41 @@ public class MainActivity extends FragmentActivity {
     private FragmentType mSelectedFragment;
 
     private int mEnableAttempts = 0;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sIsShown = true;
+        setupContent();
+        disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
+        disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
+                event -> {
+                    setupContent();
+                    setupProgressBar();
+                }
+        ));
+        disposableBag.add(ITag.ble.scanner().observableTimer().subscribe(
+                event -> {
+                    setupProgressBar();
+                }
+        ));
+        disposableBag.add(ITag.store.observable().subscribe(new Handler<StoreOp>() {
+            @Override
+            public void handle(StoreOp event) {
+                switch (event.op) {
+                    case forget:
+                        break;
+                }
+            }
+        }));
+    }
+
+    @Override
+    protected void onPause() {
+        disposableBag.dispose();
+        sIsShown = false;
+        super.onPause();
+    }
 
     private boolean isFirstLaunch() {
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
@@ -176,49 +213,21 @@ public class MainActivity extends FragmentActivity {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus != mHasFocus) {
             mHasFocus = hasFocus;
-            if (mIsServiceStartedUnbind) {
-                if (mHasFocus && iTagsService != null) {
-                    iTagsService.removeFromForeground();
-                }
+            if (mHasFocus && iTagsService != null) {
+                iTagsService.removeFromForeground();
             }
         }
     }
 
-    private boolean mIsServiceStartedUnbind;
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        sIsShown = true;
-        setupContent();
-        disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
-        disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
-                event -> {
-                    setupContent();
-                    setupProgressBar();
-                }
-        ));
-        disposableBag.add(ITag.ble.scanner().observableTimer().subscribe(
-                event -> {
-                    setupProgressBar();
-                }
-        ));
-        disposableBag.add(ITag.store.observable().subscribe(new Handler<StoreOp>() {
-            @Override
-            public void handle(StoreOp event) {
-                switch (event.op) {
-                    case forget:
-                        break;
-                }
-            }
-        }));
-    }
-
-    @Override
-    protected void onPause() {
-        disposableBag.dispose();
-        sIsShown = false;
-        super.onPause();
+    public void onRemember(@NonNull View sender) {
+        BLEScanResult scanResult = (BLEScanResult) sender.getTag();
+        if (scanResult == null) {
+            ITagApplication.handleError(new Exception("No Scan Result to Remember"), true);
+            return;
+        }
+        if (ITag.store.byId(scanResult.id) == null) {
+            ITag.store.remember(new ITagDefault(scanResult));
+        }
     }
 
     public void onForget(@NonNull View sender) {
@@ -498,7 +507,6 @@ public class MainActivity extends FragmentActivity {
         else
             ITagApplication.faMuteTag();
     }
-
 
     public void onSetName(@NonNull View sender) {
         final String id = (String) sender.getTag();

@@ -2,9 +2,9 @@ package s4y.itag.itag;
 
 public enum  TagColor {
     black,
-    blue,
+    white,
+    red,
     gold,
     green,
-    red,
-    white
+    blue,
 }

@@ -78,7 +78,7 @@ public class LeScanFragment extends Fragment {
 
 
             ImageView btn = convertView.findViewById(R.id.btn_connect);
-            btn.setTag(r.id);
+            btn.setTag(r);
 
             if (position % 2 == 1) {
                 convertView.findViewById(R.id.item_root).setBackgroundColor(0xffe0e0e0);

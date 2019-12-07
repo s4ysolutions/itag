@@ -11,14 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import s4y.itag.ble.BLEDefault;
-import s4y.itag.ble.BLEInterface;
+import s4y.itag.preference.BooleanPreference;
 import s4y.rasat.Channel;
 import s4y.rasat.Observable;
 
 public class ITagsStoreDefault implements ITagsStoreInterface {
     private final Context context;
-    private final BLEInterface ble;
     private final List<String> ids;
     private final Set<String> idsForever;
     private final Map<String, ITagInterface> tags = new HashMap<>();
@@ -27,7 +25,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
 
     ITagsStoreDefault(Context context) {
         this.context = context;
-        this.ble = BLEDefault.shared(context);
+
         ids = new PreferenceIDs(context).get();
         idsForever = new PreferenceIDsForever(context).get();
 
@@ -36,6 +34,19 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
             ITagInterface tag = new PreferenceTagDefault(context, id).get();
             if (tag != null) {
                 tags.put(id, tag);
+            }
+        }
+
+        if (ids.size() == 0) {
+            BooleanPreference prefUpgradeDone = new BooleanPreference(context, "upgradeDone", false);
+            if (!prefUpgradeDone.get()) {
+                List<ITagInterface> itags = ITagFileStore.load(context);
+                if (itags.size() > 0) {
+                    for (ITagInterface itag: itags) {
+                        remember(itag);
+                    }
+                }
+                prefUpgradeDone.set(true);
             }
         }
     }
@@ -103,7 +114,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
 
     @Override
     public void forget(@NonNull ITagInterface tag) {
-       forget(tag.id());
+        forget(tag.id());
     }
 
     @Override
@@ -172,11 +183,11 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
         for (ITagInterface tag : tags.values()) {
             new Thread(() -> {
                 try {
-                    ble.connections().connect(tag.id());
+                    ITag.ble.connections().connect(tag.id());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            },"BLEDefault Connect "+tag.id()+"-"+System.currentTimeMillis()).start();
+            }, "BLEDefault Connect " + tag.id() + "-" + System.currentTimeMillis()).start();
         }
     }
 
@@ -184,7 +195,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     public void stopAlertAll() {
         for (ITagInterface tag : tags.values()) {
             if (tag.isAlertDisconnected()) {
-                ITag.handler.post(() -> ble.alert().stopAlert(tag.id(), ITag.BLE_TIMEOUT));
+                ITag.handler.post(() -> ITag.ble.alert().stopAlert(tag.id(), ITag.BLE_TIMEOUT));
             }
         }
     }
