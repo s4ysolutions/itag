@@ -23,6 +23,4 @@ public interface ITagsStoreInterface {
     void setAlert(@NonNull String id,boolean alert);
     void setColor(@NonNull String id,@NonNull TagColor color);
     void setName(@NonNull String id,String name);
-    void connectAll();
-    void stopAlertAll();
 }

@@ -1,17 +1,21 @@
 package s4y.itag.ble;
 
+import android.os.Build;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.UUID;
 
-import s4y.rasat.Channel;
+import s4y.rasat.android.Channel;
 import s4y.rasat.DisposableBag;
 import s4y.rasat.Observable;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 class BLEConnectionDefault implements BLEConnectionInterface {
+    @SuppressWarnings("unused")
+    private static final String LT = BLEConnectionDefault.class.getName();
     private static final UUID IMMEDIATE_ALERT_SERVICE = UUID.fromString("00001802-0000-1000-8000-00805f9b34fb");
     private static final UUID FINDME_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
     private static final UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
@@ -30,6 +34,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private final Channel<Boolean> findMeChannel = new Channel<>(false);
     private final Channel<Boolean> lostChannel = new Channel<>(true);
     private final Channel<Integer> rssiChannel = new Channel<>(0);
+
     @NonNull
     final private BLEFindMeControlInterface findMeControl;
 
@@ -58,6 +63,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private void setPeripheral(@Nullable BLEPeripheralInterace peripheral) {
         this.peripheral = peripheral;
         disposables.dispose();
+        // TODO: memory leak on destruct?
         if (this.peripheral != null) {
             disposables.add(this.peripheral
                     .observables()
@@ -109,7 +115,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     @Override
     public boolean isConnected() {
-        return peripheral != null && peripheral.state() == BLEPeripheralState.connected;
+        return peripheral != null && !BLEPeripheralState.disconnected.equals(peripheral.state());
     }
 
     private BLEService immediateAlertService() {
@@ -156,16 +162,16 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     private void assertPeripheral() {
         if (peripheral == null) {
-            peripheral = manager.retrievePeripheral(id);
+            setPeripheral(manager.retrievePeripheral(id));
         }
     }
 
     private final ThreadWait<Integer> monitorDisconnect = new ThreadWait<>();
-    private final ThreadWait<BLEPeripheralInterace> monitorScan = new ThreadWait<>();
+    private final ThreadWait<Integer> monitorDiscovery = new ThreadWait<>();
     private final ThreadWait<Integer> monitorCharacteristicWrite = new ThreadWait<>();
-
     private final ThreadWait<Integer> monitorConnect = new ThreadWait<>();
 
+    @SuppressWarnings("UnusedReturnValue")
     private BLEError waitForConnect(int timeoutSec) {
         if (peripheral == null)
             return BLEError.noPeripheral;
@@ -175,31 +181,72 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         }
 
         try (DisposableBag disposables = new DisposableBag()) {
+            int connectingCount = 0;
+            boolean completed = false;
+            do {
+                disposables.add(
+                        peripheral.observables()
+                                .observableConnected() // SUCCESS (if status ok)
+                                .subscribe((event) -> {
+                                    monitorConnect.setPayload(GATT_SUCCESS);
+                                })
+                );
+                disposables.add(
+                        peripheral.observables()
+                                .observableConnectionFailed() //FAILED during connection
+                                .subscribe((event) -> monitorConnect.setPayload(event.status))
+                );
+                monitorConnect.waitFor(() -> peripheral.connect(), timeoutSec);
+                disposables.dispose();
+                if (monitorConnect.isTimedOut()) {
+                    return BLEError.timeout;
+                }
+                if (isConnected()) {
+                    completed = true;
+                } else {
+                    lastStatus = monitorConnect.payload();
+                    if (lastStatus == 133 && connectingCount++ < 3) {
+                        try {
+                            // wait after close and make another attempt
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                    } else {
+                        return BLEError.badStatus;
+                    }
+                }
+            } while (!completed);
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+                try {
+                    // wait before discovery a bit
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             disposables.add(
                     peripheral.observables()
-                            .observableDiscoveredServices() // SUCCESS (if status ok)
-                            .subscribe((event) -> monitorConnect.setPayload(event.status))
+                            .observableDiscoveredServices()
+                            .subscribe(event -> {
+                                monitorDiscovery.setPayload(event.status);
+                            }
+                            )
             );
-            disposables.add(
-                    peripheral.observables()
-                            .observableConnectionFailed() //FAILED during connection
-                            .subscribe((event) -> monitorConnect.setPayload(event.status))
-            );
-            monitorConnect.waitFor(() -> peripheral.connect(), timeoutSec);
-            if (monitorConnect.isTimedOut()) {
+
+            monitorDiscovery.waitFor(() -> peripheral.discoveryServices(), 15);
+            if (monitorDiscovery.isTimedOut()) {
                 return BLEError.timeout;
             }
-            if (isConnected()) {
-                lastStatus = GATT_SUCCESS;
-                return BLEError.ok;
-            } else {
-                lastStatus = monitorConnect.payload();
-                return BLEError.badStatus;
-            }
+            lastStatus = monitorDiscovery.payload();
+            return lastStatus == GATT_SUCCESS ? BLEError.ok : BLEError.badStatus;
         }
     }
 
-    @SuppressWarnings("UnusedReturnValue")
+    private final ThreadWait<BLEPeripheralInterace> monitorScan = new ThreadWait<>();
+
+    @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
     private BLEError waitForScan(int timeoutSec) {
         if (isConnected()) {
             return BLEError.ok;
@@ -210,7 +257,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                     manager.observables()
                             .observablePeripheralDiscovered()
                             .subscribe((event) -> {
-                                if (peripheral == null) {
+                                if (event.peripheral == null) {
                                     monitorScan.setPayload(null);
                                 }
                                 if (id.equals(event.peripheral.identifier())) {
@@ -219,60 +266,65 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                             })
             );
             monitorScan.waitFor(manager::scanForPeripherals, timeoutSec);
-            if (monitorConnect.isTimedOut()) {
+            if (monitorScan.isTimedOut()) {
                 return BLEError.timeout;
             }
-            peripheral = monitorScan.payload();
+            setPeripheral(monitorScan.payload());
             return BLEError.ok;
         }
     }
 
+
     @Override
-    public BLEError connect(int timeout) throws InterruptedException {
+    public BLEError connect(int timeout) {
         connectionsControl.setState(id, BLEConnectionState.connecting);
-        manager.stopScan();
+        if (manager.isScanning()) {
+            manager.stopScan();
+        }
         assertPeripheral();
 
-        if (peripheral != null) {
-            // already connected
-            if (isConnected()) {
-                connectionsControl.setState(id, BLEConnectionState.connecting);
-                return BLEError.ok;
-            }
-            // try fast connect to known peripheral
-            waitForConnect(Math.max(15, timeout));
-            if (isConnected()) {
-                connectionsControl.setState(id, BLEConnectionState.connecting);
-                return BLEError.ok;
+        // try fast connect to known peripheral
+        if (peripheral != null && !isConnected()) {
+            waitForConnect(Math.max(15, timeout == 0 ? 15 : timeout));
+            if (!isConnected()) {
+                // if connection failed will try to re-scan
+                setPeripheral(null);
             }
         }
 
-        do {
-            // scan for not cached/not known peripheral
-            waitForScan(timeout == 0 ? 25 : 15);
-            if (peripheral == null) {
-                Thread.sleep(5000);
-            }
-        } while (peripheral == null && timeout == 0);
-
-        // failed to scan for the peripheral
         if (peripheral == null) {
-            connectionsControl.setState(id, BLEConnectionState.disconnected);
-            return BLEError.noPeripheral;
+            // scan for not cached/not known peripheral
+            // endlessly if timeout = 0
+            do {
+                BLEError error = waitForScan(25);
+                if (peripheral == null && timeout == 0) {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    return BLEError.ok.equals(error) ? BLEError.timeout :error;
+                }
+            } while (peripheral == null);
         }
 
         // connect as soon as a peripheral scanned
         BLEError error = waitForConnect(timeout);
+        if (!BLEError.ok.equals(error)) {
+            return error;
+        }
 
         connectionsControl.setState(id,
                 isConnected()
                         ? BLEConnectionState.connected
                         : BLEConnectionState.disconnected);
-        return error;
+
+        return BLEError.ok;
     }
 
     @Override
-    public BLEError connect() throws InterruptedException {
+    public BLEError connect() {
         return connect(0);
     }
 
@@ -390,10 +442,20 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
-    public Observable<Integer> observableRSSI() { return rssiChannel.observable; }
+    public Observable<Integer> observableRSSI() {
+        return rssiChannel.observable;
+    }
 
     @Override
     public int getLastStatus() {
         return lastStatus;
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (peripheral != null) {
+            peripheral.close();
+        }
+        disposables.dispose();
     }
 }

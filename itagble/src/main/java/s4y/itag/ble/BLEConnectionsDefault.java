@@ -5,21 +5,29 @@ import androidx.annotation.NonNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import s4y.rasat.Channel;
+import s4y.rasat.Observable;
+import s4y.rasat.android.Channel;
 
-class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsControlInterface, AutoCloseable {
+/**
+ * Keeps references to connections made on demand
+ * Compose the connection store and connections in
+ * the singe interface
+ * Provides the minimal functionality needed by a consumer
+ */
+class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsControlInterface {
 
     private final Channel<BLEStateNotification> stateChannel = new Channel<>();
+
     private final Map<String, BLEConnectionState> states = new HashMap<>();
     private final BLEConnectionsStoreInterface store;
 
-    public BLEConnectionsDefault(BLEConnectionsStoreInterface store) {
+    BLEConnectionsDefault(BLEConnectionsStoreInterface store) {
         this.store = store;
     }
 
     @Override
-    public Channel<BLEStateNotification> getStateChannel() {
-        return stateChannel;
+    public Observable<BLEStateNotification> observableState() {
+        return stateChannel.observable;
     }
 
     @Override
@@ -28,18 +36,18 @@ class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsCo
     }
 
     @Override
-    public void connect(String id) throws InterruptedException {
+    public void connect(@NonNull String id) {
         connect(id, 0);
     }
 
     @Override
-    public void connect(String id, int timeoutSec) throws InterruptedException {
+    public void connect(@NonNull String id, int timeoutSec) {
         BLEConnectionInterface connection = store.getOrMake(id);
         connection.connect(timeoutSec);
     }
 
     @Override
-    public void enableRSSI(String id) {
+    public void enableRSSI(@NonNull String id) {
         BLEConnectionInterface connection = store.get(id);
         if (connection != null) {
             connection.enableRSSI();
@@ -47,7 +55,7 @@ class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsCo
     }
 
     @Override
-    public void disableRSSI(String id) {
+    public void disableRSSI(@NonNull String id) {
         BLEConnectionInterface connection = store.get(id);
         if (connection != null) {
             connection.disableRSSI();
@@ -55,9 +63,15 @@ class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsCo
     }
 
     @Override
-    public void disconnect(String id) {
+    public void disconnect(@NonNull String id) {
         BLEConnectionInterface connection = store.getOrMake(id);
         connection.disconnect();
+    }
+
+    @NonNull
+    @Override
+    public BLEConnectionInterface byId(@NonNull String id) {
+        return store.getOrMake(id);
     }
 
     @Override
@@ -68,6 +82,6 @@ class BLEConnectionsDefault implements BLEConnectionsInterface, BLEConnectionsCo
 
     @Override
     public void close() throws Exception {
-
+        store.close();
     }
 }

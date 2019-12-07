@@ -4,6 +4,8 @@ enum BLEPeripheralState {
     disconnected,
     connecting,
     connected,
+    discovering,
+    discovered,
     disconnecting,
     writting,
 }

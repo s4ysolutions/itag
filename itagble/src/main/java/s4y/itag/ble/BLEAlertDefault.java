@@ -31,32 +31,24 @@ class BLEAlertDefault implements BLEAlertInterface, AutoCloseable {
     @Override
     public void startAlert(String id, int timeout) {
         BLEConnectionInterface connection = store.getOrMake(id);
-        try {
-            BLEError error = connection.connect(timeout);
+        BLEError error = connection.connect(timeout);
+        if (error == BLEError.ok) {
+            error = connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, timeout);
             if (error == BLEError.ok) {
-                error = connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, timeout);
-                if (error == BLEError.ok) {
-                    alerts.add(id);
-                } else {
-                    alerts.remove(id);
-                }
+                alerts.add(id);
+            } else {
+                alerts.remove(id);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
     public void stopAlert(String id, int timeout) {
         BLEConnectionInterface connection = store.getOrMake(id);
-        try {
-            BLEError error = connection.connect(timeout);
-            if (error == BLEError.ok) {
-                connection.writeImmediateAlert(AlertVolume.NO_ALERT, timeout);
-                alerts.remove(id);
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        BLEError error = connection.connect(timeout);
+        if (error == BLEError.ok) {
+            connection.writeImmediateAlert(AlertVolume.NO_ALERT, timeout);
+            alerts.remove(id);
         }
     }
 

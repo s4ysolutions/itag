@@ -16,13 +16,16 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
+import s4y.itag.ble.BLEConnectionsInterface;
 import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
@@ -30,6 +33,8 @@ import s4y.itag.itag.ITagInterface;
 import s4y.rasat.DisposableBag;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsTracker;
+
+import static s4y.itag.itag.ITag.ble;
 
 
 /**
@@ -69,8 +74,8 @@ public class ITagsFragment extends Fragment
         int rssi = -1000;
         int statusDrawableId;
         int statusTextId;
-        BLEConnectionState state = ITag.ble.connections().getStates().get(itag.id());
-        if (ITag.ble.state() == BLEState.OK && state != null) {
+        BLEConnectionState state = ble.connections().getStates().get(itag.id());
+        if (ble.state() == BLEState.OK && state != null) {
             switch (state) {
                 case unknown:
                 case disconnected:
@@ -109,8 +114,8 @@ public class ITagsFragment extends Fragment
                     statusDrawableId = R.drawable.bt_disabled;
                     statusTextId = R.string.bt_disabled;
             }
-            if (ITag.ble.alert().isAlerting(itag.id()) ||
-                    ITag.ble.findMe().isFindMe(itag.id()) ||
+            if (ble.alert().isAlerting(itag.id()) ||
+                    ble.findMe().isFindMe(itag.id()) ||
                     itag.isAlertDisconnected() && state != BLEConnectionState.connected
             ) {
                 Log.d(LT, "Start animate because gatt.isFindingITag");
@@ -193,6 +198,27 @@ public class ITagsFragment extends Fragment
         }
     }
 
+    private final Map<ITagInterface, ViewGroup> tagViews = new HashMap<>();
+
+    private void updateTags(@NonNull ViewGroup root) {
+        int n = 1;
+        for (Map.Entry<ITagInterface, ViewGroup> entry : tagViews.entrySet()) {
+            setupTag(n, entry.getKey(), entry.getValue());
+        }
+    }
+
+    private void updateRSSI(@NonNull ITagInterface itag,int rssi) {
+        ViewGroup view = tagViews.get(itag);
+        if (view == null) {
+            return;
+        }
+        RssiView rssiView = view.findViewById(R.id.rssi);
+        if (rssiView == null) {
+            return;
+        }
+        rssiView.setRssi(rssi);
+    }
+
     private void setupTags(@NonNull ViewGroup root) {
         Activity activity = getActivity();
         if (activity == null) return; //
@@ -207,32 +233,24 @@ public class ITagsFragment extends Fragment
         final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
         tagsLayout = activity.getLayoutInflater().inflate(rid, root, false);
         root.addView(tagsLayout, index);
-        if (s == 0) {
-            boolean active = !"".equals(trackID) && LocationsTracker.isUpdating;
-            View wtview = tagsLayout.findViewById(R.id.wt);
-            wtview.setVisibility(
-                    active
-                            ? View.VISIBLE
-                            : View.GONE
-            );
-            if (active) {
-                TextView tid = wtview.findViewById(R.id.text_wt_id);
-                tid.setText(trackID);
-//                TextView tid2 = wtview.findViewById(R.id.text_wt_id2);
-//                tid2.setText(trackID);
-            }
-        } else {
-            setupTag(1, ITag.store.byPos(0), tagsLayout.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
-            if (s > 1) {
-                setupTag(2, ITag.store.byPos(1), tagsLayout.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
-            }
-            if (s > 2) {
-                setupTag(3, ITag.store.byPos(2), tagsLayout.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
-            }
-            if (s > 3) {
-                setupTag(4, ITag.store.byPos(3), tagsLayout.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
-            }
+        tagViews.clear();
+        if (s > 0) {
+            ITagInterface itag = ITag.store.byPos(0);
+            tagViews.put(itag, root.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
         }
+        if (s > 1) {
+            ITagInterface itag = ITag.store.byPos(1);
+            tagViews.put(itag, root.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
+        }
+        if (s > 2) {
+            ITagInterface itag = ITag.store.byPos(2);
+            tagViews.put(itag, root.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
+        }
+        if (s > 3) {
+            ITagInterface itag = ITag.store.byPos(3);
+            tagViews.put(itag, root.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
+        }
+        updateTags(root);
     }
 
     @Override
@@ -256,10 +274,9 @@ public class ITagsFragment extends Fragment
         if (BuildConfig.DEBUG) {
             Log.d(LT, "startRssi");
         }
-        stopRssi();
         for (int i = 0; i < ITag.store.count(); i++) {
             ITagInterface itag = ITag.store.byPos(i);
-            ITag.ble.connections().enableRSSI(itag.id());
+            ble.connections().enableRSSI(itag.id());
         }
     }
 
@@ -269,7 +286,7 @@ public class ITagsFragment extends Fragment
         }
         for (int i = 0; i < ITag.store.count(); i++) {
             ITagInterface itag = ITag.store.byPos(i);
-            ITag.ble.connections().disconnect(itag.id());
+            ble.connections().disableRSSI(itag.id());
         }
     }
 
@@ -283,13 +300,18 @@ public class ITagsFragment extends Fragment
         if (activity == null)
             return;
         ITagApplication.faITagsView(ITag.store.count());
-        startRssi();
         final ViewGroup root = (ViewGroup) Objects.requireNonNull(getView());
         setupTags(root);
         disposableBag.add(ITag.store.observable().subscribe(event -> {
-// TODO:
             setupTags(root);
         }));
+        for (int i=0; i< ITag.store.count();i++) {
+            ITagInterface itag = ITag.store.byPos(i);
+            BLEConnectionInterface connection = ITag.ble.connections().byId(itag.id());
+            disposableBag.add(connection.observableRSSI().subscribe(rssi -> {
+                updateRSSI(itag, rssi);
+            }));
+        }
         HistoryRecord.addListener(this);
 
         final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -300,6 +322,7 @@ public class ITagsFragment extends Fragment
             LocationsTracker.addOnTrackingStateListener(this);
             IDService.addOnTrackIDChangeListener(this);
         }
+        startRssi();
     }
 
     @Override
@@ -307,6 +330,7 @@ public class ITagsFragment extends Fragment
         if (BuildConfig.DEBUG) {
             Log.d(LT, "onPause");
         }
+        stopRssi();
         HistoryRecord.removeListener(this);
         disposableBag.dispose();
         LocationsTracker.removeOnTrackingStateListener(this);

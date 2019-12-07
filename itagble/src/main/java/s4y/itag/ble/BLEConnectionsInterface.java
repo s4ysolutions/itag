@@ -1,10 +1,13 @@
 package s4y.itag.ble;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.Map;
 
-import s4y.rasat.Channel;
+import s4y.rasat.Observable;
 
-public interface BLEConnectionsInterface {
+public interface BLEConnectionsInterface extends AutoCloseable {
     class BLEStateNotification {
         final String id;
         final BLEConnectionState state;
@@ -15,11 +18,12 @@ public interface BLEConnectionsInterface {
         }
     }
 
-    Channel<BLEStateNotification> getStateChannel();
+    Observable<BLEStateNotification> observableState();
     Map<String, BLEConnectionState> getStates();
-    void connect(String id) throws InterruptedException;
-    void connect(String id, int timeoutSec) throws InterruptedException, BLEException;
-    void enableRSSI(String id);
-    void disableRSSI(String id);
-    void disconnect(String id);
+    void connect(@NonNull String id);
+    void connect(@NonNull String id, int timeoutSec) throws InterruptedException, BLEException;
+    void enableRSSI(@NonNull String id);
+    void disableRSSI(@NonNull String id);
+    void disconnect(@NonNull String id);
+    @NonNull BLEConnectionInterface byId(@NonNull String id);
 }

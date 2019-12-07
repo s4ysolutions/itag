@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-import s4y.rasat.Channel;
+import s4y.rasat.android.Channel;
 import s4y.rasat.Observable;
 
 class BLECentralManagerObservables implements BLECentralManagerObservablesInterface {

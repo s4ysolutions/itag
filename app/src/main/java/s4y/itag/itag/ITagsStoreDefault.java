@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import s4y.itag.preference.BooleanPreference;
-import s4y.rasat.Channel;
+import s4y.rasat.android.Channel;
 import s4y.rasat.Observable;
 
 public class ITagsStoreDefault implements ITagsStoreInterface {
@@ -42,7 +42,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
             if (!prefUpgradeDone.get()) {
                 List<ITagInterface> itags = ITagFileStore.load(context);
                 if (itags.size() > 0) {
-                    for (ITagInterface itag: itags) {
+                    for (ITagInterface itag : itags) {
                         remember(itag);
                     }
                 }
@@ -187,27 +187,5 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
         tag.setName(name);
         new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
-    }
-
-    @Override
-    public void connectAll() {
-        for (ITagInterface tag : tags.values()) {
-            new Thread(() -> {
-                try {
-                    ITag.ble.connections().connect(tag.id());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }, "BLEDefault Connect " + tag.id() + "-" + System.currentTimeMillis()).start();
-        }
-    }
-
-    @Override
-    public void stopAlertAll() {
-        for (ITagInterface tag : tags.values()) {
-            if (tag.isAlertDisconnected()) {
-                // ITag.handler.post(() -> ITag.ble.alert().stopAlert(tag.id(), ITag.BLE_TIMEOUT));
-            }
-        }
     }
 }

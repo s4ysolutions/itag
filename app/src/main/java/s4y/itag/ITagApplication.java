@@ -30,6 +30,16 @@ public final class ITagApplication extends Application {
         ITag.initITag(context);
     }
 
+    @Override
+    public void onTerminate() {
+        try {
+            ITag.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        super.onTerminate();
+    }
+
     static public void handleError(@NonNull Throwable th, boolean toast) {
         new Handler(Looper.getMainLooper()).post(() -> {
             if (context == null) {

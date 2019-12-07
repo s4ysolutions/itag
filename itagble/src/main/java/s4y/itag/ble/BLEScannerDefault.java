@@ -4,8 +4,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 
-import s4y.rasat.Channel;
-import s4y.rasat.ChannelDistinct;
+import s4y.rasat.android.Channel;
+import s4y.rasat.android.ChannelDistinct;
 import s4y.rasat.DisposableBag;
 import s4y.rasat.Observable;
 
@@ -13,7 +13,7 @@ class BLEScannerDefault implements BLEScannerInterface {
     private final BLECentralManagerInterface manager;
     private final BLEConnectionsInterface connections;
     private final Channel<Integer> channelTimer = new Channel<>(0);
-    private final Channel<Boolean> channelActive = new ChannelDistinct<>(false);
+    private final ChannelDistinct<Boolean> channelActive = new ChannelDistinct<>(false);
     private final Channel<BLEScanResult> channelScan = new Channel<>();
     // private final List<BLEDiscoveryResult> resultList = new ArrayList<>();
     private final Handler handlerTimer = new Handler(Looper.getMainLooper());

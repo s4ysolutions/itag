@@ -1,14 +1,15 @@
 package s4y.itag.itag;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.HandlerThread;
+import android.util.Log;
 
 import s4y.itag.ITagApplication;
+import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
 
 public class ITag {
+    private static final String LT = ITag.class.getName();
     public static final int BLE_TIMEOUT = 60;
     public static final int SCAN_TIMEOUT = 25;
     public static BLEInterface ble;
@@ -17,6 +18,30 @@ public class ITag {
     public static void initITag(Context context) {
         ble = BLEDefault.shared(ITagApplication.context);
         store = new ITagsStoreDefault(ITagApplication.context);
+        for (int i = 0; i < store.count(); i++) {
+            connectAsync(store.byPos(i),0);
+        }
     }
 
+    public static void close() throws Exception {
+        ble.close();
+    }
+
+    private static int connectThreadsCount = 0;
+
+    private static void connectAsync(ITagInterface itag, int timeout) {
+        connectThreadsCount++;
+        Log.d(LT, "BLE Connect thread started, count = " + connectThreadsCount);
+        new Thread("BLE Connect " + itag.id() + " " + System.currentTimeMillis()) {
+            @Override
+            public void run() {
+                do {
+                    Log.d(LT, "Attempt to connect " + itag.id()+"/"+itag.name());
+                    ITag.ble.connections().connect(itag.id());
+                } while (timeout == 0 && !BLEConnectionState.connected.equals(ble.connections().getStates().get(itag.id())));
+                connectThreadsCount--;
+                Log.d(LT, "BLE Connect thread finished, count = " + connectThreadsCount);
+            }
+        }.start();
+    }
 }

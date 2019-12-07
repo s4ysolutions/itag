@@ -8,8 +8,8 @@ import android.content.IntentFilter;
 
 import androidx.annotation.NonNull;
 
-import s4y.rasat.Channel;
-import s4y.rasat.ChannelDistinct;
+import s4y.rasat.android.Channel;
+import s4y.rasat.android.ChannelDistinct;
 import s4y.rasat.Observable;
 
 public class BLEDefault implements BLEInterface {
@@ -121,7 +121,8 @@ public class BLEDefault implements BLEInterface {
     }
 
     @Override
-    public void close() {
+    public void close() throws Exception {
+        connections.close();
         context.unregisterReceiver(stateReceiver);
     }
 }

@@ -6,6 +6,10 @@ public class ChannelDistinct<T> extends Channel<T> {
         super(value);
     }
 
+    public ChannelDistinct() {
+        super();
+    }
+
     @Override
     public void broadcast(T value) {
         if (value == null && observable.value == null) {

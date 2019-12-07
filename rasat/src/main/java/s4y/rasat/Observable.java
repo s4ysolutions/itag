@@ -15,7 +15,7 @@ public class Observable<T> {
         this.value = null;
     }
 
-    void remove(Handler<T> handler) {
+    public void remove(Handler<T> handler) {
         handlers.remove(handler);
     }
 

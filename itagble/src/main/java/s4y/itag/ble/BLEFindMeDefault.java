@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import s4y.rasat.Channel;
+import s4y.rasat.android.Channel;
 
 class BLEFindMeDefault implements BLEFindMeInterface, BLEFindMeControlInterface {
     private static final int CLICK_INTERVAL = 600;

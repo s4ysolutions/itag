@@ -47,4 +47,11 @@ class BLEConnectionsStoreDefault implements BLEConnectionsStoreInterface {
     public void restorePeripherals(BLEPeripheralInterace[] peripherals) {
 
     }
+
+    @Override
+    public void close() throws Exception {
+        for (BLEConnectionInterface connection: map.values()) {
+            connection.close();
+        }
+    }
 }

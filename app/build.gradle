@@ -49,6 +49,7 @@ dependencies {
     implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
     implementation project(':waytoday')
     implementation project(':rasat')
+    implementation project(':rasatandroid')
     implementation project(':itagble')
 
     testImplementation 'androidx.test.ext:junit:1.1.1'
