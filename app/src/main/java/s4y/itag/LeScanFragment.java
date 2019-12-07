@@ -127,6 +127,9 @@ public class LeScanFragment extends Fragment {
         updateResultsList();
         disposableBag.add(
                 ITag.ble.scanner().observableScan().subscribe((result) -> {
+                    if (ITag.store.remembered(result.id)) {
+                        return;
+                    }
                     Adapter adapter = adapter();
                     if (adapter == null) {
                         return;

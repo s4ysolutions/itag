@@ -146,6 +146,17 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
+    public void setAlertDelay(@NonNull String id, int delay) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setAlertDelay(delay);
+        new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
     public void setAlert(@NonNull String id, boolean alert) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
@@ -195,7 +206,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     public void stopAlertAll() {
         for (ITagInterface tag : tags.values()) {
             if (tag.isAlertDisconnected()) {
-                ITag.handler.post(() -> ITag.ble.alert().stopAlert(tag.id(), ITag.BLE_TIMEOUT));
+                // ITag.handler.post(() -> ITag.ble.alert().stopAlert(tag.id(), ITag.BLE_TIMEOUT));
             }
         }
     }

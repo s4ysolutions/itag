@@ -15,10 +15,11 @@ import androidx.fragment.app.DialogFragment;
 
 import java.util.Objects;
 
+import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 
 public class SetNameDialogFragment extends DialogFragment {
-    public static ITagInterface iTag;
+    static ITagInterface iTag;
 
     @NonNull
     @Override
@@ -53,20 +54,20 @@ public class SetNameDialogFragment extends DialogFragment {
         builder.setTitle(R.string.change_name)
                 .setView(view)
                 .setPositiveButton(android.R.string.ok, (dialog, id) -> {
-                    iTag.setName(textName.getText().toString());
+                    ITag.store.setName(iTag.id(), textName.getText().toString());
                     ITagApplication.faNameITag();
                     switch (grpAlarm.getCheckedRadioButtonId()) {
                         case R.id.alarm_delay_0:
-                            iTag.setAlertDelay(0);
+                            ITag.store.setAlertDelay(iTag.id(), 0);
                             break;
                         case R.id.alarm_delay_3:
-                            iTag.setAlertDelay(3);
+                            ITag.store.setAlertDelay(iTag.id(), 3);
                             break;
                         case R.id.alarm_delay_5:
-                            iTag.setAlertDelay(5);
+                            ITag.store.setAlertDelay(iTag.id(), 5);
                             break;
                         default:
-                            iTag.setAlertDelay(10);
+                            ITag.store.setAlertDelay(iTag.id(), 10);
                             break;
                     }
                 })

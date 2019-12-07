@@ -113,6 +113,9 @@ public class MainActivity extends FragmentActivity {
             @Override
             public void handle(StoreOp event) {
                 switch (event.op) {
+                    case change:
+                        setupContent();
+                        break;
                     case forget:
                         break;
                 }
@@ -225,18 +228,14 @@ public class MainActivity extends FragmentActivity {
             ITagApplication.handleError(new Exception("No Scan Result to Remember"), true);
             return;
         }
-        if (ITag.store.byId(scanResult.id) == null) {
+        if (!ITag.store.remembered(scanResult.id)) {
             ITag.store.remember(new ITagDefault(scanResult));
+            ITag.ble.scanner().stop();
         }
     }
 
     public void onForget(@NonNull View sender) {
-        String id = (String) sender.getTag();
-        if (id == null) {
-            ITagApplication.handleError(new Exception("No iTag ID to forget"), true);
-            return;
-        }
-        ITagInterface itag = ITag.store.byId(id);
+        ITagInterface itag = (ITagInterface) sender.getTag();
         if (itag != null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(R.string.confirm_forget)
@@ -451,12 +450,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void onChangeColor(@NonNull View sender) {
-        final String id = (String) sender.getTag();
-        if (id == null) {
-            ITagApplication.handleError(new Exception("No ID in onChangeColor"));
-            return;
-        }
-        ITagInterface itag = ITag.store.byId(id);
+        ITagInterface itag = (ITagInterface) sender.getTag();
         if (itag == null) {
             ITagApplication.handleError(new Exception("No itag"));
             return;
@@ -466,22 +460,22 @@ public class MainActivity extends FragmentActivity {
         popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.black:
-                    itag.setColor(TagColor.black);
+                    ITag.store.setColor(itag.id(), TagColor.black);
                     break;
                 case R.id.white:
-                    itag.setColor(TagColor.white);
+                    ITag.store.setColor(itag.id(), TagColor.white);
                     break;
                 case R.id.red:
-                    itag.setColor(TagColor.red);
+                    ITag.store.setColor(itag.id(), TagColor.red);
                     break;
                 case R.id.green:
-                    itag.setColor(TagColor.green);
+                    ITag.store.setColor(itag.id(), TagColor.green);
                     break;
                 case R.id.gold:
-                    itag.setColor(TagColor.gold);
+                    ITag.store.setColor(itag.id(), TagColor.gold);
                     break;
                 case R.id.blue:
-                    itag.setColor(TagColor.blue);
+                    ITag.store.setColor(itag.id(), TagColor.blue);
                     break;
             }
             ITagApplication.faColorITag();
@@ -491,17 +485,12 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void onLink(@NonNull View sender) {
-        final String id = (String) sender.getTag();
-        if (id == null) {
-            ITagApplication.handleError(new Exception("No ID in onLink"));
-            return;
-        }
-        ITagInterface itag = ITag.store.byId(id);
+        ITagInterface itag = (ITagInterface) sender.getTag();
         if (itag == null) {
             ITagApplication.handleError(new Exception("No itag"));
             return;
         }
-        itag.setAlertDisconnected(itag.isAlertDisconnected());
+        ITag.store.setAlert(itag.id(), !itag.isAlertDisconnected());
         if (itag.isAlertDisconnected())
             ITagApplication.faUnmuteTag();
         else
@@ -509,12 +498,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void onSetName(@NonNull View sender) {
-        final String id = (String) sender.getTag();
-        if (id == null) {
-            ITagApplication.handleError(new Exception("No ID in onChangeColor"));
-            return;
-        }
-        ITagInterface itag = ITag.store.byId(id);
+        ITagInterface itag = (ITagInterface) sender.getTag();
         if (itag == null) {
             ITagApplication.handleError(new Exception("No itag"));
             return;

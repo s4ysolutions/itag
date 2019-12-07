@@ -31,7 +31,7 @@ private static final long serialVersionUID = 1575220516;
     }
 
     public ITagDefault(@NonNull BLEScanResult scanResult) {
-        this(scanResult.id, scanResult.name, null, null, null);
+        this(scanResult.id, scanResult.name == null ? "" : scanResult.name.trim(), null, null, null);
     }
 
     public ITagDefault(@NonNull String id, Map<String, Object> dict) {

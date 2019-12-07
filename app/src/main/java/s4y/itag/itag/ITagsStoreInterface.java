@@ -19,6 +19,7 @@ public interface ITagsStoreInterface {
     void forget(@NonNull ITagInterface tag);
     void remember(@NonNull ITagInterface tag);
     boolean remembered(@NonNull String id);
+    void setAlertDelay(@NonNull String id,int delay);
     void setAlert(@NonNull String id,boolean alert);
     void setColor(@NonNull String id,@NonNull TagColor color);
     void setName(@NonNull String id,String name);
