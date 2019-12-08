@@ -58,26 +58,6 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
                 close();
                 if (getState() == BLEPeripheralState.connecting) {
                     observables.channelConnectionFailed.broadcast(new BLEPeripheralObservablesInterface.ConnectionFailedEvent(status));
-                    /*
-                    if (status == 133) {
-                        int count = incConnectingCount();
-                        if (count <= 3) {
-                            gatt.close();
-                            handler.postOperation(() -> connectInternal(),
-                                    500);
-                        } else {
-                            close();
-                            handler.postOperation(
-                                    () -> observables.channelConnectionFailed.broadcast(new BLEPeripheralObservablesInterface.ConnectionFailedEvent(status))
-                            );
-                        }
-                    } else {
-                        close();
-                        handler.postOperation(
-                                () -> observables.channelConnectionFailed.broadcast(new BLEPeripheralObservablesInterface.ConnectionFailedEvent(status))
-                        );
-                    }
-                     */
                 } else {
                     observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(status));
                 }
@@ -97,6 +77,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         }
 
         private int rssi = 0;
+
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             if (rssi != this.rssi) {
@@ -152,7 +133,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     @Override
     public void discoveryServices() {
         if (!BLEPeripheralState.disconnected.equals(state())) {
-            setState(BLEPeripheralState.disconnecting);
+            setState(BLEPeripheralState.discovering);
             gatt.discoverServices();
         }
     }
@@ -234,6 +215,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             if (!BLEPeripheralState.disconnected.equals(state())) { // https://github.com/s4ysolutions/itag/issues/14
                 gatt.readRemoteRssi();
             }
+            Log.d(LT, "request RSSI id=" + identifier());
             manager.postOperation(this, RSSI_INTERVAL_MS);
         }
     };
@@ -243,7 +225,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     @Override
     public void enableRSSI() {
         rssiCount++;
-        Log.d(LT, "enableRSSI id="+identifier()+" count="+rssiCount);
+        Log.d(LT, "enableRSSI id=" + identifier() + " count=" + rssiCount);
         if (rssiCount == 1) {
             manager.postOperation(mRssiRunable);
         }
@@ -253,7 +235,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     public void disableRSSI() {
         if (rssiCount > 0) {
             rssiCount--;
-            Log.d(LT, "disableRSSI id="+identifier()+" count="+rssiCount);
+            Log.d(LT, "disableRSSI id=" + identifier() + " count=" + rssiCount);
             manager.cancelOperation(mRssiRunable);
         }
     }

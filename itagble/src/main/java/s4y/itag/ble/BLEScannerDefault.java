@@ -11,7 +11,6 @@ import s4y.rasat.Observable;
 
 class BLEScannerDefault implements BLEScannerInterface {
     private final BLECentralManagerInterface manager;
-    private final BLEConnectionsInterface connections;
     private final Channel<Integer> channelTimer = new Channel<>(0);
     private final ChannelDistinct<Boolean> channelActive = new ChannelDistinct<>(false);
     private final Channel<BLEScanResult> channelScan = new Channel<>();
@@ -36,9 +35,8 @@ class BLEScannerDefault implements BLEScannerInterface {
         }
     };
 
-    BLEScannerDefault(BLEConnectionsInterface connections, BLECentralManagerInterface manager) {
+    BLEScannerDefault(BLECentralManagerInterface manager) {
         this.manager = manager;
-        this.connections = connections;
     }
 
     @Override
@@ -79,9 +77,6 @@ class BLEScannerDefault implements BLEScannerInterface {
                 manager.observables().observablePeripheralDiscovered().subscribe(
                         event -> channelScan.broadcast(new BLEScanResult(event.peripheral.address(), event.peripheral.name(), event.rssi))
                 ));
-        for (String id : forceCancelIds) {
-            connections.disconnect(id);
-        }
         this.timeout = timeout;
         manager.scanForPeripherals();
         handlerTimer.post(runnableTimer);

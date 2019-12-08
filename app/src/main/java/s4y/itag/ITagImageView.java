@@ -1,19 +1,13 @@
 package s4y.itag;
 
-import android.annotation.TargetApi;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.ContextWrapper;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
-
-import s4y.itag.ble.BLEConnectionsInterface;
 
 public class ITagImageView extends AppCompatImageView implements GestureDetector.OnGestureListener {
     private GestureDetector mGestureDetector;

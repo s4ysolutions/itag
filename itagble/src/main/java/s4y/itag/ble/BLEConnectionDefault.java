@@ -1,15 +1,17 @@
 package s4y.itag.ble;
 
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.UUID;
 
-import s4y.rasat.android.Channel;
 import s4y.rasat.DisposableBag;
 import s4y.rasat.Observable;
+import s4y.rasat.android.ChannelDistinct;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
@@ -21,8 +23,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private static final UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
     private static final UUID FINDME_CHARACTERISTIC = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
 
-    @NonNull
-    final private BLEConnectionsControlInterface connectionsControl;
+    @Nullable
     private BLEPeripheralInterace peripheral;
     @NonNull
     final private BLECentralManagerInterface manager;
@@ -30,33 +31,60 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private String id;
     private int lastStatus;
     private final DisposableBag disposables = new DisposableBag();
-    private final Channel<AlertVolume> immediateAlertUpdateNotificationChannel = new Channel<>(AlertVolume.NO_ALERT);
-    private final Channel<Boolean> findMeChannel = new Channel<>(false);
-    private final Channel<Boolean> lostChannel = new Channel<>(true);
-    private final Channel<Integer> rssiChannel = new Channel<>(0);
+    private final ChannelDistinct<AlertVolume> alertChannel = new ChannelDistinct<>(AlertVolume.NO_ALERT);
+    private final ChannelDistinct<Boolean> findMeChannel = new ChannelDistinct<>(false);
+    private final ChannelDistinct<Boolean> lostChannel = new ChannelDistinct<>(true);
+    private final ChannelDistinct<BLEConnectionState> stateChannel = new ChannelDistinct<>(BLEConnectionState.disconnected);
+    private final ChannelDistinct<Integer> rssiChannel = new ChannelDistinct<>(0);
 
-    @NonNull
-    final private BLEFindMeControlInterface findMeControl;
+    private class Click {
+        private static final int CLICK_INTERVAL = 600;
+        private static final int CLICK_COUNT = 2;
 
-    BLEConnectionDefault(@NonNull BLEConnectionsControlInterface connectionsControl,
-                         @NonNull BLEFindMeControlInterface findMeControl,
-                         @NonNull BLECentralManagerInterface manager,
+        private Handler clickHandler = new Handler(Looper.getMainLooper());
+        private int count = 0;
+        private final Runnable waitNext = () -> {
+            if (done()) {
+                findMeChannel.broadcast(true);
+            } else {
+                clear();
+            }
+        };
+
+        private synchronized boolean done() {
+            return count >= CLICK_COUNT;
+        }
+
+        private synchronized void inc() {
+            count++;
+        }
+
+        private synchronized void clear() {
+            count = 0;
+        }
+
+        void onClick() {
+            clickHandler.removeCallbacks(click.waitNext);
+            if (isFindMe()) {
+                findMeChannel.broadcast(false);
+            } else {
+                click.inc();
+                clickHandler.postDelayed(click.waitNext, CLICK_INTERVAL);
+            }
+        }
+    }
+
+    private final Click click = new Click();
+
+    BLEConnectionDefault(@NonNull BLECentralManagerInterface manager,
                          @NonNull String id) {
-        this.connectionsControl = connectionsControl;
-        this.findMeControl = findMeControl;
         this.id = id;
         this.manager = manager;
     }
 
-    BLEConnectionDefault(@NonNull BLEConnectionsControlInterface connectionsControl,
-                         @NonNull BLEFindMeControlInterface findMeControl,
-                         @NonNull BLECentralManagerInterface manager,
+    BLEConnectionDefault(@NonNull BLECentralManagerInterface manager,
                          @NonNull BLEPeripheralInterace peripheral) {
-        this(connectionsControl,
-                findMeControl,
-                manager,
-                peripheral.identifier()
-        );
+        this(manager, peripheral.identifier());
         setPeripheral(peripheral);
     }
 
@@ -67,10 +95,29 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         if (this.peripheral != null) {
             disposables.add(this.peripheral
                     .observables()
+                    .observableDiscoveredServices()
+                    .subscribe(event -> {
+                        if (findMeCharacteristic() != null && peripheral != null) {
+                            peripheral.setNotify(findMeCharacteristic(), true);
+                        }
+                        stateChannel.broadcast(BLEConnectionState.connected);
+                        lostChannel.broadcast(false);
+                    }));
+            disposables.add(this.peripheral
+                    .observables()
+                    .observableDisconnected()
+                    .subscribe(event -> {
+                        if (event.status != GATT_SUCCESS && lostChannel.observable.value()) {
+                            stateChannel.broadcast(BLEConnectionState.disconnected);
+                            lostChannel.broadcast(false);
+                        }
+                    }));
+            disposables.add(this.peripheral
+                    .observables()
                     .observableNotification()
                     .subscribe(event -> {
                         if (FINDME_CHARACTERISTIC.equals(event.characteristic.uuid())) {
-                            findMeControl.onClick(id);
+                            click.onClick();
                         }
                     }));
             disposables.add(this.peripheral
@@ -78,27 +125,8 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                     .observableWrite()
                     .subscribe(event -> {
                         if (ALERT_LEVEL_CHARACTERISTIC.equals(event.characteristic.uuid())) {
-                            immediateAlertUpdateNotificationChannel.broadcast(
+                            alertChannel.broadcast(
                                     AlertVolume.fromCharacteristic(event.characteristic));
-                        }
-                    }));
-            disposables.add(this.peripheral
-                    .observables()
-                    .observableConnected()
-                    .subscribe(event -> {
-                        if (findMeCharacteristic() != null && peripheral != null) {
-                            peripheral.setNotify(findMeCharacteristic(), true);
-                        }
-                        if (!lostChannel.observable.value()) {
-                            lostChannel.broadcast(true);
-                        }
-                    }));
-            disposables.add(this.peripheral
-                    .observables()
-                    .observableDisconnected()
-                    .subscribe(event -> {
-                        if (event.status != GATT_SUCCESS && lostChannel.observable.value()) {
-                            lostChannel.broadcast(false);
                         }
                     }));
             disposables.add(this.peripheral
@@ -119,18 +147,22 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     private BLEService immediateAlertService() {
-        for (BLEService service : peripheral.services()) {
-            if (IMMEDIATE_ALERT_SERVICE.equals(service.uuid())) {
-                return service;
+        if (peripheral != null) {
+            for (BLEService service : peripheral.services()) {
+                if (IMMEDIATE_ALERT_SERVICE.equals(service.uuid())) {
+                    return service;
+                }
             }
         }
         return null;
     }
 
     private BLEService findMeService() {
-        for (BLEService service : peripheral.services()) {
-            if (FINDME_SERVICE.equals(service.uuid())) {
-                return service;
+        if (peripheral != null) {
+            for (BLEService service : peripheral.services()) {
+                if (FINDME_SERVICE.equals(service.uuid())) {
+                    return service;
+                }
             }
         }
         return null;
@@ -187,9 +219,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                 disposables.add(
                         peripheral.observables()
                                 .observableConnected() // SUCCESS (if status ok)
-                                .subscribe((event) -> {
-                                    monitorConnect.setPayload(GATT_SUCCESS);
-                                })
+                                .subscribe((event) -> monitorConnect.setPayload(GATT_SUCCESS))
                 );
                 disposables.add(
                         peripheral.observables()
@@ -229,9 +259,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             disposables.add(
                     peripheral.observables()
                             .observableDiscoveredServices()
-                            .subscribe(event -> {
-                                monitorDiscovery.setPayload(event.status);
-                            }
+                            .subscribe(event -> monitorDiscovery.setPayload(event.status)
                             )
             );
 
@@ -257,11 +285,10 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                     manager.observables()
                             .observablePeripheralDiscovered()
                             .subscribe((event) -> {
-                                if (event.peripheral == null) {
-                                    monitorScan.setPayload(null);
-                                }
-                                if (id.equals(event.peripheral.identifier())) {
-                                    monitorScan.setPayload(event.peripheral);
+                                if (event.peripheral != null) {
+                                    if (id.equals(event.peripheral.identifier())) {
+                                        monitorScan.setPayload(event.peripheral);
+                                    }
                                 }
                             })
             );
@@ -277,7 +304,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     @Override
     public BLEError connect(int timeout) {
-        connectionsControl.setState(id, BLEConnectionState.connecting);
+        stateChannel.broadcast(BLEConnectionState.connecting);
         if (manager.isScanning()) {
             manager.stopScan();
         }
@@ -304,7 +331,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                         e.printStackTrace();
                     }
                 } else {
-                    return BLEError.ok.equals(error) ? BLEError.timeout :error;
+                    return BLEError.ok.equals(error) ? BLEError.timeout : error;
                 }
             } while (peripheral == null);
         }
@@ -314,11 +341,6 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         if (!BLEError.ok.equals(error)) {
             return error;
         }
-
-        connectionsControl.setState(id,
-                isConnected()
-                        ? BLEConnectionState.connected
-                        : BLEConnectionState.disconnected);
 
         return BLEError.ok;
     }
@@ -331,13 +353,16 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     @Override
     public BLEError disconnect(int timeoutSec) {
         manager.stopScan();
+
         if (!isConnected()) {
-            connectionsControl.setState(id, BLEConnectionState.disconnected);
             return BLEError.ok;
         }
 
-        connectionsControl.setState(id, BLEConnectionState.disconnecting);
+        if (peripheral == null) {
+            return BLEError.noPeripheral;
+        }
 
+        stateChannel.broadcast(BLEConnectionState.disconnecting);
 
         if (timeoutSec <= 0) {
             peripheral.disconnect();
@@ -351,7 +376,6 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                             .subscribe(event -> monitorDisconnect.setPayload(event.status))
             );
             monitorDisconnect.waitFor(() -> peripheral.disconnect(), timeoutSec);
-            connectionsControl.setState(id, isConnected() ? BLEConnectionState.connected : BLEConnectionState.disconnected);
             lastStatus = monitorDisconnect.payload();
             return monitorDisconnect.isTimedOut()
                     ? BLEError.timeout
@@ -428,7 +452,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     @Override
     public Observable<AlertVolume> observableImmediateAlert() {
-        return immediateAlertUpdateNotificationChannel.observable;
+        return alertChannel.observable;
     }
 
     @Override
@@ -437,18 +461,33 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
-    public Observable<Boolean> observableLost() {
-        return lostChannel.observable;
-    }
-
-    @Override
     public Observable<Integer> observableRSSI() {
         return rssiChannel.observable;
     }
 
     @Override
+    public Observable<BLEConnectionState> observableState() {
+        return stateChannel.observable;
+    }
+
+    @Override
     public int getLastStatus() {
         return lastStatus;
+    }
+
+    @Override
+    public BLEConnectionState state() {
+        return stateChannel.observable.value();
+    }
+
+    @Override
+    public boolean isAlerting() {
+        return alertChannel.observable.value() != AlertVolume.NO_ALERT;
+    }
+
+    @Override
+    public boolean isFindMe() {
+        return findMeChannel.observable.value();
     }
 
     @Override

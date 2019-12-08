@@ -2,15 +2,13 @@ package s4y.itag.ble;
 
 import androidx.annotation.NonNull;
 
-import s4y.rasat.Channel;
 import s4y.rasat.Observable;
 
 public interface BLEInterface extends AutoCloseable {
-    BLEAlertInterface alert();
-    BLEConnectionsInterface connections();
-    BLEFindMeInterface findMe();
     BLEScannerInterface scanner();
     @NonNull BLEState state();
+    @SuppressWarnings("UnusedReturnValue")
     BLEError enable();
     Observable<BLEState> observableState();
+    @NonNull BLEConnectionInterface connectionById(String id);
 }

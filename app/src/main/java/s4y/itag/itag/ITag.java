@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import s4y.itag.ITagApplication;
+import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
@@ -35,10 +36,11 @@ public class ITag {
         new Thread("BLE Connect " + itag.id() + " " + System.currentTimeMillis()) {
             @Override
             public void run() {
+                BLEConnectionInterface connection = ble.connectionById(itag.id());
                 do {
                     Log.d(LT, "Attempt to connect " + itag.id()+"/"+itag.name());
-                    ITag.ble.connections().connect(itag.id());
-                } while (timeout == 0 && !BLEConnectionState.connected.equals(ble.connections().getStates().get(itag.id())));
+                    connection.connect(timeout);
+                } while (timeout == 0 && !connection.isConnected());
                 connectThreadsCount--;
                 Log.d(LT, "BLE Connect thread finished, count = " + connectThreadsCount);
             }

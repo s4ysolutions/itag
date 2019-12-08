@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import s4y.itag.BuildConfig;
 import s4y.itag.ITagApplication;
 import s4y.itag.R;
+import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.itag.ITag;
 
@@ -155,7 +156,8 @@ public final class HistoryRecord implements Serializable {
             ITagApplication.faRemovedGpsRequestBySuccess();
             if (BuildConfig.DEBUG)
                 Log.d(LT, "GPS removeUpdates on location changed" + addr);
-            if (isListening && ITag.ble.connections().getStates().get(addr)== BLEConnectionState.connected && location.getTime() < ts + LOCATION_TIMEOUT)
+            BLEConnectionInterface connection = ITag.ble.connectionById(addr);
+            if (isListening && connection.isConnected() && location.getTime() < ts + LOCATION_TIMEOUT)
                 add(context, new HistoryRecord(addr, location));
             ITagApplication.faGotGpsLocation();
         }

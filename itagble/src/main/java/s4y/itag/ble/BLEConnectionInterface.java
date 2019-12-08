@@ -5,8 +5,8 @@ import s4y.rasat.Observable;
 public interface BLEConnectionInterface extends AutoCloseable {
     Observable<AlertVolume> observableImmediateAlert();
     Observable<Boolean> observableFindeMe();
-    Observable<Boolean> observableLost();
     Observable<Integer> observableRSSI();
+    Observable<BLEConnectionState> observableState();
 
     boolean isConnected();
     BLEError connect() throws InterruptedException;
@@ -19,4 +19,7 @@ public interface BLEConnectionInterface extends AutoCloseable {
     void disableRSSI();
     boolean rssi();
     int getLastStatus();
+    BLEConnectionState state();
+    boolean isAlerting();
+    boolean isFindMe();
 }

@@ -8,7 +8,9 @@ import android.content.IntentFilter;
 
 import androidx.annotation.NonNull;
 
-import s4y.rasat.android.Channel;
+import java.util.HashMap;
+import java.util.Map;
+
 import s4y.rasat.android.ChannelDistinct;
 import s4y.rasat.Observable;
 
@@ -20,27 +22,19 @@ public class BLEDefault implements BLEInterface {
             _shared = new BLEDefault(
                     context,
                     new BLEConnectionFactoryDefault(),
-                    new BLEConnectionsControlFactoryDefault(),
-                    new BLEConnectionsFactoryDefault(),
                     new BLECentralManagerDefault(context),
-                    new BLEFindMeDefault(),
-                    new BLEScannerFactoryDefault(),
-                    new BLEAlertFactoryDefault(),
-                    new BLEFindMeControlFactoryDefault(),
-                    new BLEConnectionsStoreFactoryDefault()
+                    new BLEScannerFactoryDefault()
             );
         }
         return _shared;
     }
 
-    static final int TIMEOUT = 60;
     private final BLECentralManagerInterface manager;
-    private final BLEConnectionsInterface connections;
-    private final BLEAlertInterface alert;
-    private final BLEFindMeInterface findMe;
     private final BLEScannerInterface scanner;
     private final ChannelDistinct<BLEState> channelState;
     private final Context context;
+    private final BLEConnectionFactoryInterface connectionFactory;
+    private final Map<String, BLEConnectionInterface> map = new HashMap<>();
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -56,47 +50,18 @@ public class BLEDefault implements BLEInterface {
     private BLEDefault(
             Context context,
             BLEConnectionFactoryInterface connectionFactory,
-            BLEConnectionsControlFactoryInterface connectionsControlFactory,
-            BLEConnectionsFactoryInterface connectionsFactory,
             BLECentralManagerInterface manager,
-            BLEFindMeInterface findMe,
-            BLEScannerFactoryInterface scannerFactory,
-            BLEAlertFactoryInterface alertFactory,
-            BLEFindMeControlFactoryInterface findMeControlFactory,
-            BLEConnectionsStoreFactoryInterface storeFactory
+            BLEScannerFactoryInterface scannerFactory
     ) {
+        this.context = context;
+        this.connectionFactory = connectionFactory;
         this.manager = manager;
         this.channelState = new ChannelDistinct<>(manager.state());
-        BLEFindMeControlInterface findMeControl = findMeControlFactory.findMeControll(findMe);
-        final BLEConnectionsStoreInterface store = storeFactory.store(connectionFactory, findMeControl, manager);
-        this.connections = connectionsFactory.connections(store);
-        // this is cycle dependency ugly resolving
-        // connections <- store <- connectionsControl <- connections
-        // as a result store.setConnections is must
-        store.setConnectionsControl(connectionsControlFactory.connectionsControl(connections));
-        this.alert = alertFactory.alert(store);
-        this.findMe = findMe;
-        this.scanner = scannerFactory.scanner(connections, manager);
-        this.context = context;
+        this.scanner = scannerFactory.scanner(manager);
         context.registerReceiver(
                 stateReceiver,
                 new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         );
-    }
-
-    @Override
-    public BLEAlertInterface alert() {
-        return alert;
-    }
-
-    @Override
-    public BLEConnectionsInterface connections() {
-        return connections;
-    }
-
-    @Override
-    public BLEFindMeInterface findMe() {
-        return findMe;
     }
 
     @Override
@@ -120,9 +85,19 @@ public class BLEDefault implements BLEInterface {
         return channelState.observable;
     }
 
+    @NonNull
     @Override
-    public void close() throws Exception {
-        connections.close();
+    public BLEConnectionInterface connectionById(String id) {
+        BLEConnectionInterface connection = map.get(id);
+        if (connection == null) {
+            connection = connectionFactory.connection(manager, id);
+            map.put(id, connection);
+        }
+        return connection;
+    }
+
+    @Override
+    public void close() {
         context.unregisterReceiver(stateReceiver);
     }
 }

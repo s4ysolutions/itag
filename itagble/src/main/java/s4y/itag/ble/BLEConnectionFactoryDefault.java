@@ -5,20 +5,16 @@ import androidx.annotation.NonNull;
 class BLEConnectionFactoryDefault implements BLEConnectionFactoryInterface {
     @Override
     public BLEConnectionInterface connection(
-            @NonNull BLEConnectionsControlInterface connectionsControl,
-            @NonNull BLEFindMeControlInterface findMeControl,
             @NonNull BLECentralManagerInterface manager,
             @NonNull String id) {
 
-        return new BLEConnectionDefault(connectionsControl, findMeControl, manager, id);
+        return new BLEConnectionDefault(manager, id);
     }
 
     @Override
-    public BLEConnectionInterface connection(@NonNull BLEConnectionsControlInterface connectionsControl,
-                                             @NonNull BLEFindMeControlInterface findMeControl,
-                                             @NonNull BLECentralManagerInterface manager,
+    public BLEConnectionInterface connection(@NonNull BLECentralManagerInterface manager,
                                              @NonNull BLEPeripheralInterace peripheral) {
-        return new BLEConnectionDefault(connectionsControl, findMeControl, manager, peripheral);
+        return new BLEConnectionDefault(manager, peripheral);
     }
 
 }

@@ -25,7 +25,6 @@ import androidx.fragment.app.Fragment;
 
 import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
-import s4y.itag.ble.BLEConnectionsInterface;
 import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
@@ -74,29 +73,17 @@ public class ITagsFragment extends Fragment
         int rssi = -1000;
         int statusDrawableId;
         int statusTextId;
-        BLEConnectionState state = ble.connections().getStates().get(itag.id());
+        BLEConnectionInterface connection = ble.connectionById(itag.id());
+        BLEConnectionState state = connection.state();
         if (ble.state() == BLEState.OK && state != null) {
             switch (state) {
-                case unknown:
-                case disconnected:
-                case disconnecting:
-                    if (itag.isAlertDisconnected()) {
-                        statusDrawableId = R.drawable.bt_connecting;
-                        statusTextId = R.string.bt_unk;
-                    } else {
-                        statusDrawableId = R.drawable.bt_disabled;
-                        statusTextId = R.string.bt_disabled;
-                    }
-                    break;
                 case connected:
                     statusDrawableId = R.drawable.bt;
                     statusTextId = R.string.bt;
                     rssi = 0;
                     break;
                 case connecting:
-                case discovering:
-                case discoveringServices:
-                case discoveringCharacteristics:
+                case disconnecting:
                     if (itag.isAlertDisconnected()) {
                         statusDrawableId = R.drawable.bt_connecting;
                         statusTextId = R.string.bt_unk;
@@ -110,13 +97,14 @@ public class ITagsFragment extends Fragment
                     statusDrawableId = R.drawable.bt_call;
                     statusTextId = R.string.bt_call;
                     break;
+                case disconnected:
                 default:
                     statusDrawableId = R.drawable.bt_disabled;
                     statusTextId = R.string.bt_disabled;
             }
-            if (ble.alert().isAlerting(itag.id()) ||
-                    ble.findMe().isFindMe(itag.id()) ||
-                    itag.isAlertDisconnected() && state != BLEConnectionState.connected
+            if (connection.isAlerting() ||
+                    connection.isFindMe() ||
+                    itag.isAlertDisconnected() && !connection.isConnected()
             ) {
                 Log.d(LT, "Start animate because gatt.isFindingITag");
                 animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
@@ -200,14 +188,14 @@ public class ITagsFragment extends Fragment
 
     private final Map<ITagInterface, ViewGroup> tagViews = new HashMap<>();
 
-    private void updateTags(@NonNull ViewGroup root) {
+    private void updateTags() {
         int n = 1;
         for (Map.Entry<ITagInterface, ViewGroup> entry : tagViews.entrySet()) {
             setupTag(n, entry.getKey(), entry.getValue());
         }
     }
 
-    private void updateRSSI(@NonNull ITagInterface itag,int rssi) {
+    private void updateRSSI(@NonNull ITagInterface itag, int rssi) {
         ViewGroup view = tagViews.get(itag);
         if (view == null) {
             return;
@@ -250,7 +238,7 @@ public class ITagsFragment extends Fragment
             ITagInterface itag = ITag.store.byPos(3);
             tagViews.put(itag, root.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
         }
-        updateTags(root);
+        updateTags();
     }
 
     @Override
@@ -276,7 +264,8 @@ public class ITagsFragment extends Fragment
         }
         for (int i = 0; i < ITag.store.count(); i++) {
             ITagInterface itag = ITag.store.byPos(i);
-            ble.connections().enableRSSI(itag.id());
+            BLEConnectionInterface connection = ble.connectionById(itag.id());
+            connection.enableRSSI();
         }
     }
 
@@ -286,7 +275,8 @@ public class ITagsFragment extends Fragment
         }
         for (int i = 0; i < ITag.store.count(); i++) {
             ITagInterface itag = ITag.store.byPos(i);
-            ble.connections().disableRSSI(itag.id());
+            BLEConnectionInterface connection = ble.connectionById(itag.id());
+            connection.disableRSSI();
         }
     }
 
@@ -302,15 +292,11 @@ public class ITagsFragment extends Fragment
         ITagApplication.faITagsView(ITag.store.count());
         final ViewGroup root = (ViewGroup) Objects.requireNonNull(getView());
         setupTags(root);
-        disposableBag.add(ITag.store.observable().subscribe(event -> {
-            setupTags(root);
-        }));
-        for (int i=0; i< ITag.store.count();i++) {
+        disposableBag.add(ITag.store.observable().subscribe(event -> setupTags(root)));
+        for (int i = 0; i < ITag.store.count(); i++) {
             ITagInterface itag = ITag.store.byPos(i);
-            BLEConnectionInterface connection = ITag.ble.connections().byId(itag.id());
-            disposableBag.add(connection.observableRSSI().subscribe(rssi -> {
-                updateRSSI(itag, rssi);
-            }));
+            BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
+            disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(itag, rssi)));
         }
         HistoryRecord.addListener(this);
 
