@@ -96,6 +96,9 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
     public void scanForPeripherals() {
         BluetoothAdapter adapter = getAdapter();
         if (adapter != null) {
+            if (BuildConfig.DEBUG) {
+                Log.d(L,"scanForPeripherals");
+            }
             if (!isScanning(adapter)) {
                 adapter.startLeScan(leScanCallback);
                 isScanning = true;

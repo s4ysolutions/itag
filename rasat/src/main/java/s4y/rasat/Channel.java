@@ -12,8 +12,10 @@ public class Channel<T> {
 
     public void broadcast(T value) {
         observable.value = value;
-        for (Handler<T> handler : observable.handlers) {
-            handler.handle(value);
+        synchronized (observable.handlers) {
+            for (Handler<T> handler : observable.handlers) {
+                handler.handle(value);
+            }
         }
     }
 }

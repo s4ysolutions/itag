@@ -15,13 +15,17 @@ public class Observable<T> {
         this.value = null;
     }
 
-    public void remove(Handler<T> handler) {
-        handlers.remove(handler);
+    void remove(Handler<T> handler) {
+        synchronized (handlers) {
+            handlers.remove(handler);
+        }
     }
 
     public Disposable<T> subscribe(Handler<T> handler) {
-        handlers.add(handler);
-        return new Disposable<>(handler,this);
+        synchronized (handlers) {
+            handlers.add(handler);
+        }
+        return new Disposable<>(handler, this);
     }
 
     public T value() {

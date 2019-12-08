@@ -1,5 +1,7 @@
 package s4y.itag.ble;
 
+import android.util.Log;
+
 class ThreadWait<T> {
     private T state;
 

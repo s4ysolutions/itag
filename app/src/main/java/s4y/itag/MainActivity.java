@@ -34,6 +34,7 @@ import java.util.Locale;
 
 import s4y.itag.ble.AlertVolume;
 import s4y.itag.ble.BLEConnectionInterface;
+import s4y.itag.ble.BLEError;
 import s4y.itag.ble.BLEScanResult;
 import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
@@ -289,19 +290,72 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    // if alertThread[0] != 0 then connect-disconenct section is active
+    private final Thread[] alertThread = new Thread[]{null};
+
     public void onITagClick(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
         if (MediaPlayerUtils.getInstance().isSound()) {
             MediaPlayerUtils.getInstance().stopSound(this);
         }
-        BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-        new Thread(() -> {
-            if (connection.isAlerting()) {
-                connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
-            }else{
-                connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
+        final BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
+        synchronized (alertThread) {
+            if (alertThread[0] != null) {
+                alertThread[0] = null;
+                if (connection.isConnected()) {
+                    connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
+                }
+                return;
             }
-        }).start();
+        }
+        if (connection.isConnected()) {
+            new Thread(() -> {
+                if (connection.isAlerting()) {
+                    connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
+                    if (!itag.isAlertDisconnected()) {
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        connection.disconnect(ITag.BLE_TIMEOUT);
+                    }
+                } else {
+                    connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
+                }
+            }).start();
+        } else if (!itag.isAlertDisconnected()) {
+            // simulate key find by connect /disconnect
+            Thread thread = new Thread(() -> {
+                boolean abort;
+                do {
+                    connection.connect(false);
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if (connection.isConnected()) {
+                        synchronized (alertThread) {
+                            alertThread[0] = null;
+                        }
+                        if (connection.isAlerting()) {
+                            connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
+                        } else {
+                            connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
+                        }
+                        // connection.disconnect(ITag.BLE_TIMEOUT);
+                    }
+                    synchronized (alertThread) {
+                        abort = alertThread[0] == null;
+                    }
+                } while (!abort);
+            });
+            synchronized (alertThread) {
+                alertThread[0] = thread;
+            }
+            thread.start();
+        }
     }
 
     public void onStartStopScan(View ignored) {

@@ -39,9 +39,10 @@ class BLEScannerDefault implements BLEScannerInterface {
         this.manager = manager;
     }
 
+    private boolean isScanning = false;
     @Override
     public boolean isScanning() {
-        return manager.isScanning();
+        return isScanning;
     }
 
     @Override
@@ -77,6 +78,7 @@ class BLEScannerDefault implements BLEScannerInterface {
                 manager.observables().observablePeripheralDiscovered().subscribe(
                         event -> channelScan.broadcast(new BLEScanResult(event.peripheral.address(), event.peripheral.name(), event.rssi))
                 ));
+        isScanning = true;
         this.timeout = timeout;
         manager.scanForPeripherals();
         handlerTimer.post(runnableTimer);
@@ -90,6 +92,7 @@ class BLEScannerDefault implements BLEScannerInterface {
         manager.stopScan();
      //   resultList.clear();
         disposableBag.dispose();
+        isScanning = false;
         channelActive.broadcast(false);
     }
 }

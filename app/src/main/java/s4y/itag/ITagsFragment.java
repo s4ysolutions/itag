@@ -54,37 +54,137 @@ public class ITagsFragment extends Fragment
         // Required empty public constructor
     }
 
-    private void setupTag(int n, @NonNull final ITagInterface itag, final View itagLayout) {
-        final View btnForget = itagLayout.findViewById(R.id.btn_forget);
+    private final Map<String, ViewGroup> tagViews = new HashMap<>();
+
+    private void setupTags(@NonNull ViewGroup root) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
+
+        View tagsLayout = root.findViewById(R.id.tags);
+        int index = -1;
+        if (tagsLayout != null) {
+            root.removeView(tagsLayout);
+            index = root.indexOfChild(tagsLayout);
+        }
+        final int s = ITag.store.count();
+        final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
+        tagsLayout = activity.getLayoutInflater().inflate(rid, root, false);
+        root.addView(tagsLayout, index);
+        tagViews.clear();
+        if (s > 0) {
+            ITagInterface itag = ITag.store.byPos(0);
+            tagViews.put(itag.id(), root.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
+        }
+        if (s > 1) {
+            ITagInterface itag = ITag.store.byPos(1);
+            tagViews.put(itag.id(), root.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
+        }
+        if (s > 2) {
+            ITagInterface itag = ITag.store.byPos(2);
+            tagViews.put(itag.id(), root.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
+        }
+        if (s > 3) {
+            ITagInterface itag = ITag.store.byPos(3);
+            tagViews.put(itag.id(), root.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
+        }
+
+
+        for (Map.Entry<String, ViewGroup> entry : tagViews.entrySet()) {
+            String id = entry.getKey();
+            ViewGroup rootView = entry.getValue();
+            ITagInterface itag = ITag.store.byId(id);
+            BLEConnectionInterface connection = ble.connectionById(id);
+            if (itag != null) {
+                setupTag(rootView, itag);
+                updateITagImage(rootView, itag, connection);
+                updateName(rootView, itag.name());
+            }
+            updateRSSI(rootView, connection.rssi());
+            updateState(rootView, id, connection.state());
+            updateLocationImage(rootView, id);
+        }
+        updateWayToday();
+    }
+
+    private void setupTag(@NonNull ViewGroup rootView, @NonNull final ITagInterface itag) {
+        final View btnForget = rootView.findViewById(R.id.btn_forget);
         btnForget.setTag(itag);
-        final View btnColor = itagLayout.findViewById(R.id.btn_color);
+        final View btnColor = rootView.findViewById(R.id.btn_color);
         btnColor.setTag(itag);
-        final View btnSetName = itagLayout.findViewById(R.id.btn_set_name);
+        final View btnSetName = rootView.findViewById(R.id.btn_set_name);
         btnSetName.setTag(itag);
-        final ImageView btnAlert = itagLayout.findViewById(R.id.btn_alert);
+        final ImageView btnAlert = rootView.findViewById(R.id.btn_alert);
         btnAlert.setImageResource(itag.isAlertDisconnected() ? R.drawable.alert : R.drawable.noalert);
         btnAlert.setTag(itag);
 
-        MainActivity mainActivity = (MainActivity) getActivity();
-        if (mainActivity == null)
+    }
+
+    private void updateWayToday() {
+        if (ITag.store.count() > 0) {
+            ITagInterface itag = ITag.store.byPos(0);
+            ViewGroup rootView = tagViews.get(itag.id());
+            if (rootView == null) {
+                return;
+            }
+            View waytoday = rootView.findViewById(R.id.wt);
+            if (LocationsTracker.isUpdating && !"".equals(trackID)) {
+                waytoday.setVisibility(View.VISIBLE);
+                TextView wtid = waytoday.findViewById(R.id.text_wt_id);
+                wtid.setText(trackID);
+            } else {
+                waytoday.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private void updateLocationImage(@NonNull ViewGroup rootView, @NonNull String id) {
+        final Activity activity = getActivity();
+        if (activity == null) {
             return;
-        Animation animShake = null;
-        RssiView rssiView = itagLayout.findViewById(R.id.rssi);
-        int rssi = -1000;
+        }
+        final ImageView imageLocation = rootView.findViewById(R.id.location);
+        imageLocation.setTag(id);
+
+        Map<String, HistoryRecord> records = HistoryRecord.getHistoryRecords(activity);
+
+        if (records.get(id) == null) {
+            mLocationAnimation.cancel();
+            imageLocation.setVisibility(View.GONE);
+        } else {
+            imageLocation.startAnimation(mLocationAnimation);
+            imageLocation.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void updateRSSI(@NonNull ViewGroup rootView, int rssi) {
+        RssiView rssiView = rootView.findViewById(R.id.rssi);
+        if (rssiView == null) {
+            return;
+        }
+        rssiView.setRssi(rssi);
+    }
+
+    private void updateRSSI(@NonNull String id, int rssi) {
+        ViewGroup view = tagViews.get(id);
+        if (view == null) {
+            return;
+        }
+        updateRSSI(view, rssi);
+    }
+
+    private void updateState(@NonNull ViewGroup rootView, @NonNull String id, @NonNull BLEConnectionState state) {
         int statusDrawableId;
         int statusTextId;
-        BLEConnectionInterface connection = ble.connectionById(itag.id());
-        BLEConnectionState state = connection.state();
-        if (ble.state() == BLEState.OK && state != null) {
+        if (ble.state() == BLEState.OK) {
             switch (state) {
                 case connected:
                     statusDrawableId = R.drawable.bt;
                     statusTextId = R.string.bt;
-                    rssi = 0;
                     break;
                 case connecting:
                 case disconnecting:
-                    if (itag.isAlertDisconnected()) {
+                    ITagInterface itag = ITag.store.byId(id);
+                    if (itag != null && itag.isAlertDisconnected()) {
                         statusDrawableId = R.drawable.bt_connecting;
                         statusTextId = R.string.bt_unk;
                     } else {
@@ -102,18 +202,43 @@ public class ITagsFragment extends Fragment
                     statusDrawableId = R.drawable.bt_disabled;
                     statusTextId = R.string.bt_disabled;
             }
-            if (connection.isAlerting() ||
-                    connection.isFindMe() ||
-                    itag.isAlertDisconnected() && !connection.isConnected()
-            ) {
-                Log.d(LT, "Start animate because gatt.isFindingITag");
-                animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
-            }
         } else {
             statusDrawableId = R.drawable.bt_disabled;
             statusTextId = R.string.bt_disabled;
         }
-        rssiView.setRssi(rssi);
+
+        final ImageView imgStatus = rootView.findViewById(R.id.bt_status);
+        imgStatus.setImageResource(statusDrawableId);
+        final TextView textStatus = rootView.findViewById(R.id.text_status);
+        textStatus.setText(statusTextId);
+    }
+
+    private void updateState(@NonNull String id, @NonNull BLEConnectionState state) {
+        ViewGroup view = tagViews.get(id);
+        if (view == null) {
+            return;
+        }
+        updateState(view, id, state);
+    }
+
+    private void updateName(@NonNull ViewGroup rootView, String name) {
+        final TextView textName = rootView.findViewById(R.id.text_name);
+        textName.setText(name);
+    }
+
+    private void updateITagImage(@NonNull ViewGroup rootView, ITagInterface itag, BLEConnectionInterface connection) {
+        MainActivity mainActivity = (MainActivity) getActivity();
+        if (mainActivity == null)
+            return;
+        Animation animShake = null;
+
+        if (connection.isAlerting() ||
+                connection.isFindMe() ||
+                itag.isAlertDisconnected() && !connection.isConnected()
+        ) {
+            Log.d(LT, "Start animate because gatt.isFindingITag");
+            animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
+        }
 
         int imageId;
         switch (itag.color()) {
@@ -137,8 +262,7 @@ public class ITagsFragment extends Fragment
                 break;
         }
 
-        final ImageView imageITag = itagLayout.findViewById(R.id.image_itag);
-        // imageITag.setOnLongClickListener(mOnLongClickListener);
+        final ImageView imageITag = rootView.findViewById(R.id.image_itag);
         imageITag.setImageResource(imageId);
         imageITag.setTag(itag);
         if (animShake == null) {
@@ -152,93 +276,6 @@ public class ITagsFragment extends Fragment
             Log.d(LT, "Start animation");
             imageITag.startAnimation(animShake);
         }
-
-        final ImageView imgStatus = itagLayout.findViewById(R.id.bt_status);
-        imgStatus.setImageResource(statusDrawableId);
-
-        final TextView textName = itagLayout.findViewById(R.id.text_name);
-//        textName.setText(device.name!=null && device.name.length()>0 ?device.name:device.addr);
-        textName.setText(itag.name());
-
-        final TextView textStatus = itagLayout.findViewById(R.id.text_status);
-        textStatus.setText(statusTextId);
-
-        final ImageView imageLocation = itagLayout.findViewById(R.id.location);
-        imageLocation.setTag(itag);
-
-        Map<String, HistoryRecord> records = HistoryRecord.getHistoryRecords(getActivity());
-
-        if (records.get(itag.id()) == null) {
-            mLocationAnimation.cancel();
-            imageLocation.setVisibility(View.GONE);
-        } else {
-            imageLocation.startAnimation(mLocationAnimation);
-            imageLocation.setVisibility(View.VISIBLE);
-        }
-
-        View waytoday = itagLayout.findViewById(R.id.wt);
-        if (n == 1 && LocationsTracker.isUpdating && !"".equals(trackID)) {
-            waytoday.setVisibility(View.VISIBLE);
-            TextView wtid = waytoday.findViewById(R.id.text_wt_id);
-            wtid.setText(trackID);
-        } else {
-            waytoday.setVisibility(View.GONE);
-        }
-    }
-
-    private final Map<ITagInterface, ViewGroup> tagViews = new HashMap<>();
-
-    private void updateTags() {
-        int n = 1;
-        for (Map.Entry<ITagInterface, ViewGroup> entry : tagViews.entrySet()) {
-            setupTag(n, entry.getKey(), entry.getValue());
-        }
-    }
-
-    private void updateRSSI(@NonNull ITagInterface itag, int rssi) {
-        ViewGroup view = tagViews.get(itag);
-        if (view == null) {
-            return;
-        }
-        RssiView rssiView = view.findViewById(R.id.rssi);
-        if (rssiView == null) {
-            return;
-        }
-        rssiView.setRssi(rssi);
-    }
-
-    private void setupTags(@NonNull ViewGroup root) {
-        Activity activity = getActivity();
-        if (activity == null) return; //
-
-        View tagsLayout = root.findViewById(R.id.tags);
-        int index = -1;
-        if (tagsLayout != null) {
-            root.removeView(tagsLayout);
-            index = root.indexOfChild(tagsLayout);
-        }
-        final int s = ITag.store.count();
-        final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
-        tagsLayout = activity.getLayoutInflater().inflate(rid, root, false);
-        root.addView(tagsLayout, index);
-        tagViews.clear();
-        if (s > 0) {
-            ITagInterface itag = ITag.store.byPos(0);
-            tagViews.put(itag, root.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
-        }
-        if (s > 1) {
-            ITagInterface itag = ITag.store.byPos(1);
-            tagViews.put(itag, root.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
-        }
-        if (s > 2) {
-            ITagInterface itag = ITag.store.byPos(2);
-            tagViews.put(itag, root.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
-        }
-        if (s > 3) {
-            ITagInterface itag = ITag.store.byPos(3);
-            tagViews.put(itag, root.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
-        }
-        updateTags();
     }
 
     @Override
@@ -294,9 +331,11 @@ public class ITagsFragment extends Fragment
         setupTags(root);
         disposableBag.add(ITag.store.observable().subscribe(event -> setupTags(root)));
         for (int i = 0; i < ITag.store.count(); i++) {
-            ITagInterface itag = ITag.store.byPos(i);
-            BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-            disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(itag, rssi)));
+            final ITagInterface itag = ITag.store.byPos(i);
+            final String id = itag.id();
+            final BLEConnectionInterface connection = ITag.ble.connectionById(id);
+            disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(id, rssi)));
+            disposableBag.add(connection.observableState().subscribe(state -> updateState(id, state)));
         }
         HistoryRecord.addListener(this);
 

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static android.bluetooth.BluetoothDevice.DEVICE_TYPE_UNKNOWN;
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
@@ -28,7 +29,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private final BluetoothDevice device;
     @NonNull
     private final BLECentralManagerInterface manager;
-    private BluetoothGatt gatt = null;
+    private final BluetoothGatt[] gatt = new BluetoothGatt[]{null};
     private BLEPeripheralObservables observables = new BLEPeripheralObservables();
     private BLEService[] services = new BLEService[]{};
 
@@ -43,6 +44,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     }
 
     private final Context context;
+    private final boolean cached;
 
     private final BluetoothGattCallback callback = new BluetoothGattCallback() {
         @Override
@@ -94,13 +96,13 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             if (rssi != this.rssi) {
                 if (BuildConfig.DEBUG) {
-                    Log.d(LT, "onReadRemoteRssi id=" + identifier() + " rssi=" + rssi + " status=" + status);
+                    Log.v(LT, "onReadRemoteRssi id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
                 }
                 this.rssi = rssi;
                 observables.channelRSSI.broadcast(new BLEPeripheralObservablesInterface.RSSIEvent(rssi, status));
             } else {
                 if (BuildConfig.DEBUG) {
-                    Log.d(LT, "onReadRemoteRssi skipped id=" + identifier() + " rssi=" + rssi + " status=" + status);
+                    Log.v(LT, "onReadRemoteRssi skipped id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
                 }
             }
         }
@@ -123,6 +125,11 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         this.device = device;
         this.manager = manager;
         this.context = context;
+        int type = device.getType();
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "BLEPeripheralDefault addr="+device.getAddress()+" name="+device.getName()+" type="+type);
+        }
+        this.cached = type != DEVICE_TYPE_UNKNOWN;
     }
 
     @NonNull
@@ -132,51 +139,68 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
 
     @Override
-    public void connect() {
+    public void connect(boolean auto) {
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "connect id=" + identifier());
+        }
+        if (isConnected()) {
+            if (gatt() == null) {
+                Log.w(LT, "gatt == null but device is connected");
+            } else {
+                return;
+            }
+        }
         setState(BLEPeripheralState.connecting);
         BluetoothGatt g;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            g = device.connectGatt(context, true, callback, TRANSPORT_LE);
+            g = device.connectGatt(context,  auto, callback, TRANSPORT_LE);
         } else {
-            g = device.connectGatt(context, true, callback);
+            g = device.connectGatt(context, auto, callback);
         }
-        synchronized (this) {
-            gatt = g;
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "init gatt id=" + identifier() + " gatt is null: " + (g == null ? "yes" : "no") + " id=" + identifier());
         }
+        if (g == null) {
+            Log.w(LT, "will init gatt to null, id=" + identifier());
+
+        }
+        setGatt(g);
     }
 
     @Override
     public void disconnect() {
-        if (state() == BLEPeripheralState.disconnected) {
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "disconnect id=" + identifier());
+        }
+        if (isDisconnected()) {
             setState(BLEPeripheralState.disconnected);
         } else {
             setState(BLEPeripheralState.disconnecting);
-            gatt.disconnect();
+            gatt().disconnect();
         }
     }
 
     @Override
     public void discoveryServices() {
-        if (!BLEPeripheralState.disconnected.equals(state())) {
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "discoveryServices id=" + identifier());
+        }
+        if (isConnected()) {
             setState(BLEPeripheralState.discovering);
-            gatt.discoverServices();
+            gatt().discoverServices();
         }
     }
 
     @Override
     public BLEError writeInt8(BLECharacteristic characteristic, int value) {
-        BluetoothGatt g;
-        synchronized (this) {
-            g = gatt;
-        }
         if (BuildConfig.DEBUG) {
             Log.d(LT, "writeInt8 id=" + identifier() +
-                    " gatt=" + (g==null? "null" :g.getDevice().getAddress()) +
+                    " gatt=" + (gatt() == null ? "null" : gatt().getDevice().getAddress()) +
                     " connected=" + manager.connected(device) +
                     " characteristic=" + characteristic.gattCharacteristic.getUuid() +
                     " value=" + value);
         }
-        if (g == null) {
+        if (gatt() == null) {
             return BLEError.noGatt;
         }
         if (!manager.connected(device)) {
@@ -184,44 +208,41 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         }
         setState(BLEPeripheralState.writting);
         characteristic.setInt8(value);
-        g.writeCharacteristic(characteristic.gattCharacteristic);
+        gatt().writeCharacteristic(characteristic.gattCharacteristic);
         return BLEError.ok;
     }
 
     @Override
     public BLEError setNotify(BLECharacteristic characteristic, boolean enable) {
-        BluetoothGatt g;
-        synchronized (this) {
-            g = gatt;
-        }
-        if (g == null) {
+        if (gatt() == null) {
             return BLEError.noGatt;
         }
         if (!manager.connected(device)) {
             return BLEError.notConnected;
         }
-        g.setCharacteristicNotification(characteristic.gattCharacteristic, enable);
+        gatt().setCharacteristicNotification(characteristic.gattCharacteristic, enable);
         BluetoothGattDescriptor descriptor = characteristic.gattCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG);
         if (descriptor != null) {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            g.writeDescriptor(descriptor);
+            gatt().writeDescriptor(descriptor);
         }
 
         return BLEError.ok;
     }
 
-    @Override
-    public BLEPeripheralState state() {
-        BluetoothGatt g;
-        synchronized (this) {
-            g = gatt;
+    /*
+        @Override
+        public BLEPeripheralState state() {
+            BluetoothGatt g;
+            synchronized (this) {
+                g = gatt;
+            }
+            if (g == null || !manager.connected(device)) {
+                return BLEPeripheralState.disconnected;
+            }
+            return getState();
         }
-        if (g == null || !manager.connected(device)) {
-            return BLEPeripheralState.disconnected;
-        }
-        return getState();
-    }
-
+    */
     @Override
     public BLEPeripheralObservablesInterface observables() {
         return observables;
@@ -230,12 +251,17 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     @Override
     synchronized public void close() {
         setState(BLEPeripheralState.disconnected);
-        BluetoothGatt g;
-        synchronized (this) {
-            g = gatt;
-            gatt = null;
+        if (isConnected()) {
+            Log.w(LT, "gatt will be closed, but device is connected");
         }
-        g.close();
+        if (gatt() == null) {
+            Log.w(LT, "gatt will be closed, but  gatt is null");
+        }
+        if (gatt() != null) {
+            Log.d(LT, "close");
+            gatt().close();
+        }
+        setGatt(null);
     }
 
     private static final int RSSI_INTERVAL_MS = 1000;
@@ -244,10 +270,10 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private Runnable mRssiRunable = new Runnable() {
         @Override
         public void run() {
-            if (!BLEPeripheralState.disconnected.equals(state())) { // https://github.com/s4ysolutions/itag/issues/14
-                gatt.readRemoteRssi();
+            if (isConnected() && gatt() != null) {
+                Log.v(LT, "request RSSI id=" + identifier());
+                gatt().readRemoteRssi();
             }
-            Log.d(LT, "request RSSI id=" + identifier());
             manager.postOperation(this, RSSI_INTERVAL_MS);
         }
     };
@@ -284,7 +310,54 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         return device.getAddress();
     }
 
-    public boolean rssi() {
+    @Override
+    public boolean isConnected() {
+        boolean connected = manager.connected(device);
+        if (gatt() == null && connected) {
+            Log.w(LT, "isConnected, but gatt == null, id=" + identifier());
+        }
+        return connected;
+    }
+
+    @Override
+    public boolean isDisconnected() {
+        boolean notconnected = !manager.connected(device);
+        if (gatt() == null && !notconnected) {
+            Log.w(LT, "not isDisconnected, but gatt == null, id=" + identifier());
+        }
+        return notconnected;
+    }
+
+    public boolean rssiEnabled() {
         return rssiCount > 0;
     }
+
+    private BluetoothGatt gatt() {
+        BluetoothGatt ret;
+        synchronized (gatt) {
+            ret = gatt[0];
+        }
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "getGatt null:" +(ret==null?"yes":"no")+" id="+identifier());
+        }
+        return ret;
+    }
+
+    private void setGatt(BluetoothGatt gatt) {
+        synchronized (this.gatt) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "setGatt null:" +(gatt==null?"yes":"no")+" id="+identifier());
+            }
+            if (this.gatt[0] != null) {
+                Log.w(LT, "Overwrite not null gatt, id=" + identifier());
+            }
+            this.gatt[0] = gatt;
+        }
+    }
+
+    @Override
+    public boolean cached() {
+        return cached;
+    }
+
 }
