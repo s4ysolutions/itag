@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-enum AlertVolume {
+public enum AlertVolume {
     NO_ALERT((byte) 0x00),
     MEDIUM_ALERT((byte) 0x01),
     HIGH_ALERT((byte) 0x02);

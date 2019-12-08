@@ -14,8 +14,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.preference.PreferenceManager;
 
 import android.util.Log;
@@ -34,16 +32,16 @@ import androidx.fragment.app.FragmentTransaction;
 import java.util.List;
 import java.util.Locale;
 
+import s4y.itag.ble.AlertVolume;
+import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEScanResult;
 import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagDefault;
 import s4y.itag.itag.ITagInterface;
-import s4y.itag.itag.StoreOp;
 import s4y.itag.itag.TagColor;
 import s4y.rasat.DisposableBag;
-import s4y.rasat.Handler;
 import s4y.waytoday.idservice.IDService;
 
 public class MainActivity extends FragmentActivity {
@@ -105,20 +103,15 @@ public class MainActivity extends FragmentActivity {
                 }
         ));
         disposableBag.add(ITag.ble.scanner().observableTimer().subscribe(
-                event -> {
-                    setupProgressBar();
-                }
+                event -> setupProgressBar()
         ));
-        disposableBag.add(ITag.store.observable().subscribe(new Handler<StoreOp>() {
-            @Override
-            public void handle(StoreOp event) {
-                switch (event.op) {
-                    case change:
-                        setupContent();
-                        break;
-                    case forget:
-                        break;
-                }
+        disposableBag.add(ITag.store.observable().subscribe(event -> {
+            switch (event.op) {
+                case change:
+                    setupContent();
+                    break;
+                case forget:
+                    break;
             }
         }));
     }
@@ -297,14 +290,18 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void onITagClick(@NonNull View sender) {
-        String id = (String) sender.getTag();
-        if (id == null) {
-            ITagApplication.handleError(new Exception("No ID in onITagClick"));
-            return;
-        }
+        ITagInterface itag = (ITagInterface) sender.getTag();
         if (MediaPlayerUtils.getInstance().isSound()) {
             MediaPlayerUtils.getInstance().stopSound(this);
         }
+        BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
+        new Thread(() -> {
+            if (connection.isAlerting()) {
+                connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
+            }else{
+                connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
+            }
+        }).start();
     }
 
     public void onStartStopScan(View ignored) {
@@ -336,6 +333,7 @@ public class MainActivity extends FragmentActivity {
         final PopupMenu popupMenu = new PopupMenu(this, sender);
         popupMenu.inflate(R.menu.app);
         popupMenu.setOnMenuItemClickListener(item -> {
+            //noinspection SwitchStatementWithTooFewBranches
             switch (item.getItemId()) {
                 case R.id.exit:
                     SharedPreferences preferences = (getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
@@ -542,7 +540,7 @@ public class MainActivity extends FragmentActivity {
 
     @SuppressLint("MissingSuperCall")
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         //No call for super(). Bug on API Level > 11. issue #54
     }
 }

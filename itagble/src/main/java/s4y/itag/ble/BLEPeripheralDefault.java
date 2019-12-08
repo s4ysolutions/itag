@@ -3,6 +3,7 @@ package s4y.itag.ble;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
@@ -46,6 +47,12 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private final BluetoothGattCallback callback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(@NonNull BluetoothGatt gatt, int status, int newState) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "onConnectionStateChange id=" + identifier() +
+                        " addr=" + gatt.getDevice().getAddress() +
+                        " status=" + status +
+                        " newState=" + newState);
+            }
             if (status == GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     setState(BLEPeripheralState.connected);
@@ -66,6 +73,11 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
         @Override
         public void onServicesDiscovered(@NonNull final BluetoothGatt gatt, int status) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "onServicesDiscovered id=" + identifier() +
+                        " addr=" + gatt.getDevice().getAddress() +
+                        " status=" + status);
+            }
             List<BLEService> serviceList = new ArrayList<>();
             for (BluetoothGattService service : gatt.getServices()) {
                 serviceList.add(new BLEService(service));
@@ -91,6 +103,19 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
                     Log.d(LT, "onReadRemoteRssi skipped id=" + identifier() + " rssi=" + rssi + " status=" + status);
                 }
             }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "onCharacteristicWrite id=" + identifier() +
+                        " addr=" + gatt.getDevice().getAddress() +
+                        " characteristic=" + characteristic.getUuid() +
+                        " status=" + status);
+            }
+            observables.channelWrite.broadcast(new BLEPeripheralObservablesInterface.CharacteristicEvent(
+                    new BLECharacteristic(characteristic),
+                    status));
         }
     };
 
@@ -143,6 +168,13 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         BluetoothGatt g;
         synchronized (this) {
             g = gatt;
+        }
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "writeInt8 id=" + identifier() +
+                    " gatt=" + (g==null? "null" :g.getDevice().getAddress()) +
+                    " connected=" + manager.connected(device) +
+                    " characteristic=" + characteristic.gattCharacteristic.getUuid() +
+                    " value=" + value);
         }
         if (g == null) {
             return BLEError.noGatt;

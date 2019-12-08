@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -15,6 +16,7 @@ import s4y.rasat.android.ChannelDistinct;
 import s4y.rasat.Observable;
 
 public class BLEDefault implements BLEInterface {
+    private static final String LT = BLEDefault.class.getName();
     private static BLEInterface _shared;
 
     public static BLEInterface shared(Context context) {
@@ -88,12 +90,19 @@ public class BLEDefault implements BLEInterface {
     @NonNull
     @Override
     public BLEConnectionInterface connectionById(String id) {
-        BLEConnectionInterface connection = map.get(id);
-        if (connection == null) {
-            connection = connectionFactory.connection(manager, id);
-            map.put(id, connection);
+        synchronized (map) {
+            BLEConnectionInterface connection = map.get(id);
+            if (connection == null) {
+                connection = connectionFactory.connection(manager, id);
+                map.put(id, connection);
+                Log.d(LT, "connectionById make id=" + id);
+            } else {
+                if (BuildConfig.DEBUG) {
+                    Log.d(LT, "connectionById reused id=" + id);
+                }
+            }
+            return connection;
         }
-        return connection;
     }
 
     @Override

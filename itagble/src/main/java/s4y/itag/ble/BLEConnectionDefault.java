@@ -3,6 +3,7 @@ package s4y.itag.ble;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -89,6 +90,9 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     private void setPeripheral(@Nullable BLEPeripheralInterace peripheral) {
+        if (BuildConfig.DEBUG){
+           Log.d("LT", "setPeripheral id="+id+" peripheral="+(peripheral==null? "null":peripheral.identifier()));
+        }
         this.peripheral = peripheral;
         disposables.dispose();
         // TODO: memory leak on destruct?
@@ -267,6 +271,9 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             if (monitorDiscovery.isTimedOut()) {
                 return BLEError.timeout;
             }
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "waitForConnect id="+id+" characteristicAlert=" + (immediateAlertCharacteristic() != null ? "yes" : "no"));
+            }
             lastStatus = monitorDiscovery.payload();
             return lastStatus == GATT_SUCCESS ? BLEError.ok : BLEError.badStatus;
         }
@@ -408,10 +415,11 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                         }
                     }));
             monitorCharacteristicWrite.waitFor(() -> peripheral.writeInt8(characteristic, value), timeoutSec);
+            if (monitorCharacteristicWrite.isTimedOut()) {
+                return BLEError.timeout;
+            }
             lastStatus = monitorCharacteristicWrite.payload();
-            return monitorCharacteristicWrite.isTimedOut()
-                    ? BLEError.timeout
-                    : lastStatus == GATT_SUCCESS
+            return lastStatus == GATT_SUCCESS
                     ? BLEError.ok
                     : BLEError.badStatus;
         }
