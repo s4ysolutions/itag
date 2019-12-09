@@ -1,12 +1,15 @@
 package s4y.itag.itag;
 
 import android.content.Context;
+import android.media.MediaPlayer;
 import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import s4y.itag.BuildConfig;
 import s4y.itag.ITagApplication;
+import s4y.itag.MediaPlayerUtils;
 import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEDefault;
@@ -68,15 +71,19 @@ public class ITag {
         connectAsync(connection, true);
     }
 
-    static void connectAsync(final BLEConnectionInterface connection, boolean infinity) {
-        connectAsync(connection,  infinity, null);
+    @SuppressWarnings("SameParameterValue")
+    private static void connectAsync(final BLEConnectionInterface connection, boolean infinity) {
+        connectAsync(connection, infinity, null);
     }
 
+    @SuppressWarnings("unused")
     static void connectAsync(final BLEConnectionInterface connection, Runnable onComplete) {
-        connectAsync(connection,  true, onComplete);
+        connectAsync(connection, true, onComplete);
     }
 
     private static final Map<String, Thread> asyncConnections = new HashMap<>();
+    private static final Map<String, DisposableBag> connectionBags = new HashMap<>();
+
     @SuppressWarnings("SameParameterValue")
     public static void connectAsync(final BLEConnectionInterface connection, boolean infinity, Runnable onComplete) {
         synchronized (asyncConnections) {
@@ -84,27 +91,52 @@ public class ITag {
                 return;
             }
         }
+        DisposableBag disposableBagTmp;
+        synchronized (connectionBags) {
+            disposableBagTmp = connectionBags.get(connection.id());
+            if (disposableBagTmp == null) {
+                disposableBagTmp = new DisposableBag();
+                connectionBags.put(connection.id(), disposableBagTmp);
+            } else {
+                disposableBagTmp.dispose();
+            }
+        }
+
+        final DisposableBag disposableBag = disposableBagTmp;
         final ITagInterface itag = store.byId(connection.id());
         if (itag == null) {
             return;
         }
         connectThreadsCount++;
-        Log.d(LT, "BLE Connect thread started, count = " + connectThreadsCount);
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "BLE Connect thread started, count = " + connectThreadsCount);
+        }
         Thread thread = new Thread("BLE Connect " + connection.id() + " " + System.currentTimeMillis()) {
             @Override
             public void run() {
                 do {
-                    Log.d(LT, "BLE Connect thread connect " + connection.id() + "/" + (itag == null ? "null" : itag.name())+" "+Thread.currentThread().getName());
+                    if (BuildConfig.DEBUG) {
+                        Log.d(LT, "BLE Connect thread connect " + connection.id() + "/" + itag.name() + " " + Thread.currentThread().getName());
+                    }
                     connection.connect(infinity);
                 } while (itag.isAlertDisconnected() && infinity && !connection.isConnected());
-                if (onComplete!=null) {
+                disposableBag.add(connection.observableClick().subscribe(click -> {
+                    if (connection.isFindMe() && !MediaPlayerUtils.getInstance().isSound()) {
+                        MediaPlayerUtils.getInstance().startFindPhone(ITagApplication.context);
+                    } else {
+                        MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
+                    }
+                }));
+                if (onComplete != null) {
                     onComplete.run();
                 }
                 synchronized (asyncConnections) {
                     asyncConnections.remove(connection.id());
                 }
                 connectThreadsCount--;
-                Log.d(LT, "BLE Connect thread finished, count = " + connectThreadsCount);
+                if (BuildConfig.DEBUG) {
+                    Log.d(LT, "BLE Connect thread finished, count = " + connectThreadsCount);
+                }
             }
         };
         synchronized (asyncConnections) {

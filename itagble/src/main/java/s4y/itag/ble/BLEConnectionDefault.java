@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import s4y.rasat.DisposableBag;
 import s4y.rasat.Observable;
+import s4y.rasat.android.Channel;
 import s4y.rasat.android.ChannelDistinct;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
@@ -33,22 +34,24 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private int lastStatus;
     private final DisposableBag disposables = new DisposableBag();
     private final ChannelDistinct<AlertVolume> alertChannel = new ChannelDistinct<>(AlertVolume.NO_ALERT);
-    private final ChannelDistinct<Boolean> findMeChannel = new ChannelDistinct<>(false);
+    private final Channel<Integer> clickChannel = new Channel<>(0);
     private final ChannelDistinct<BLEConnectionState> stateChannel = new ChannelDistinct<>(BLEConnectionState.disconnected);
     private final ChannelDistinct<Integer> rssiChannel = new ChannelDistinct<>(-999);
 
-    private class Click {
+    private class ClickHandler {
         private static final int CLICK_INTERVAL = 600;
         private static final int CLICK_COUNT = 2;
 
         private Handler clickHandler = new Handler(Looper.getMainLooper());
         private int count = 0;
         private final Runnable waitNext = () -> {
-            if (done()) {
-                findMeChannel.broadcast(true);
-            } else {
-                clear();
+            Log.d(LT, "ClickHandler.waitNext postDelayed");
+            int c;
+            synchronized (this) {
+               c = count;
+               count = 0;
             }
+            clickChannel.broadcast(c);
         };
 
         private synchronized boolean done() {
@@ -59,22 +62,15 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             count++;
         }
 
-        private synchronized void clear() {
-            count = 0;
-        }
-
-        void onClick() {
-            clickHandler.removeCallbacks(click.waitNext);
-            if (isFindMe()) {
-                findMeChannel.broadcast(false);
-            } else {
-                click.inc();
-                clickHandler.postDelayed(click.waitNext, CLICK_INTERVAL);
-            }
+        synchronized void handleClick() {
+            clickHandler.removeCallbacks(BLEConnectionDefault.this.clickHandler.waitNext);
+            inc();
+            Log.d(LT, "ClickHandler.handleClick postDelayed");
+            clickHandler.postDelayed(BLEConnectionDefault.this.clickHandler.waitNext, CLICK_INTERVAL);
         }
     }
 
-    private final Click click = new Click();
+    private final ClickHandler clickHandler = new ClickHandler();
 
     BLEConnectionDefault(@NonNull BLECentralManagerInterface manager,
                          @NonNull String id) {
@@ -96,12 +92,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                 disposables.add(peripheral[0]
                         .observables()
                         .observableDiscoveredServices()
-                        .subscribe(event -> {
-                            if (findMeCharacteristic() != null) {
-                                peripheral[0].setNotify(findMeCharacteristic(), true);
-                            }
-                            stateChannel.broadcast(BLEConnectionState.connected);
-                        }));
+                        .subscribe(event -> stateChannel.broadcast(BLEConnectionState.connected)));
                 disposables.add(peripheral[0]
                         .observables()
                         .observableDisconnected()
@@ -110,8 +101,8 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                         .observables()
                         .observableNotification()
                         .subscribe(event -> {
-                            if (FINDME_CHARACTERISTIC.equals(event.characteristic.uuid())) {
-                                click.onClick();
+                            if (FINDME_CHARACTERISTIC.equals(event.uuid())) {
+                                clickHandler.handleClick();
                             }
                         }));
                 disposables.add(peripheral[0]
@@ -364,6 +355,8 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     @Override
     public BLEError connect(boolean infinity) {
+        clickChannel.broadcast(0);
+
         manager.stopScan();
         if (isConnected()) {
             if (peripheral() == null) {
@@ -415,6 +408,10 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             return error;
         }
 
+        if (findMeCharacteristic() != null) {
+            peripheral().setNotify(findMeCharacteristic(), true);
+        }
+
         startObserve();
         if (BuildConfig.DEBUG) Log.d(LT, "Connected");
         stateChannel.broadcast(BLEConnectionState.connected);
@@ -429,6 +426,8 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     @Override
     public BLEError disconnect(int timeoutSec) {
+        clickChannel.broadcast(0);
+
         if (manager.isScanning()) {
             manager.stopScan();
         }
@@ -484,6 +483,8 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     private BLEError writeInt8(@NonNull BLECharacteristic characteristic, int value, int timeoutSec) {
+        clickChannel.broadcast(0);
+
         if (peripheral() == null) {
             return BLEError.noPeripheral;
         }
@@ -560,8 +561,8 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
-    public Observable<Boolean> observableFindeMe() {
-        return findMeChannel.observable;
+    public Observable<Integer> observableClick() {
+        return clickChannel.observable;
     }
 
     @Override
@@ -597,11 +598,12 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     @Override
     public boolean isFindMe() {
-        return findMeChannel.observable.value();
+        return observableClick().value() > 1;
     }
 
     @Override
     public void close() throws Exception {
+        clickChannel.broadcast(0);
         BLEPeripheralInterace p = peripheral();
         if (p != null) {
             p.close();

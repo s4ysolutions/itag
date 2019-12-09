@@ -253,7 +253,6 @@ public class ITagsFragment extends Fragment
         Animation animShake = null;
 
         if (connection.isAlerting() ||
-                connection.isFindMe() ||
                 itag.isAlertDisconnected() && !connection.isConnected()
         ) {
             Log.d(LT, "Start animate because gatt.isFindingITag");
@@ -358,10 +357,12 @@ public class ITagsFragment extends Fragment
             disposableBag.add(connection.observableState().subscribe(state -> {
                 updateAlertButton(id);
                 updateState(id, state);
-                if (connection.isDisconnected()){
-                   updateRSSI(id, -999);
+                if (connection.isDisconnected()) {
+                    updateRSSI(id, -999);
                 }
             }));
+            disposableBag.add(connection.observableClick().subscribe(event ->
+                    Log.d(LT, "clicked = " + event)));
         }
         HistoryRecord.addListener(this);
 

@@ -36,7 +36,7 @@ interface BLEPeripheralObservablesInterface {
         final BLECharacteristic characteristic;
         final int status;
 
-        public CharacteristicEvent(BLECharacteristic characteristic, int status) {
+        CharacteristicEvent(BLECharacteristic characteristic, int status) {
             this.characteristic = characteristic;
             this.status = status;
         }
@@ -57,6 +57,6 @@ interface BLEPeripheralObservablesInterface {
     Observable<DisconnectedEvent> observableDisconnected();
     Observable<DiscoveredServicesEvent> observableDiscoveredServices();
     Observable<CharacteristicEvent> observableWrite();
-    Observable<CharacteristicEvent> observableNotification();
+    Observable<BLECharacteristic> observableNotification();
     Observable<RSSIEvent> observableRSSI();
 }

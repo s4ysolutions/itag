@@ -10,7 +10,7 @@ class BLEPeripheralObservables implements BLEPeripheralObservablesInterface {
     final Channel<BLEPeripheralObservablesInterface.DisconnectedEvent> channelDisconnected = new Channel<>();
     final Channel<BLEPeripheralObservablesInterface.DiscoveredServicesEvent> channelDiscoveredServices = new Channel<>();
     final Channel<BLEPeripheralObservablesInterface.CharacteristicEvent> channelWrite = new Channel<>();
-    final Channel<BLEPeripheralObservablesInterface.CharacteristicEvent> channelNotification = new Channel<>();
+    final Channel<BLECharacteristic> channelNotification = new Channel<>();
     final Channel<BLEPeripheralObservablesInterface.RSSIEvent> channelRSSI = new Channel<>();
 
     @Override
@@ -39,7 +39,7 @@ class BLEPeripheralObservables implements BLEPeripheralObservablesInterface {
     }
 
     @Override
-    public Observable<BLEPeripheralObservablesInterface.CharacteristicEvent> observableNotification() {
+    public Observable<BLECharacteristic> observableNotification() {
         return channelNotification.observable;
     }
 

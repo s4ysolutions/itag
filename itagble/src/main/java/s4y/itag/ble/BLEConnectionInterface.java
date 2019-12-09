@@ -6,7 +6,7 @@ import s4y.rasat.Observable;
 
 public interface BLEConnectionInterface extends AutoCloseable {
     Observable<AlertVolume> observableImmediateAlert();
-    Observable<Boolean> observableFindeMe();
+    Observable<Integer> observableClick();
     Observable<Integer> observableRSSI();
     Observable<BLEConnectionState> observableState();
 

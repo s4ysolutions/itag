@@ -8,7 +8,7 @@ import android.media.MediaPlayer;
 import java.io.IOException;
 import static android.content.Context.AUDIO_SERVICE;
 
-class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
     private final MediaPlayer mPlayer;
     private int mVolumeLevel = -1;
 
@@ -87,7 +87,7 @@ class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.On
     }
 
 
-    void startFindPhone(Context context) {
+    public void startFindPhone(Context context) {
         AssetFileDescriptor afd = null;
         stopSound(context);
         try {

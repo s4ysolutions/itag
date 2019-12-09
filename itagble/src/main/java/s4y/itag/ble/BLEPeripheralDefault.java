@@ -47,6 +47,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private final boolean cached;
 
     private final BluetoothGattCallback callback = new BluetoothGattCallback() {
+
         @Override
         public void onConnectionStateChange(@NonNull BluetoothGatt gatt, int status, int newState) {
             if (BuildConfig.DEBUG) {
@@ -118,6 +119,16 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             observables.channelWrite.broadcast(new BLEPeripheralObservablesInterface.CharacteristicEvent(
                     new BLECharacteristic(characteristic),
                     status));
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "onCharacteristicChanged id=" + identifier() +
+                        " addr=" + gatt.getDevice().getAddress() +
+                        " characteristic=" + characteristic.getUuid());
+            }
+            observables.channelNotification.broadcast(new BLECharacteristic(characteristic));
         }
     };
 
@@ -355,7 +366,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             ret = gatt[0];
         }
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "getGatt null:" +(ret==null?"yes":"no")+" id="+identifier());
+            Log.v(LT, "getGatt null:" +(ret==null?"yes":"no")+" id="+identifier());
         }
         return ret;
     }
@@ -363,7 +374,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private void setGatt(BluetoothGatt gatt) {
         synchronized (this.gatt) {
             if (BuildConfig.DEBUG) {
-                Log.d(LT, "setGatt null:" +(gatt==null?"yes":"no")+" id="+identifier());
+                Log.v(LT, "setGatt null:" +(gatt==null?"yes":"no")+" id="+identifier());
             }
             if (this.gatt[0] != null) {
                 Log.w(LT, "Overwrite not null gatt, id=" + identifier());
