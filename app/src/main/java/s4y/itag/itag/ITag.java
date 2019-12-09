@@ -10,6 +10,7 @@ import java.util.Map;
 import s4y.itag.BuildConfig;
 import s4y.itag.ITagApplication;
 import s4y.itag.MediaPlayerUtils;
+import s4y.itag.ble.AlertVolume;
 import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEDefault;
@@ -121,10 +122,14 @@ public class ITag {
                     connection.connect(infinity);
                 } while (itag.isAlertDisconnected() && infinity && !connection.isConnected());
                 disposableBag.add(connection.observableClick().subscribe(click -> {
-                    if (connection.isFindMe() && !MediaPlayerUtils.getInstance().isSound()) {
-                        MediaPlayerUtils.getInstance().startFindPhone(ITagApplication.context);
+                    if (click != 0 && connection.isAlerting()) {
+                        new Thread(() -> connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT)).start();
                     } else {
-                        MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
+                        if (connection.isFindMe() && !MediaPlayerUtils.getInstance().isSound()) {
+                            MediaPlayerUtils.getInstance().startFindPhone(ITagApplication.context);
+                        } else {
+                            MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
+                        }
                     }
                 }));
                 if (onComplete != null) {

@@ -356,6 +356,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     @Override
     public BLEError connect(boolean infinity) {
         clickChannel.broadcast(0);
+        alertChannel.broadcast(AlertVolume.NO_ALERT);
 
         manager.stopScan();
         if (isConnected()) {
@@ -427,6 +428,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     @Override
     public BLEError disconnect(int timeoutSec) {
         clickChannel.broadcast(0);
+        alertChannel.broadcast(AlertVolume.NO_ALERT);
 
         if (manager.isScanning()) {
             manager.stopScan();
@@ -515,6 +517,9 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     @Override
     public BLEError writeImmediateAlert(AlertVolume volume, int timeout) {
+        if (volume != AlertVolume.NO_ALERT) {
+            alertChannel.broadcast(volume);
+        }
         BLECharacteristic characteristic = immediateAlertCharacteristic();
         if (characteristic == null) {
             return BLEError.noImmediateAlertCharacteristic;

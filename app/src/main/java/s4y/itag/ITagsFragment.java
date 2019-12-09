@@ -271,12 +271,15 @@ public class ITagsFragment extends Fragment
         Animation animShake = null;
 
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "updateITagImageAnimation isFindMe:"+ connection.isFindMe() +
-                    " isAlertDisconnected:"+ itag.isAlertDisconnected() +
-                    " not conencted:" +  !connection.isConnected()
-                    );
+            Log.d(LT, "updateITagImageAnimation isFindMe:" + connection.isFindMe() +
+                    " isAlerting:" + connection.isAlerting() +
+                    " isAlertDisconnected:" + itag.isAlertDisconnected() +
+                    " not conencted:" + !connection.isConnected()
+            );
         }
-        if (connection.isFindMe() || itag.isAlertDisconnected() && !connection.isConnected()) {
+        if (connection.isAlerting() ||
+                connection.isFindMe() ||
+                itag.isAlertDisconnected() && !connection.isConnected()) {
             animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
         }
         final ImageView imageITag = rootView.findViewById(R.id.image_itag);
@@ -413,10 +416,13 @@ public class ITagsFragment extends Fragment
             final String id = itag.id();
             final BLEConnectionInterface connection = ITag.ble.connectionById(id);
             disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(id, rssi)));
+            disposableBag.add(connection.observableImmediateAlert().subscribe(state -> {
+                updateITagImageAnimation(itag, connection);
+            }));
             disposableBag.add(connection.observableState().subscribe(state -> {
                 updateAlertButton(id);
                 updateState(id, state);
-                updateITagImageAnimation(id);
+                updateITagImageAnimation(itag, connection);
                 if (connection.isDisconnected()) {
                     updateRSSI(id, -999);
                 }
