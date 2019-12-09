@@ -44,7 +44,6 @@
     <string name="bt_disabled">выключен</string>
     <string name="bt_connecting">подключение</string>
     <string name="bt_setup">утерян</string>
-    <string name="bt_call">поиск</string>
     <string name="bt">на связи</string>
     <string name="bt_unk">отключен</string>
     <string name="last_seen">В+последний+раз+замечен+%d+%s+назад</string>
@@ -81,4 +80,7 @@
     <string name="gold">Золотистый</string>
     <string name="unknown">Без имени</string>
     <string name="scanning_stopped">Поиск завершен</string>
+    <string name="bt_lost">утерян</string>
+    <string name="bt_call">сигнал</string>
+    <string name="bt_disconnecting">отключение</string>
 </resources>

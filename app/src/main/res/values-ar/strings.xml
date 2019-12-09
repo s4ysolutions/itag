@@ -45,8 +45,8 @@
     <string name="bt_disabled">ايقاف</string>
     <string name="bt_connecting">بحث</string>
     <string name="bt_setup">ضائع</string>
-    <string name="bt_call">صراخ</string>
-    <string name="bt">قريب</string>
+    <string name="bt_call">صياح</string>
+    <string name="bt">بالسلاسل</string>
     <string name="bt_unk">اغمي عليه</string>
     <string name="last_seen">Last+seen+here+%d+%s+ago</string>
     <string name="not_connected">غير متصل</string>
@@ -81,4 +81,6 @@
     <string name="gold">ذهبي</string>
     <string name="unknown">غير مسمى</string>
     <string name="scanning_stopped">تم الانتهاء</string>
+    <string name="bt_lost">ضائع</string>
+    <string name="bt_disconnecting">قطع</string>
 </resources>

@@ -122,7 +122,7 @@
             android:layout_width="@android:dimen/app_icon_size"
             android:layout_height="@android:dimen/app_icon_size"
             android:contentDescription="@string/manage_alert"
-            android:onClick="onLink"
+            android:onClick="onDisconnectAlert"
             android:src="@drawable/alert" />
 
         <Space

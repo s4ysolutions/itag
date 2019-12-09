@@ -34,7 +34,6 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private final DisposableBag disposables = new DisposableBag();
     private final ChannelDistinct<AlertVolume> alertChannel = new ChannelDistinct<>(AlertVolume.NO_ALERT);
     private final ChannelDistinct<Boolean> findMeChannel = new ChannelDistinct<>(false);
-    private final ChannelDistinct<Boolean> lostChannel = new ChannelDistinct<>(true);
     private final ChannelDistinct<BLEConnectionState> stateChannel = new ChannelDistinct<>(BLEConnectionState.disconnected);
     private final ChannelDistinct<Integer> rssiChannel = new ChannelDistinct<>(-999);
 
@@ -98,23 +97,15 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                         .observables()
                         .observableDiscoveredServices()
                         .subscribe(event -> {
-                        /*
-                        if (findMeCharacteristic() != null && peripheral != null) {
-                            peripheral.setNotify(findMeCharacteristic(), true);
-                        }
-                         */
+                            if (findMeCharacteristic() != null) {
+                                peripheral[0].setNotify(findMeCharacteristic(), true);
+                            }
                             stateChannel.broadcast(BLEConnectionState.connected);
-                            lostChannel.broadcast(false);
                         }));
                 disposables.add(peripheral[0]
                         .observables()
                         .observableDisconnected()
-                        .subscribe(event -> {
-                            if (!isConnected()) {
-                                stateChannel.broadcast(BLEConnectionState.disconnected);
-                                lostChannel.broadcast(true);
-                            }
-                        }));
+                        .subscribe(event -> stateChannel.broadcast(BLEConnectionState.disconnected)));
                 disposables.add(peripheral[0]
                         .observables()
                         .observableNotification()
@@ -127,6 +118,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                         .observables()
                         .observableWrite()
                         .subscribe(event -> {
+                            stateChannel.broadcast(BLEConnectionState.connected);
                             if (ALERT_LEVEL_CHARACTERISTIC.equals(event.characteristic.uuid())) {
                                 alertChannel.broadcast(
                                         AlertVolume.fromCharacteristic(event.characteristic));
@@ -264,6 +256,12 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                                 .subscribe((event) -> monitorConnect.setPayload(event.status)
                                 )
                 );
+                disposables.add(
+                        peripheral().observables()
+                                .observableDisconnected() //disconnected during connection
+                                .subscribe((event) -> monitorConnect.setPayload(event.status)
+                                )
+                );
                 if (BuildConfig.DEBUG) {
                     Log.d(LT, "Start wait for connect " + Thread.currentThread().getName());
                 }
@@ -379,7 +377,10 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
         assertPeripheral();
 
+        boolean scan = false;
+
         while (peripheral() == null || !peripheral().cached()) {
+            scan = true;
             // scan for not cached/not known peripheral
             // endlessly if timeout = 0
             if (BuildConfig.DEBUG) Log.d(LT,
@@ -398,7 +399,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                     }
                 } else {
                     if (BuildConfig.DEBUG) Log.d(LT, "Scan failed no peripheral, will abort");
-                    return BLEError.noPeripheral;
+                    return BLEError.ok.equals(error) ? BLEError.noPeripheral : error;
                 }
             } else {
                 if (BuildConfig.DEBUG) Log.d(LT, "Scan got peripheral, will connect");
@@ -406,18 +407,17 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         }
 
         // connect as soon as a peripheral scanned
-        if (BuildConfig.DEBUG) Log.d(LT, "Attempt to connect after scan");
+        if (BuildConfig.DEBUG) Log.d(LT, "Attempt to connect. Scan run: " + (scan ? "yes" : "no"));
         BLEError error = waitForConnect(infinity);
-        if (!BLEError.ok.equals(error)) {
+        if (!BLEError.ok.equals(error) || !isConnected()) {
             if (BuildConfig.DEBUG) Log.d(LT, "Attempt to connect failed");
+            stateChannel.broadcast(BLEConnectionState.disconnected);
             return error;
         }
 
-        if (isConnected()) {
-            startObserve();
-            if (BuildConfig.DEBUG) Log.d(LT, "Connected");
-            stateChannel.broadcast(BLEConnectionState.connected);
-        }
+        startObserve();
+        if (BuildConfig.DEBUG) Log.d(LT, "Connected");
+        stateChannel.broadcast(BLEConnectionState.connected);
         return BLEError.ok;
 // TODO: check for isConencted?
     }
@@ -433,7 +433,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             manager.stopScan();
         }
 
-        if (!isConnected()) {
+        if (BLEConnectionState.disconnected.equals(state())) {
             return BLEError.ok;
         }
 
@@ -453,6 +453,10 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             e.printStackTrace();
         }
 */
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "disconnect, wait: " + (timeoutSec <= 0 ? "no" : timeoutSec));
+        }
+
         if (timeoutSec <= 0) {
             peripheral().disconnect();
             return BLEError.ok;
@@ -487,6 +491,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             return peripheral().writeInt8(characteristic, value);
         }
 
+        stateChannel.broadcast(BLEConnectionState.writting);
         try (DisposableBag disposables = new DisposableBag()) {
             disposables.add(peripheral()
                     .observables()

@@ -169,14 +169,31 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
     @Override
     public void disconnect() {
-        if (BuildConfig.DEBUG) {
-            Log.d(LT, "disconnect id=" + identifier());
-        }
-        if (isDisconnected()) {
-            setState(BLEPeripheralState.disconnected);
+        if (BLEPeripheralState.disconnected.equals(state)) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "disconnect id=" + identifier()+", already disconnected, no action");
+            }
         } else {
-            setState(BLEPeripheralState.disconnecting);
-            gatt().disconnect();
+            if (isConnected()) {
+                if (BuildConfig.DEBUG) {
+                    Log.d(LT, "disconnect id=" + identifier()+", connected, will wait connection change");
+                }
+                setState(BLEPeripheralState.disconnecting);
+                gatt().disconnect();
+            } else {
+                if (BuildConfig.DEBUG) {
+                    Log.d(LT, "disconnect id=" + identifier()+", not connected will simulate connection change");
+                }
+                setState(BLEPeripheralState.disconnecting);
+                gatt().disconnect();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                close();
+                observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(0));
+            }
         }
     }
 

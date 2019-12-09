@@ -95,9 +95,10 @@ public class ITagsFragment extends Fragment
             ITagInterface itag = ITag.store.byId(id);
             BLEConnectionInterface connection = ble.connectionById(id);
             if (itag != null) {
-                setupTag(rootView, itag);
+                setupButtons(rootView, itag);
                 updateITagImage(rootView, itag, connection);
                 updateName(rootView, itag.name());
+                updateAlertButton(rootView, itag.isAlertDisconnected(), connection.isConnected());
             }
             updateRSSI(rootView, connection.rssi());
             updateState(rootView, id, connection.state());
@@ -106,7 +107,7 @@ public class ITagsFragment extends Fragment
         updateWayToday();
     }
 
-    private void setupTag(@NonNull ViewGroup rootView, @NonNull final ITagInterface itag) {
+    private void setupButtons(@NonNull ViewGroup rootView, @NonNull final ITagInterface itag) {
         final View btnForget = rootView.findViewById(R.id.btn_forget);
         btnForget.setTag(itag);
         final View btnColor = rootView.findViewById(R.id.btn_color);
@@ -114,9 +115,7 @@ public class ITagsFragment extends Fragment
         final View btnSetName = rootView.findViewById(R.id.btn_set_name);
         btnSetName.setTag(itag);
         final ImageView btnAlert = rootView.findViewById(R.id.btn_alert);
-        btnAlert.setImageResource(itag.isAlertDisconnected() ? R.drawable.alert : R.drawable.noalert);
         btnAlert.setTag(itag);
-
     }
 
     private void updateWayToday() {
@@ -186,10 +185,13 @@ public class ITagsFragment extends Fragment
                     ITagInterface itag = ITag.store.byId(id);
                     if (itag != null && itag.isAlertDisconnected()) {
                         statusDrawableId = R.drawable.bt_connecting;
-                        statusTextId = R.string.bt_unk;
+                        statusTextId = R.string.bt_lost;
                     } else {
                         statusDrawableId = R.drawable.bt_setup;
-                        statusTextId = R.string.bt_connecting;
+                        if (state == BLEConnectionState.connecting)
+                            statusTextId = R.string.bt_connecting;
+                        else
+                            statusTextId = R.string.bt_disconnecting;
                     }
                     break;
                 case writting:
@@ -224,6 +226,24 @@ public class ITagsFragment extends Fragment
     private void updateName(@NonNull ViewGroup rootView, String name) {
         final TextView textName = rootView.findViewById(R.id.text_name);
         textName.setText(name);
+    }
+
+    private void updateAlertButton(@NonNull ViewGroup rootView, boolean isAlertDisconnected, boolean isConnected) {
+        final ImageView btnAlert = rootView.findViewById(R.id.btn_alert);
+        btnAlert.setImageResource(isAlertDisconnected || isConnected ? R.drawable.alert : R.drawable.noalert);
+    }
+
+    private void updateAlertButton(@NonNull String id) {
+        ViewGroup view = tagViews.get(id);
+        if (view == null) {
+            return;
+        }
+        ITagInterface itag = ITag.store.byId(id);
+        if (itag == null) {
+            return;
+        }
+        BLEConnectionInterface connection = ble.connectionById(id);
+        updateAlertButton(view, itag.isAlertDisconnected(), connection.isConnected());
     }
 
     private void updateITagImage(@NonNull ViewGroup rootView, ITagInterface itag, BLEConnectionInterface connection) {
@@ -335,7 +355,13 @@ public class ITagsFragment extends Fragment
             final String id = itag.id();
             final BLEConnectionInterface connection = ITag.ble.connectionById(id);
             disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(id, rssi)));
-            disposableBag.add(connection.observableState().subscribe(state -> updateState(id, state)));
+            disposableBag.add(connection.observableState().subscribe(state -> {
+                updateAlertButton(id);
+                updateState(id, state);
+                if (connection.isDisconnected()){
+                   updateRSSI(id, -999);
+                }
+            }));
         }
         HistoryRecord.addListener(this);
 

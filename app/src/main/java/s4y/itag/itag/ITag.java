@@ -64,26 +64,53 @@ public class ITag {
 
     private static int connectThreadsCount = 0;
 
-    private static void connectAsync(final BLEConnectionInterface connection) {
+    public static void connectAsync(final BLEConnectionInterface connection) {
         connectAsync(connection, true);
     }
 
+    static void connectAsync(final BLEConnectionInterface connection, boolean infinity) {
+        connectAsync(connection,  infinity, null);
+    }
+
+    static void connectAsync(final BLEConnectionInterface connection, Runnable onComplete) {
+        connectAsync(connection,  true, onComplete);
+    }
+
+    private static final Map<String, Thread> asyncConnections = new HashMap<>();
     @SuppressWarnings("SameParameterValue")
-    private static void connectAsync(final BLEConnectionInterface connection, boolean infinity) {
+    public static void connectAsync(final BLEConnectionInterface connection, boolean infinity, Runnable onComplete) {
+        synchronized (asyncConnections) {
+            if (asyncConnections.containsKey(connection.id())) {
+                return;
+            }
+        }
+        final ITagInterface itag = store.byId(connection.id());
+        if (itag == null) {
+            return;
+        }
         connectThreadsCount++;
         Log.d(LT, "BLE Connect thread started, count = " + connectThreadsCount);
-        new Thread("BLE Connect " + connection.id() + " " + System.currentTimeMillis()) {
+        Thread thread = new Thread("BLE Connect " + connection.id() + " " + System.currentTimeMillis()) {
             @Override
             public void run() {
                 do {
-                    ITagInterface itag = store.byId(connection.id());
-                    Log.d(LT, "Attempt to connect " + connection.id() + "/" + (itag == null ? "null" : itag.name())+" "+Thread.currentThread().getName());
+                    Log.d(LT, "BLE Connect thread connect " + connection.id() + "/" + (itag == null ? "null" : itag.name())+" "+Thread.currentThread().getName());
                     connection.connect(infinity);
-                } while (infinity && !connection.isConnected());
+                } while (itag.isAlertDisconnected() && infinity && !connection.isConnected());
+                if (onComplete!=null) {
+                    onComplete.run();
+                }
+                synchronized (asyncConnections) {
+                    asyncConnections.remove(connection.id());
+                }
                 connectThreadsCount--;
                 Log.d(LT, "BLE Connect thread finished, count = " + connectThreadsCount);
             }
-        }.start();
+        };
+        synchronized (asyncConnections) {
+            asyncConnections.put(connection.id(), thread);
+        }
+        thread.start();
     }
 
     private static void enableReconnect(String id) {

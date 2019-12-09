@@ -124,6 +124,25 @@ public class MainActivity extends FragmentActivity {
         super.onPause();
     }
 
+    private boolean mHasFocus = false;
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus != mHasFocus) {
+            mHasFocus = hasFocus;
+            if (mHasFocus && iTagsService != null) {
+                iTagsService.removeFromForeground();
+            }
+        }
+    }
+
+    @SuppressLint("MissingSuperCall")
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        //No call for super(). Bug on API Level > 11. issue #54
+    }
+
     private boolean isFirstLaunch() {
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         return sharedPref.getBoolean("first", true);
@@ -203,19 +222,6 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
-    private boolean mHasFocus = false;
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus != mHasFocus) {
-            mHasFocus = hasFocus;
-            if (mHasFocus && iTagsService != null) {
-                iTagsService.removeFromForeground();
-            }
-        }
-    }
-
     public void onRemember(@NonNull View sender) {
         BLEScanResult scanResult = (BLEScanResult) sender.getTag();
         if (scanResult == null) {
@@ -290,71 +296,33 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
-    // if alertThread[0] != 0 then connect-disconenct section is active
-    private final Thread[] alertThread = new Thread[]{null};
-
     public void onITagClick(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
         if (MediaPlayerUtils.getInstance().isSound()) {
             MediaPlayerUtils.getInstance().stopSound(this);
         }
         final BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-        synchronized (alertThread) {
-            if (alertThread[0] != null) {
-                alertThread[0] = null;
-                if (connection.isConnected()) {
-                    connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
-                }
-                return;
-            }
-        }
         if (connection.isConnected()) {
             new Thread(() -> {
                 if (connection.isAlerting()) {
                     connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
-                    if (!itag.isAlertDisconnected()) {
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        connection.disconnect(ITag.BLE_TIMEOUT);
-                    }
                 } else {
                     connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
                 }
             }).start();
-        } else if (!itag.isAlertDisconnected()) {
-            // simulate key find by connect /disconnect
-            Thread thread = new Thread(() -> {
-                boolean abort;
-                do {
-                    connection.connect(false);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+        } else {
+            if (!itag.isAlertDisconnected()) {
+                // there's no sense to communicate if the connection
+                // in the connecting state
+                ITag.connectAsync(connection, false, () -> {
+                    if (connection.isAlerting()) {
+                        connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
+                    } else {
+                        connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
                     }
-                    if (connection.isConnected()) {
-                        synchronized (alertThread) {
-                            alertThread[0] = null;
-                        }
-                        if (connection.isAlerting()) {
-                            connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
-                        } else {
-                            connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
-                        }
-                        // connection.disconnect(ITag.BLE_TIMEOUT);
-                    }
-                    synchronized (alertThread) {
-                        abort = alertThread[0] == null;
-                    }
-                } while (!abort);
-            });
-            synchronized (alertThread) {
-                alertThread[0] = thread;
+
+                });
             }
-            thread.start();
         }
     }
 
@@ -536,13 +504,24 @@ public class MainActivity extends FragmentActivity {
         popupMenu.show();
     }
 
-    public void onLink(@NonNull View sender) {
+    public void onDisconnectAlert(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
         if (itag == null) {
             ITagApplication.handleError(new Exception("No itag"));
             return;
         }
-        ITag.store.setAlert(itag.id(), !itag.isAlertDisconnected());
+        BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
+        if (itag.isAlertDisconnected()) {
+            ITag.store.setAlert(itag.id(), false);
+            new Thread(connection::disconnect).start();
+        } else {
+            if (connection.isConnected()) {
+                new Thread(connection::disconnect).start();
+            } else {
+                ITag.store.setAlert(itag.id(), true);
+                ITag.connectAsync(connection);
+            }
+        }
         if (itag.isAlertDisconnected())
             ITagApplication.faUnmuteTag();
         else
@@ -590,11 +569,5 @@ public class MainActivity extends FragmentActivity {
     public void onOpenBTSettings(View ignored) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivity(enableBtIntent);
-    }
-
-    @SuppressLint("MissingSuperCall")
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        //No call for super(). Bug on API Level > 11. issue #54
     }
 }
