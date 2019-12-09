@@ -1,6 +1,6 @@
 package s4y.rasat;
 
-public class Disposable<T> implements  AutoCloseable {
+public class Disposable<T> implements AutoCloseable {
     private final Handler<T> handler;
     private final Observable<T> observable;
 
@@ -9,12 +9,13 @@ public class Disposable<T> implements  AutoCloseable {
         this.observable = observable;
     }
 
-    public void dispose(){
-       observable.remove(handler);
+    @SuppressWarnings("WeakerAccess")
+    public void dispose() {
+        observable.remove(handler);
     }
 
     @Override
     public void close() {
-       dispose();
+        dispose();
     }
 }

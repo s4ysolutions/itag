@@ -121,6 +121,9 @@ public class ITag {
                     }
                     connection.connect(infinity);
                 } while (itag.isAlertDisconnected() && infinity && !connection.isConnected());
+                // stop sound on connection in any case
+                MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
+                // listen for lifetime events
                 disposableBag.add(connection.observableClick().subscribe(click -> {
                     if (click != 0 && connection.isAlerting()) {
                         new Thread(() -> connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT)).start();
@@ -130,6 +133,11 @@ public class ITag {
                         } else {
                             MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
                         }
+                    }
+                }));
+                disposableBag.add(connection.observableState().subscribe(state -> {
+                    if (itag.isAlertDisconnected() && connection.isDisconnected()) {
+                        MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
                     }
                 }));
                 if (onComplete != null) {

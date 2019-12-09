@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Observable<T> {
-    final Set<Handler<T>> handlers = new HashSet<>();
+    private final Set<Handler<T>> handlers = new HashSet<>();
     T value;
 
     public Observable(T value) {
@@ -30,5 +30,13 @@ public class Observable<T> {
 
     public T value() {
         return value;
+    }
+
+    Set<Handler<T>> handlers() {
+        Set<Handler<T>> ret;
+        synchronized (handlers)  {
+            ret = new HashSet<>(handlers);
+        }
+        return ret;
     }
 }
