@@ -311,7 +311,7 @@ public class ITagsFragment extends Fragment
         }
         updateITagImageAnimation(view, itag, connection);
     }
-
+/*
     private void updateITagImageAnimation(@NonNull String id) {
         Activity activity = getActivity();
         if (activity == null) return; //
@@ -322,7 +322,7 @@ public class ITagsFragment extends Fragment
         BLEConnectionInterface connection = ble.connectionById(id);
         updateITagImageAnimation(itag, connection);
     }
-
+*/
     private void updateITagImage(@NonNull ViewGroup rootView, ITagInterface itag) {
         Activity activity = getActivity();
         if (activity == null) return; //
@@ -378,7 +378,9 @@ public class ITagsFragment extends Fragment
         for (int i = 0; i < ITag.store.count(); i++) {
             ITagInterface itag = ITag.store.byPos(i);
             BLEConnectionInterface connection = ble.connectionById(itag.id());
-            connection.enableRSSI();
+            if (connection.isConnected()) {
+                connection.enableRSSI();
+            }
         }
     }
 
@@ -405,9 +407,7 @@ public class ITagsFragment extends Fragment
         ITagApplication.faITagsView(ITag.store.count());
         final ViewGroup root = (ViewGroup) Objects.requireNonNull(getView());
         setupTags(root);
-        disposableBag.add(ITag.store.observable().subscribe(event -> {
-            setupTags(root);
-        }));
+        disposableBag.add(ITag.store.observable().subscribe(event -> setupTags(root)));
         for (int i = 0; i < ITag.store.count(); i++) {
             final ITagInterface itag = ITag.store.byPos(i);
             if (itag == null) {
@@ -416,20 +416,19 @@ public class ITagsFragment extends Fragment
             final String id = itag.id();
             final BLEConnectionInterface connection = ITag.ble.connectionById(id);
             disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(id, rssi)));
-            disposableBag.add(connection.observableImmediateAlert().subscribe(state -> {
-                updateITagImageAnimation(itag, connection);
-            }));
+            disposableBag.add(connection.observableImmediateAlert().subscribe(state -> updateITagImageAnimation(itag, connection)));
             disposableBag.add(connection.observableState().subscribe(state -> {
                 updateAlertButton(id);
                 updateState(id, state);
                 updateITagImageAnimation(itag, connection);
-                if (connection.isDisconnected()) {
+                if (connection.isConnected()) {
+                    connection.enableRSSI();
+                } else {
+                    connection.disableRSSI();
                     updateRSSI(id, -999);
                 }
             }));
-            disposableBag.add(connection.observableClick().subscribe(event -> {
-                updateITagImageAnimation(itag, connection);
-            }));
+            disposableBag.add(connection.observableClick().subscribe(event -> updateITagImageAnimation(itag, connection)));
         }
         HistoryRecord.addListener(this);
 
