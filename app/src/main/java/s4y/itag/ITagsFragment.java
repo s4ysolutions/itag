@@ -96,7 +96,8 @@ public class ITagsFragment extends Fragment
             BLEConnectionInterface connection = ble.connectionById(id);
             if (itag != null) {
                 setupButtons(rootView, itag);
-                updateITagImage(rootView, itag, connection);
+                updateITagImage(rootView, itag);
+                updateITagImageAnimation(rootView, itag, connection);
                 updateName(rootView, itag.name());
                 updateAlertButton(rootView, itag.isAlertDisconnected(), connection.isConnected());
             }
@@ -108,6 +109,8 @@ public class ITagsFragment extends Fragment
     }
 
     private void setupButtons(@NonNull ViewGroup rootView, @NonNull final ITagInterface itag) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
         final View btnForget = rootView.findViewById(R.id.btn_forget);
         btnForget.setTag(itag);
         final View btnColor = rootView.findViewById(R.id.btn_color);
@@ -119,6 +122,8 @@ public class ITagsFragment extends Fragment
     }
 
     private void updateWayToday() {
+        Activity activity = getActivity();
+        if (activity == null) return; //
         if (ITag.store.count() > 0) {
             ITagInterface itag = ITag.store.byPos(0);
             ViewGroup rootView = tagViews.get(itag.id());
@@ -156,6 +161,8 @@ public class ITagsFragment extends Fragment
     }
 
     private void updateRSSI(@NonNull ViewGroup rootView, int rssi) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
         RssiView rssiView = rootView.findViewById(R.id.rssi);
         if (rssiView == null) {
             return;
@@ -172,6 +179,8 @@ public class ITagsFragment extends Fragment
     }
 
     private void updateState(@NonNull ViewGroup rootView, @NonNull String id, @NonNull BLEConnectionState state) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
         int statusDrawableId;
         int statusTextId;
         if (ble.state() == BLEState.OK) {
@@ -224,16 +233,22 @@ public class ITagsFragment extends Fragment
     }
 
     private void updateName(@NonNull ViewGroup rootView, String name) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
         final TextView textName = rootView.findViewById(R.id.text_name);
         textName.setText(name);
     }
 
     private void updateAlertButton(@NonNull ViewGroup rootView, boolean isAlertDisconnected, boolean isConnected) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
         final ImageView btnAlert = rootView.findViewById(R.id.btn_alert);
         btnAlert.setImageResource(isAlertDisconnected || isConnected ? R.drawable.alert : R.drawable.noalert);
     }
 
     private void updateAlertButton(@NonNull String id) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
         ViewGroup view = tagViews.get(id);
         if (view == null) {
             return;
@@ -246,19 +261,68 @@ public class ITagsFragment extends Fragment
         updateAlertButton(view, itag.isAlertDisconnected(), connection.isConnected());
     }
 
-    private void updateITagImage(@NonNull ViewGroup rootView, ITagInterface itag, BLEConnectionInterface connection) {
-        MainActivity mainActivity = (MainActivity) getActivity();
-        if (mainActivity == null)
+    private void updateITagImageAnimation(@NonNull ViewGroup rootView, ITagInterface itag, BLEConnectionInterface connection) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
+        if (mITagAnimation == null) {
             return;
-        Animation animShake = null;
-
-        if (connection.isAlerting() ||
-                itag.isAlertDisconnected() && !connection.isConnected()
-        ) {
-            Log.d(LT, "Start animate because gatt.isFindingITag");
-            animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
         }
 
+        Animation animShake = null;
+
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "updateITagImageAnimation isFindMe:"+ connection.isFindMe() +
+                    " isAlertDisconnected:"+ itag.isAlertDisconnected() +
+                    " not conencted:" +  !connection.isConnected()
+                    );
+        }
+        if (connection.isFindMe() || itag.isAlertDisconnected() && !connection.isConnected()) {
+            animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
+        }
+        final ImageView imageITag = rootView.findViewById(R.id.image_itag);
+        if (animShake == null) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "updateITagImageAnimation: No animations appointed");
+            }
+            animShake = imageITag.getAnimation();
+            if (animShake != null) {
+                if (BuildConfig.DEBUG) {
+                    Log.d(LT, "updateITagImageAnimation: Stop previous animation");
+                }
+                animShake.cancel();
+            }
+        } else {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "updateITagImageAnimation: Start animation");
+            }
+            imageITag.startAnimation(animShake);
+        }
+    }
+
+    private void updateITagImageAnimation(@NonNull ITagInterface itag, @NonNull BLEConnectionInterface connection) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
+        ViewGroup view = tagViews.get(itag.id());
+        if (view == null) {
+            return;
+        }
+        updateITagImageAnimation(view, itag, connection);
+    }
+
+    private void updateITagImageAnimation(@NonNull String id) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
+        ITagInterface itag = ITag.store.byId(id);
+        if (itag == null) {
+            return;
+        }
+        BLEConnectionInterface connection = ble.connectionById(id);
+        updateITagImageAnimation(itag, connection);
+    }
+
+    private void updateITagImage(@NonNull ViewGroup rootView, ITagInterface itag) {
+        Activity activity = getActivity();
+        if (activity == null) return; //
         int imageId;
         switch (itag.color()) {
             case black:
@@ -281,20 +345,10 @@ public class ITagsFragment extends Fragment
                 break;
         }
 
+
         final ImageView imageITag = rootView.findViewById(R.id.image_itag);
         imageITag.setImageResource(imageId);
         imageITag.setTag(itag);
-        if (animShake == null) {
-            Log.d(LT, "No animations appointed");
-            animShake = imageITag.getAnimation();
-            if (animShake != null) {
-                Log.d(LT, "Stop previous animation");
-                animShake.cancel();
-            }
-        } else {
-            Log.d(LT, "Start animation");
-            imageITag.startAnimation(animShake);
-        }
     }
 
     @Override
@@ -348,21 +402,28 @@ public class ITagsFragment extends Fragment
         ITagApplication.faITagsView(ITag.store.count());
         final ViewGroup root = (ViewGroup) Objects.requireNonNull(getView());
         setupTags(root);
-        disposableBag.add(ITag.store.observable().subscribe(event -> setupTags(root)));
+        disposableBag.add(ITag.store.observable().subscribe(event -> {
+            setupTags(root);
+        }));
         for (int i = 0; i < ITag.store.count(); i++) {
             final ITagInterface itag = ITag.store.byPos(i);
+            if (itag == null) {
+                continue;
+            }
             final String id = itag.id();
             final BLEConnectionInterface connection = ITag.ble.connectionById(id);
             disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(id, rssi)));
             disposableBag.add(connection.observableState().subscribe(state -> {
                 updateAlertButton(id);
                 updateState(id, state);
+                updateITagImageAnimation(id);
                 if (connection.isDisconnected()) {
                     updateRSSI(id, -999);
                 }
             }));
-            disposableBag.add(connection.observableClick().subscribe(event ->
-                    Log.d(LT, "clicked = " + event)));
+            disposableBag.add(connection.observableClick().subscribe(event -> {
+                updateITagImageAnimation(itag, connection);
+            }));
         }
         HistoryRecord.addListener(this);
 
