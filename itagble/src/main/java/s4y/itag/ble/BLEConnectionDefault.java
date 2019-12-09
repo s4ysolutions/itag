@@ -18,12 +18,13 @@ import s4y.rasat.android.ChannelDistinct;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 class BLEConnectionDefault implements BLEConnectionInterface {
-    @SuppressWarnings("unused")
     private static final String LT = BLEConnectionDefault.class.getName();
     private static final UUID IMMEDIATE_ALERT_SERVICE = UUID.fromString("00001802-0000-1000-8000-00805f9b34fb");
     private static final UUID FINDME_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
     private static final UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
     private static final UUID FINDME_CHARACTERISTIC = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
+
+    private static final int CLICK_COUNT = 2;
 
     @NonNull
     private final BLEPeripheralInterace[] peripheral = new BLEPeripheralInterace[]{null};
@@ -40,7 +41,6 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     private class ClickHandler {
         private static final int CLICK_INTERVAL = 600;
-        private static final int CLICK_COUNT = 2;
 
         private Handler clickHandler = new Handler(Looper.getMainLooper());
         private int count = 0;
@@ -53,10 +53,6 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             }
             clickChannel.broadcast(c);
         };
-
-        private synchronized boolean done() {
-            return count >= CLICK_COUNT;
-        }
 
         private synchronized void inc() {
             count++;
@@ -603,7 +599,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
     @Override
     public boolean isFindMe() {
-        return observableClick().value() > 1;
+        return observableClick().value() >= CLICK_COUNT;
     }
 
     @Override
