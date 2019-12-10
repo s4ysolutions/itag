@@ -1,7 +1,6 @@
 package s4y.itag.itag;
 
 import android.content.Context;
-import android.media.MediaPlayer;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -16,6 +15,9 @@ import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
 import s4y.rasat.DisposableBag;
+
+import static s4y.itag.Notifications.cancelDisconnectNotification;
+import static s4y.itag.Notifications.sendDisconnectNotification;
 
 public class ITag {
     private static final String LT = ITag.class.getName();
@@ -79,6 +81,9 @@ public class ITag {
                 disposablesDisconnect.add(connection.observableState().subscribe(event -> {
                             if (itag.isAlertDisconnected() && connection.isDisconnected()) {
                                 MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
+                                sendDisconnectNotification(ITagApplication.context, itag.name());
+                            } else {
+                                cancelDisconnectNotification(ITagApplication.context);
                             }
                         }
                 ));
