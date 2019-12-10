@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="s4y.itag"
     android:versionCode="122"
-    android:versionName="2.0"
+    android:versionName="2.0beta"
     >
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -73,6 +73,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
     </application>

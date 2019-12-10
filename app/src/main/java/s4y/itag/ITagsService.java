@@ -8,14 +8,9 @@ import android.app.Service;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.location.Location;
 import android.os.Binder;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
-
-import androidx.preference.PreferenceManager;
 
 import android.util.Log;
 
@@ -23,18 +18,12 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
 import s4y.itag.itag.ITag;
-import s4y.waytoday.idservice.IDService;
-import s4y.waytoday.locations.LocationsGPSUpdater;
 import s4y.waytoday.locations.LocationsTracker;
-import s4y.waytoday.locations.LocationsUpdater;
-import s4y.waytoday.upload.UploadJobService;
 
 import static s4y.itag.Notifications.EXTRA_STOP_SOUND;
 
 
-public class ITagsService extends Service implements
-        LocationsTracker.ILocationListener,
-        IDService.IIDSeriviceListener {
+public class ITagsService extends Service {
     private static final int FOREGROUND_ID = 1;
     static final String FOREGROUND_CHANNEL_ID = "itag3";
 
@@ -53,14 +42,10 @@ public class ITagsService extends Service implements
     }
 
     public static void start(@NonNull Context context) {
-        if (ITag.store.count() > 0) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent(context));
-            } else {
-                context.startService(intent(context));
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent(context));
         } else {
-            stop(context);
+            context.startService(intent(context));
         }
     }
 
@@ -75,16 +60,6 @@ public class ITagsService extends Service implements
             Log.d(LT, "onCreate");
         }
 
-        gpsLocatonUpdater = new LocationsGPSUpdater(this);
-        LocationsTracker.addOnLocationListener(this);
-        IDService.addOnTrackIDChangeListener(this);
-
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean wt = preferences.getBoolean("wt", false);
-        int freq = preferences.getInt("freq", 0);
-        if (wt && freq > 0) {
-            startWayToday(freq);
-        }
     }
 
     @Override
@@ -92,9 +67,6 @@ public class ITagsService extends Service implements
         if (BuildConfig.DEBUG) {
             Log.d(LT, "onDestroy");
         }
-        LocationsTracker.removeOnLocationListener(this);
-
-        LocationsTracker.stop();
         super.onDestroy();
     }
 
@@ -141,8 +113,8 @@ public class ITagsService extends Service implements
     }
 
 
-
     private static boolean createdForegroundChannel;
+
     private static void createForegroundNotificationChannel(Context context) {
         if (!createdForegroundChannel && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = context.getString(R.string.app_name);
@@ -178,58 +150,4 @@ public class ITagsService extends Service implements
         builder.setContentIntent(pendingIntent);
         return builder.build();
     }
-
-
-    @Override
-    public void onLocation(@NonNull Location location) {
-        UploadJobService.enqueueUploadLocation(this, location);
-    }
-
-    @Override
-    public void onTrackID(@NonNull String trackID) {
-        if ("".equals(trackID))
-            return;
-
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        sp.edit().putString("tid", trackID).apply();
-        sp.edit().putBoolean("wtfirst", false).apply();
-    }
-
-    private LocationsUpdater gpsLocatonUpdater;
-
-    public void startWayToday(int frequency) {
-        final SharedPreferences preferences =
-                PreferenceManager.getDefaultSharedPreferences(this);
-        preferences.edit().putBoolean("wt", true).apply();
-        preferences.edit().putInt("freq", frequency).apply();
-        final String tid = preferences.getString("tid", null);
-        Handler handler = new Handler();
-        if (tid == null) {
-            ITagApplication.faWtNoTrackID();
-            final IDService.IIDSeriviceListener listener = new IDService.IIDSeriviceListener() {
-                @Override
-                public void onTrackID(@NonNull String trackID) {
-                    IDService.removeOnTrackIDChangeListener(this);
-                    if (!"".equals(trackID)) {
-                        // duplicate of ITagsService.onTrackID
-                        preferences.edit().putString("tid", trackID).apply();
-                        handler.post(() ->
-                                LocationsTracker.requestStart(gpsLocatonUpdater, frequency));
-                    }
-                }
-            };
-            IDService.addOnTrackIDChangeListener(listener);
-            IDService.enqueueRetrieveId(this, "");
-        } else {
-            LocationsTracker.requestStart(gpsLocatonUpdater, frequency);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    public void stopWayToday() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        preferences.edit().putBoolean("wt", false).apply();
-        LocationsTracker.stop();
-    }
-
 }

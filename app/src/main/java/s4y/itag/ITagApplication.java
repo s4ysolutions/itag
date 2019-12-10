@@ -15,6 +15,7 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import androidx.annotation.NonNull;
 
 import s4y.itag.itag.ITag;
+import s4y.itag.waytoday.Waytoday;
 
 public final class ITagApplication extends Application {
     private final static String LT = ITagApplication.class.getName();
@@ -28,10 +29,12 @@ public final class ITagApplication extends Application {
         faAppCreated();
         context = this;
         ITag.initITag(context);
+        Waytoday.init();
     }
 
     @Override
     public void onTerminate() {
+        Waytoday.done();
         try {
             ITag.close();
         } catch (Exception e) {

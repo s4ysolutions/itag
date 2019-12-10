@@ -44,8 +44,10 @@ import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagDefault;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
+import s4y.itag.waytoday.Waytoday;
 import s4y.rasat.DisposableBag;
 import s4y.waytoday.idservice.IDService;
+import s4y.waytoday.locations.LocationsTracker;
 
 public class MainActivity extends FragmentActivity {
     static public final int REQUEST_ENABLE_BT = 1;
@@ -66,9 +68,6 @@ public class MainActivity extends FragmentActivity {
         String appLinkAction = appLinkIntent.getAction();
         Uri appLinkData = appLinkIntent.getData();
         */
-        // TODO: what's this?
-        SharedPreferences preferences = (getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
-        preferences.edit().putBoolean("loadOnBoot", true).apply();
     }
 
     private void setupProgressBar() {
@@ -140,7 +139,7 @@ public class MainActivity extends FragmentActivity {
         unbindService(mServiceConnection);
         disposableBag.dispose();
         sIsShown = false;
-        if (ITag.store.isDisconnectAlert()) {
+        if (ITag.store.isDisconnectAlert() || LocationsTracker.isUpdating) {
             ITagsService.start(this);
         } else {
             ITagsService.stop(this);
@@ -383,8 +382,6 @@ public class MainActivity extends FragmentActivity {
             //noinspection SwitchStatementWithTooFewBranches
             switch (item.getItemId()) {
                 case R.id.exit:
-                    SharedPreferences preferences = (getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
-                    preferences.edit().putBoolean("loadOnBoot", false).apply();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         finishAndRemoveTask();
                     } else {
@@ -417,18 +414,18 @@ public class MainActivity extends FragmentActivity {
             AlertDialog.Builder builder;
             switch (item.getItemId()) {
                 case R.id.wt_sec_1:
-                    // iTagsService.startWayToday(1);
+                    Waytoday.start(1);
                     ITagApplication.faWtOn1();
                     break;
                 case R.id.wt_min_5:
-                    // iTagsService.startWayToday(300000);
+                    Waytoday.start(300000);
                     break;
                 case R.id.wt_hour_1:
-                    // iTagsService.startWayToday(3600000);
+                    Waytoday.start(3600000);
                     ITagApplication.faWtOn300();
                     break;
                 case R.id.wt_off:
-                    // iTagsService.stopWayToday();
+                    Waytoday.stop();
                     ITagApplication.faWtOff();
                     break;
                 case R.id.wt_new_tid:

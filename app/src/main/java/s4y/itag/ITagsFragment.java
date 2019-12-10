@@ -30,6 +30,7 @@ import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 import s4y.rasat.DisposableBag;
+import s4y.waytoday.grpc.LocationOuterClass;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsTracker;
 
@@ -124,20 +125,30 @@ public class ITagsFragment extends Fragment
     private void updateWayToday() {
         Activity activity = getActivity();
         if (activity == null) return; //
+        if (BuildConfig.DEBUG) Log.d(LT, "updateWayToday, count=" + ITag.store.count());
+        View rootView;
         if (ITag.store.count() > 0) {
             ITagInterface itag = ITag.store.byPos(0);
-            ViewGroup rootView = tagViews.get(itag.id());
-            if (rootView == null) {
-                return;
-            }
-            View waytoday = rootView.findViewById(R.id.wt);
-            if (LocationsTracker.isUpdating && !"".equals(trackID)) {
-                waytoday.setVisibility(View.VISIBLE);
-                TextView wtid = waytoday.findViewById(R.id.text_wt_id);
-                wtid.setText(trackID);
-            } else {
-                waytoday.setVisibility(View.GONE);
-            }
+            rootView = tagViews.get(itag.id());
+        } else {
+            rootView = getView();
+        }
+        if (rootView == null) {
+            Log.e(LT, "no rootView for waytoday", new Exception("no rootView for waytoday"));
+            return;
+        }
+        View waytoday = rootView.findViewById(R.id.wt);
+        if (waytoday == null) {
+            Log.e(LT, "no waytoday imageview", new Exception("no waytoday imagegview"));
+            return;
+        }
+        if (BuildConfig.DEBUG) Log.d(LT, "updateWayToday, updating=" + LocationsTracker.isUpdating+" trackID="+trackID);
+        if (LocationsTracker.isUpdating && !"".equals(trackID)) {
+            waytoday.setVisibility(View.VISIBLE);
+            TextView wtid = waytoday.findViewById(R.id.text_wt_id);
+            wtid.setText(trackID);
+        } else {
+            waytoday.setVisibility(View.GONE);
         }
     }
 
@@ -152,11 +163,11 @@ public class ITagsFragment extends Fragment
         Map<String, HistoryRecord> records = HistoryRecord.getHistoryRecords(activity);
 
         if (records.get(id) == null) {
-            Log.d(LT, "updateLocationImage off:"+id);
+            Log.d(LT, "updateLocationImage off:" + id);
             mLocationAnimation.cancel();
             imageLocation.setVisibility(View.GONE);
         } else {
-            Log.d(LT, "updateLocationImage on:"+id);
+            Log.d(LT, "updateLocationImage on:" + id);
             imageLocation.startAnimation(mLocationAnimation);
             imageLocation.setVisibility(View.VISIBLE);
         }
@@ -467,7 +478,7 @@ public class ITagsFragment extends Fragment
         Activity activity = getActivity();
         if (activity == null)
             return;
-        Log.d(LT,"onHistoryRecordChange");
+        Log.d(LT, "onHistoryRecordChange");
         activity.runOnUiThread(this::updateLocationImages);
     }
 
@@ -479,20 +490,17 @@ public class ITagsFragment extends Fragment
             if (activity == null)
                 return;
 
-            activity.runOnUiThread(() -> setupTags((ViewGroup) view));
+            activity.runOnUiThread(this::updateWayToday);
         }
     }
 
     @Override
     public void onTrackID(@NonNull String trackID) {
+        if (BuildConfig.DEBUG) Log.d(LT, "onTrackID: " + trackID);
         this.trackID = trackID;
-        final View view = getView();
-        if (view != null) {
-            Activity activity = getActivity();
-            if (activity == null)
-                return;
-
-            activity.runOnUiThread(() -> setupTags((ViewGroup) view));
-        }
+        Activity activity = getActivity();
+        if (activity == null)
+            return;
+        activity.runOnUiThread(this::updateWayToday);
     }
 }

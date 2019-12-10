@@ -23,7 +23,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
 
     private final Channel<StoreOp> channel = new Channel<>();
 
-    ITagsStoreDefault(Context context) {
+    public ITagsStoreDefault(Context context) {
         this.context = context;
 
         ids = new PreferenceIDs(context).get();
