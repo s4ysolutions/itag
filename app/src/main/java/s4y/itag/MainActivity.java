@@ -326,7 +326,9 @@ public class MainActivity extends FragmentActivity {
         }
         final BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
         Notifications.cancelDisconnectNotification(this);
-        if (connection.isConnected()) {
+        if (connection.isFindMe()) {
+            connection.resetFindeMe();
+        } else if (connection.isConnected()) {
             new Thread(() -> {
                 if (connection.isAlerting()) {
                     connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);

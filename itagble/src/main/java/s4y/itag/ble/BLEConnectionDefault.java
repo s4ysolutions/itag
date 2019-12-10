@@ -603,6 +603,11 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
+    public void resetFindeMe() {
+       clickChannel.broadcast(0);
+    };
+
+    @Override
     public void close() throws Exception {
         clickChannel.broadcast(0);
         BLEPeripheralInterace p = peripheral();

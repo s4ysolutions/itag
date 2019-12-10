@@ -27,7 +27,7 @@ private static final long serialVersionUID = 1575220516;
         this.name = name == null ? ITagApplication.context.getString(R.string.unknown):name;
         this.color = color == null? TagColor.black : color;
         this.alert = alert == null ? false : alert;
-        this.alertDelay = alertDelay == null ? 7: alertDelay;
+        this.alertDelay = alertDelay == null ? 5: alertDelay;
     }
 
     public ITagDefault(@NonNull BLEScanResult scanResult) {
