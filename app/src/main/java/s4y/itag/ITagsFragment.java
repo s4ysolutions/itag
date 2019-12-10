@@ -311,18 +311,7 @@ public class ITagsFragment extends Fragment
         }
         updateITagImageAnimation(view, itag, connection);
     }
-/*
-    private void updateITagImageAnimation(@NonNull String id) {
-        Activity activity = getActivity();
-        if (activity == null) return; //
-        ITagInterface itag = ITag.store.byId(id);
-        if (itag == null) {
-            return;
-        }
-        BLEConnectionInterface connection = ble.connectionById(id);
-        updateITagImageAnimation(itag, connection);
-    }
-*/
+
     private void updateITagImage(@NonNull ViewGroup rootView, ITagInterface itag) {
         Activity activity = getActivity();
         if (activity == null) return; //

@@ -187,7 +187,7 @@ public class MainActivity extends FragmentActivity {
             setupProgressBar();
             mEnableAttempts = 0;
             if (mSelectedFragment != FragmentType.SCANNER) {
-                fragment = new LeScanFragment();
+                fragment = new ScanFragment();
                 mSelectedFragment = FragmentType.SCANNER;
             }
         } else {

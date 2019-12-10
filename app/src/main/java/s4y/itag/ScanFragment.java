@@ -26,7 +26,7 @@ import s4y.rasat.DisposableBag;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class LeScanFragment extends Fragment {
+public class ScanFragment extends Fragment {
     private final DisposableBag disposableBag = new DisposableBag();
     private final Map<String, Integer> id2rssi = new HashMap<>();
 
@@ -89,7 +89,7 @@ public class LeScanFragment extends Fragment {
         }
     }
 
-    public LeScanFragment() {
+    public ScanFragment() {
         // Required empty public constructor
     }
 

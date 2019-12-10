@@ -51,6 +51,6 @@ public class FixesTest {
         mainActivity.onStartStopScan(null);
         final FragmentManager fragmentManager = mainActivity.getSupportFragmentManager();
         Fragment fragment = fragmentManager.findFragmentById(R.id.content);
-        Assert.assertTrue(fragment instanceof LeScanFragment);
+        Assert.assertTrue(fragment instanceof ScanFragment);
     }
 }
