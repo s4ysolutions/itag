@@ -1,6 +1,8 @@
 package s4y.itag.itag;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -82,11 +84,22 @@ public class ITag {
                 disposablesConnections.add(connection.observableState().subscribe(event -> {
                             Log.d(LT, "connection " + connection.id() + " state " + connection.state());
                             if (itag.isAlertDisconnected() && BLEConnectionState.disconnected.equals(connection.state())) {
-                                Log.d(LT, "connection " + connection.id() + " lost");
-                                MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
-                                sendDisconnectNotification(ITagApplication.context, itag.name());
-                                HistoryRecord.add(ITagApplication.context, itag.id());
-                            } else if (BLEConnectionState.connected.equals(connection.state())){
+                                if (itag.alertDelay() == 0) {
+                                    Log.d(LT, "connection " + connection.id() + " lost");
+                                    MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
+                                    sendDisconnectNotification(ITagApplication.context, itag.name());
+                                    HistoryRecord.add(ITagApplication.context, itag.id());
+                                } else {
+                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                        if (itag.isAlertDisconnected() && BLEConnectionState.disconnected.equals(connection.state())) {
+                                            Log.d(LT, "connection " + connection.id() + " lost");
+                                            MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
+                                            sendDisconnectNotification(ITagApplication.context, itag.name());
+                                            HistoryRecord.add(ITagApplication.context, itag.id());
+                                        }
+                                    }, itag.alertDelay() * 1000);
+                                }
+                            } else if (BLEConnectionState.connected.equals(connection.state())) {
                                 Log.d(LT, "connection " + connection.id() + " restored");
                                 MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
                                 cancelDisconnectNotification(ITagApplication.context);
@@ -148,7 +161,6 @@ public class ITag {
             }
         }
 
-        final DisposableBag disposableBag = disposableBagTmp;
         final ITagInterface itag = store.byId(connection.id());
         if (itag == null) {
             return;
