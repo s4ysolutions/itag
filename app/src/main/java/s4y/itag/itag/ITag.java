@@ -14,6 +14,7 @@ import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
+import s4y.itag.history.HistoryRecord;
 import s4y.rasat.DisposableBag;
 
 import static s4y.itag.Notifications.cancelDisconnectNotification;
@@ -28,7 +29,7 @@ public class ITag {
 
     private static final Map<String, AutoCloseable> reconnectListeners = new HashMap<>();
     private static final DisposableBag disposables = new DisposableBag();
-    private static final DisposableBag disposablesDisconnect = new DisposableBag();
+    private static final DisposableBag disposablesConnections = new DisposableBag();
 
     public static void initITag(Context context) {
         ble = BLEDefault.shared(context);
@@ -73,20 +74,39 @@ public class ITag {
     }
 
     private static void subscribeDisconnections() {
-        disposablesDisconnect.dispose();
+        disposablesConnections.dispose();
         for (int i = 0; i < store.count(); i++) {
             final ITagInterface itag = store.byPos(i);
             if (itag != null && itag.isAlertDisconnected()) {
                 BLEConnectionInterface connection = ble.connectionById(itag.id());
-                disposablesDisconnect.add(connection.observableState().subscribe(event -> {
-                            if (itag.isAlertDisconnected() && connection.isDisconnected()) {
+                disposablesConnections.add(connection.observableState().subscribe(event -> {
+                            Log.d(LT, "connection " + connection.id() + " state " + connection.state());
+                            if (itag.isAlertDisconnected() && BLEConnectionState.disconnected.equals(connection.state())) {
+                                Log.d(LT, "connection " + connection.id() + " lost");
                                 MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
                                 sendDisconnectNotification(ITagApplication.context, itag.name());
-                            } else {
+                                HistoryRecord.add(ITagApplication.context, itag.id());
+                            } else if (BLEConnectionState.connected.equals(connection.state())){
+                                Log.d(LT, "connection " + connection.id() + " restored");
+                                MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
                                 cancelDisconnectNotification(ITagApplication.context);
+                                HistoryRecord.clear(ITagApplication.context, itag.id());
                             }
                         }
                 ));
+                disposablesConnections.add(connection.observableClick().subscribe(click -> {
+                    if (click != 0 && connection.isAlerting()) {
+                        new Thread(() -> connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT)).start();
+                    } else {
+                        if (connection.isFindMe() && !MediaPlayerUtils.getInstance().isSound()) {
+                            MediaPlayerUtils.getInstance().startFindPhone(ITagApplication.context);
+                        } else {
+                            if (connection.isConnected()) {
+                                MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
+                            }
+                        }
+                    }
+                }));
             }
         }
     }
@@ -148,18 +168,6 @@ public class ITag {
                 } while (itag.isAlertDisconnected() && infinity && !connection.isConnected());
                 // stop sound on connection in any case
                 MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
-                // listen for lifetime events
-                disposableBag.add(connection.observableClick().subscribe(click -> {
-                    if (click != 0 && connection.isAlerting()) {
-                        new Thread(() -> connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT)).start();
-                    } else {
-                        if (connection.isFindMe() && !MediaPlayerUtils.getInstance().isSound()) {
-                            MediaPlayerUtils.getInstance().startFindPhone(ITagApplication.context);
-                        } else {
-                            MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
-                        }
-                    }
-                }));
                 if (onComplete != null) {
                     onComplete.run();
                 }

@@ -23,11 +23,11 @@ import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
+
 import s4y.itag.BuildConfig;
 import s4y.itag.ITagApplication;
 import s4y.itag.R;
 import s4y.itag.ble.BLEConnectionInterface;
-import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.itag.ITag;
 
 
@@ -155,10 +155,13 @@ public final class HistoryRecord implements Serializable {
             locationManager.removeUpdates(this);
             ITagApplication.faRemovedGpsRequestBySuccess();
             if (BuildConfig.DEBUG)
-                Log.d(LT, "GPS removeUpdates on location changed" + addr);
+                Log.d(LT, "GPS onLocationChanged. id:" + addr + ", listening: "+isListening);
             BLEConnectionInterface connection = ITag.ble.connectionById(addr);
-            if (isListening && connection.isConnected() && location.getTime() < ts + LOCATION_TIMEOUT)
+            if (isListening && !connection.isConnected() && location.getTime() < ts + LOCATION_TIMEOUT) {
+                if (BuildConfig.DEBUG)
+                    Log.d(LT, "GPS onLocationChanged adds history record. id:" + addr);
                 add(context, new HistoryRecord(addr, location));
+            }
             ITagApplication.faGotGpsLocation();
         }
 
@@ -201,7 +204,14 @@ public final class HistoryRecord implements Serializable {
                         .getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 if (location != null) {
                     add(context, new HistoryRecord(addr, location));
-                    gotBestLocation = location.getTime() > System.currentTimeMillis() - 5000;
+                    gotBestLocation = System.currentTimeMillis() - location.getTime() > 30000;
+                }
+                if (BuildConfig.DEBUG) {
+                    if (location == null) {
+                        Log.d(LT, "can't getLastKnownLocation from GPS. id:" + id);
+                    } else {
+                        Log.d(LT, "getLastKnownLocation from GPS in " + (System.currentTimeMillis() - location.getTime()) / 1000 + "sec. id:" + id);
+                    }
                 }
             } catch (SecurityException e) {
                 ITagApplication.handleError(e);
@@ -213,19 +223,27 @@ public final class HistoryRecord implements Serializable {
                 Location networklocation = locationManager
                         .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 if (networklocation != null) {
-                    if (location == null || location.getTime() < System.currentTimeMillis() - 120000)
+                    if (location == null || location.getTime() < System.currentTimeMillis() - 30000)
                         add(context, new HistoryRecord(addr, networklocation));
+                }
+                if (BuildConfig.DEBUG) {
+                    if (location == null) {
+                        Log.d(LT, "can't getLastKnownLocation from Networkd. id:" + id);
+                    } else {
+                        Log.d(LT, "getLastKnownLocation from Network in " + (System.currentTimeMillis() - location.getTime()) / 1000 + "sec. id:" + id);
+                    }
                 }
             } catch (SecurityException e) {
                 ITagApplication.handleError(e);
             }
         }
 
-        if (isGPSEnabled && !sLocationListeners.containsKey(addr) && !gotBestLocation) {
+        if (isGPSEnabled && !sLocationListeners.containsKey(addr)) {
             LocationListener locationListener =
                     new HistoryLocationListener(context, locationManager, addr);
 
             try {
+                Log.d(LT, "will request GPS location id:" + id);
                 locationManager.requestLocationUpdates(
                         LocationManager.GPS_PROVIDER, 1, 1, locationListener, Looper.getMainLooper());
                 if (BuildConfig.DEBUG) Log.d(LT, "GPS requestLocationUpdates " + addr);
@@ -233,6 +251,7 @@ public final class HistoryRecord implements Serializable {
                 mGpsTimeoutHandler.postDelayed(() -> {
                     sLocationListeners.remove(addr);
                     locationManager.removeUpdates(locationListener);
+                    Log.d(LT, "the request of GPS location timeout id:" + id);
                     ITagApplication.faRemovedGpsRequestByTimeout();
                 }, LOCATION_TIMEOUT);
 
@@ -248,6 +267,7 @@ public final class HistoryRecord implements Serializable {
     }
 
     public static void clear(Context context, String addr) {
+        if (BuildConfig.DEBUG) Log.d(LT, "clear history" + addr);
         records.remove(addr);
         save(context);
         LocationListener locationListener = sLocationListeners.get(addr);
@@ -256,9 +276,11 @@ public final class HistoryRecord implements Serializable {
         if (locationListener != null) {
             final LocationManager locationManager = (LocationManager) context
                     .getSystemService(Context.LOCATION_SERVICE);
-            locationManager.removeUpdates(locationListener);
+            if (locationManager != null) {
+                if (BuildConfig.DEBUG) Log.d(LT, "GPS removeUpdates on clear history" + addr);
+                locationManager.removeUpdates(locationListener);
+            }
             ITagApplication.faRemovedGpsRequestByConnect();
-            if (BuildConfig.DEBUG) Log.d(LT, "GPS removeUpdates on clear history" + addr);
         }
 
     }

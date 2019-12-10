@@ -152,11 +152,28 @@ public class ITagsFragment extends Fragment
         Map<String, HistoryRecord> records = HistoryRecord.getHistoryRecords(activity);
 
         if (records.get(id) == null) {
+            Log.d(LT, "updateLocationImage off:"+id);
             mLocationAnimation.cancel();
             imageLocation.setVisibility(View.GONE);
         } else {
+            Log.d(LT, "updateLocationImage on:"+id);
             imageLocation.startAnimation(mLocationAnimation);
             imageLocation.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void updateLocationImages() {
+        final Activity activity = getActivity();
+        if (activity == null) {
+            return;
+        }
+
+        for (Map.Entry<String, ViewGroup> entry : tagViews.entrySet()) {
+            String id = entry.getKey();
+            ViewGroup rootView = entry.getValue();
+            if (rootView != null) {
+                updateLocationImage(rootView, id);
+            }
         }
     }
 
@@ -447,15 +464,11 @@ public class ITagsFragment extends Fragment
 
     @Override
     public void onHistoryRecordChange() {
-
-        final View view = getView();
-        if (view != null) {
-            Activity activity = getActivity();
-            if (activity == null)
-                return;
-
-            activity.runOnUiThread(() -> setupTags((ViewGroup) view));
-        }
+        Activity activity = getActivity();
+        if (activity == null)
+            return;
+        Log.d(LT,"onHistoryRecordChange");
+        activity.runOnUiThread(this::updateLocationImages);
     }
 
     @Override

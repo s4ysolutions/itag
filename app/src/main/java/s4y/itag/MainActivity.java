@@ -326,6 +326,7 @@ public class MainActivity extends FragmentActivity {
             MediaPlayerUtils.getInstance().stopSound(this);
         }
         final BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
+        Notifications.cancelDisconnectNotification(this);
         if (connection.isConnected()) {
             new Thread(() -> {
                 if (connection.isAlerting()) {
