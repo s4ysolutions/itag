@@ -5,8 +5,10 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -16,6 +18,7 @@ import android.os.Bundle;
 
 import androidx.preference.PreferenceManager;
 
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
@@ -34,7 +37,6 @@ import java.util.Locale;
 
 import s4y.itag.ble.AlertVolume;
 import s4y.itag.ble.BLEConnectionInterface;
-import s4y.itag.ble.BLEError;
 import s4y.itag.ble.BLEScanResult;
 import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
@@ -88,8 +90,23 @@ public class MainActivity extends FragmentActivity {
     }
 
     private FragmentType mSelectedFragment;
-
     private int mEnableAttempts = 0;
+
+    static class ITagServiceConnection implements ServiceConnection {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            ITagsService.ITagBinder itagService = (ITagsService.ITagBinder) service;
+            itagService.removeFromForeground();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    }
+
+    private ITagServiceConnection mServiceConnection = new ITagServiceConnection();
 
     @Override
     protected void onResume() {
@@ -115,12 +132,19 @@ public class MainActivity extends FragmentActivity {
                     break;
             }
         }));
+        bindService(ITagsService.intent(this), mServiceConnection, 0);
     }
 
     @Override
     protected void onPause() {
+        unbindService(mServiceConnection);
         disposableBag.dispose();
         sIsShown = false;
+        if (ITag.store.isDisconnectAlert()) {
+            ITagsService.start(this);
+        } else {
+            ITagsService.stop(this);
+        }
         super.onPause();
     }
 

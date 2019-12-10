@@ -45,7 +45,7 @@
     <string name="blue">Blue</string>
 
     <string name="service_in_background">Double click iTag\'s button to find the phone</string>
-    <string name="service_description">Long press iTag\'s image to make it to ring.</string>
+    <string name="service_description">Click iTag\'s image to make the tag to ring.</string>
 
     <string name="notify_disconnect">%s disconnected</string>
     <string name="click_to_silent">Click to stop alarm</string>

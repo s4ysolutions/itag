@@ -14,7 +14,7 @@ public class BootReceiver extends BroadcastReceiver {
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             SharedPreferences preferences =(context.getSharedPreferences("s4y.solutions.itags.prefs", Context.MODE_PRIVATE));
             if (preferences.getBoolean("loadOnBoot", true)) {
-                ITagsService.startInForeground(context);
+                ITagsService.start(context);
             }
         }
     }

@@ -56,6 +56,17 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
         return ids.size();
     }
 
+    @Override
+    public boolean isDisconnectAlert() {
+        for (String id: ids){
+            ITagInterface itag = tags.get(id);
+            if (itag != null && itag.isAlertDisconnected()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @NonNull
     @Override
     public Observable<StoreOp> observable() {

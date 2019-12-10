@@ -32,8 +32,8 @@
     <string name="red">Красный</string>
     <string name="green">Зеленый</string>
     <string name="blue">Голубой</string>
-    <string name="service_in_background">Двойное нажатие кнопки брелка для поиска телефона</string>
-    <string name="service_description">Долгое нажатие на изображении брелка для его поиска</string>
+    <string name="service_in_background">Двойное нажатие кнопки на брелке для поиска телефона</string>
+    <string name="service_description">Один клик на изображении брелка для его поиска</string>
     <string name="notify_disconnect">%s отключен</string>
     <string name="click_to_silent">Одно нажатие для выключения сигнала</string>
     <string name="help_longpress">Длинное нажатие для поиска брелка</string>

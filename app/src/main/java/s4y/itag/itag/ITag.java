@@ -26,6 +26,7 @@ public class ITag {
 
     private static final Map<String, AutoCloseable> reconnectListeners = new HashMap<>();
     private static final DisposableBag disposables = new DisposableBag();
+    private static final DisposableBag disposablesDisconnect = new DisposableBag();
 
     public static void initITag(Context context) {
         ble = BLEDefault.shared(context);
@@ -40,6 +41,7 @@ public class ITag {
                 }
             }
         }
+        subscribeDisconnections();
         disposables.add(store.observable().subscribe(event -> {
             ITagInterface itag = event.tag;
             boolean reconnect = store.remembered(itag.id()) && itag.isAlertDisconnected();
@@ -55,7 +57,9 @@ public class ITag {
                     new Thread(() -> connection.disconnect(BLE_TIMEOUT)).start();
                 }
             }
+            subscribeDisconnections();
         }));
+
     }
 
     public static void close() throws Exception {
@@ -64,6 +68,22 @@ public class ITag {
             disableReconnect(id);
         }
         disposables.dispose();
+    }
+
+    private static void subscribeDisconnections() {
+        disposablesDisconnect.dispose();
+        for (int i = 0; i < store.count(); i++) {
+            final ITagInterface itag = store.byPos(i);
+            if (itag != null && itag.isAlertDisconnected()) {
+                BLEConnectionInterface connection = ble.connectionById(itag.id());
+                disposablesDisconnect.add(connection.observableState().subscribe(event -> {
+                            if (itag.isAlertDisconnected() && connection.isDisconnected()) {
+                                MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
+                            }
+                        }
+                ));
+            }
+        }
     }
 
     private static int connectThreadsCount = 0;
@@ -133,11 +153,6 @@ public class ITag {
                         } else {
                             MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
                         }
-                    }
-                }));
-                disposableBag.add(connection.observableState().subscribe(state -> {
-                    if (itag.isAlertDisconnected() && connection.isDisconnected()) {
-                        MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
                     }
                 }));
                 if (onComplete != null) {

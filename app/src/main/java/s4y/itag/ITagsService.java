@@ -6,28 +6,26 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.TaskStackBuilder;
-import android.bluetooth.BluetoothAdapter;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import androidx.preference.PreferenceManager;
-import android.util.Log;
 
-import java.util.HashMap;
-import java.util.Map;
+import androidx.preference.PreferenceManager;
+
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
-import s4y.itag.history.HistoryRecord;
+import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.itag.ITag;
+import s4y.itag.itag.ITagInterface;
+import s4y.rasat.DisposableBag;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsGPSUpdater;
 import s4y.waytoday.locations.LocationsTracker;
@@ -37,89 +35,48 @@ import s4y.waytoday.upload.UploadJobService;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 
-class ITagsService extends Service implements
+public class ITagsService extends Service implements
         LocationsTracker.ILocationListener,
         IDService.IIDSeriviceListener {
+    private static final String LT = ITagsService.class.getName();
     private static final int FOREGROUND_ID = 1;
     private static final int NOTIFICATION_DISCONNECT_ID = 2;
-    private static final String CHANNEL_ID = "itag3";
+    private static final String MAIN_CHANNEL_ID = "itag3";
     private static final String CHANNEL_DISCONNECT_ID = "ditag1";
-    private static final String RUN_IN_FOREGROUND = "run_in_foreground";
-    private static final String STOP_SOUND = "stop_sound";
-    private boolean mChannelCreated;
-    private boolean mChannelDisconnectedCreated;
+    private static final String EXTRA_STOP_SOUND = "stop_sound";
+    private static final String EXTRA_SHOW_ACTIVITY = "show_activity";
 
-    private static final String LT = ITagsService.class.getName();
+    private final DisposableBag disposablesStore = new DisposableBag();
+    private final DisposableBag disposableDisconnect = new DisposableBag();
 
-    @NonNull
 
-    @Override
-    public void onLocation(@NonNull Location location) {
-        UploadJobService.enqueueUploadLocation(this, location);
-    }
-
-    @Override
-    public void onTrackID(@NonNull String trackID) {
-        if ("".equals(trackID))
-            return;
-
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        sp.edit().putString("tid", trackID).apply();
-        sp.edit().putBoolean("wtfirst", false).apply();
-    }
-
-    public class GattBinder extends Binder {
-        @NonNull
-        public ITagsService getService() {
-            return ITagsService.this;
+    class ITagBinder extends Binder {
+        void removeFromForeground() {
+            ITagsService.this.removeFromForeground();
         }
     }
 
-    @NonNull
-    private IBinder mBinder = new GattBinder();
+    final private IBinder mBinder = new ITagBinder();
 
-    private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, @NonNull Intent intent) {
-            if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
-                final int bluetoothState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
-                Log.d(LT, "bluetooth change state: " + bluetoothState);
-                if (bluetoothState == BluetoothAdapter.STATE_ON) {
-                    if (BuildConfig.DEBUG) {
-                        Log.d(LT, "ACTION_STATE_CHANGED STATE_ON");
-                    }
-                } else if (bluetoothState == BluetoothAdapter.STATE_OFF) {
-                    if (BuildConfig.DEBUG) {
-                        Log.d(LT, "ACTION_STATE_CHANGED STATE_OFF");
-                    }
-                }
+    static Intent intent(Context context) {
+        return new Intent(context, ITagsService.class);
+    }
+
+    public static void start(@NonNull Context context) {
+        if (ITag.store.count() > 0) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent(context));
+            } else {
+                context.startService(intent(context));
             }
+        } else {
+            stop(context);
         }
-    };
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null || intent.getBooleanExtra(RUN_IN_FOREGROUND, false)) {
-            addToForeground();
-        }
-        if (intent != null && intent.getBooleanExtra(STOP_SOUND, false)) {
-            MediaPlayerUtils.getInstance().stopSound(this);
-            if (!MainActivity.sIsShown) {
-                Intent intentActivity = new Intent(this, MainActivity.class);
-                intentActivity.addFlags(FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intentActivity);
-            }
-        }
-        return START_REDELIVER_INTENT;
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        // connectAll();
-        return mBinder;
+    public static void stop(@NonNull Context context) {
+        context.stopService(intent(context));
     }
-
-    private LocationsUpdater gpsLocatonUpdater;
 
     @Override
     public void onCreate() {
@@ -128,8 +85,13 @@ class ITagsService extends Service implements
             Log.d(LT, "onCreate");
         }
 
-        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-        this.registerReceiver(mBluetoothReceiver, filter);
+        subscribeDisconnections();
+        disposablesStore.add(ITag.store.observable().subscribe(event -> {
+                    disposableDisconnect.dispose();
+                    subscribeDisconnections();
+                }
+        ));
+
         gpsLocatonUpdater = new LocationsGPSUpdater(this);
         LocationsTracker.addOnLocationListener(this);
         IDService.addOnTrackIDChangeListener(this);
@@ -142,22 +104,74 @@ class ITagsService extends Service implements
         }
     }
 
+    private void subscribeDisconnections() {
+        disposableDisconnect.dispose();
+        for (int i = 0; i < ITag.store.count(); i++) {
+            final ITagInterface itag = ITag.store.byPos(i);
+            if (itag != null && itag.isAlertDisconnected()) {
+                BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
+                disposableDisconnect.add(connection.observableState().subscribe(event -> {
+                            if (itag.isAlertDisconnected() && connection.isDisconnected()) {
+                                sendDisconnectNotification(itag.name());
+                            } else {
+                                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                if (notificationManager != null) {
+                                    notificationManager.cancel(NOTIFICATION_DISCONNECT_ID);
+                                }
+                            }
+                        }
+                ));
+            }
+        }
+    }
+
     @Override
     public void onDestroy() {
         if (BuildConfig.DEBUG) {
             Log.d(LT, "onDestroy");
         }
+        disposableDisconnect.dispose();
+        disposablesStore.dispose();
         LocationsTracker.removeOnLocationListener(this);
-        this.unregisterReceiver(mBluetoothReceiver);
 
         LocationsTracker.stop();
         super.onDestroy();
     }
 
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
 
-    public void addToForeground() {
-        createNotificationChannel();
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+    private boolean inForeground = false;
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (!inForeground) {
+            putInForeground();
+        }
+        if (intent != null) {
+            if (intent.getBooleanExtra(EXTRA_STOP_SOUND, false)) {
+                MediaPlayerUtils.getInstance().stopSound(this);
+            }
+            boolean showActivity = intent.getBooleanExtra(EXTRA_SHOW_ACTIVITY, false);
+            if (showActivity && !MainActivity.sIsShown) {
+                Intent intentActivity = new Intent(this, MainActivity.class);
+                intentActivity.addFlags(FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intentActivity);
+            }
+
+        }
+        return START_REDELIVER_INTENT;
+    }
+
+    public void putInForeground() {
+        if (inForeground) {
+            return;
+        }
+        inForeground = true;
+        createMainNotificationChannel();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, MAIN_CHANNEL_ID);
         builder
                 .setTicker(null)
                 .setSmallIcon(R.drawable.app)
@@ -179,55 +193,30 @@ class ITagsService extends Service implements
 
     public void removeFromForeground() {
         stopForeground(true);
+        inForeground = false;
     }
 
-    private void createNotificationChannel() {
-        if (!mChannelCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    private boolean createdChannel;
+
+    private void createMainNotificationChannel() {
+        if (!createdChannel && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.app_name);
             int importance = NotificationManager.IMPORTANCE_MIN;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            NotificationChannel channel = new NotificationChannel(MAIN_CHANNEL_ID, name, importance);
             channel.setSound(null, null);
             channel.setShowBadge(false);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
-                mChannelCreated = true;
+                createdChannel = true;
             }
         }
     }
 
-    public static boolean start(@NonNull Context context, boolean foreground) {
-        if (ITag.store.count() > 0) {
-            Intent intent = new Intent(context, ITagsService.class);
-            if (foreground) {
-                intent.putExtra(RUN_IN_FOREGROUND, true);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(intent);
-                } else {
-                    context.startService(intent);
-                }
-            } else {
-                context.startService(intent);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    public static boolean start(@NonNull Context context) {
-        return start(context, false);
-    }
-
-    public static void startInForeground(@NonNull Context context) {
-        start(context, true);
-    }
-
-    public static void stop(@NonNull Context context) {
-        context.stopService(new Intent(context, ITagsService.class));
-    }
+    private boolean createdChannelDisconnected;
 
     private void createDisconnectNotificationChannel() {
-        if (!mChannelDisconnectedCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (!createdChannelDisconnected && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.app_name);
             int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(CHANNEL_DISCONNECT_ID, name, importance);
@@ -237,15 +226,15 @@ class ITagsService extends Service implements
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
-                mChannelDisconnectedCreated = true;
+                createdChannelDisconnected = true;
             }
         }
     }
 
-
-    private void createDisconnectNotification(String name) {
-        createNotificationChannel();
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+    private void sendDisconnectNotification(String name) {
+        // 1. change icon of them main notification
+        createMainNotificationChannel();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, MAIN_CHANNEL_ID);
         builder
                 .setTicker(String.format(getString(R.string.notify_disconnect),
                         name == null || "".equals(name) ? "iTag" : name))
@@ -254,8 +243,9 @@ class ITagsService extends Service implements
                 .setContentText(getString(R.string.click_to_silent))
                 .setPriority(Notification.PRIORITY_MAX)
                 .setAutoCancel(true);
+
         Intent intent = new Intent(this, ITagsService.class);
-        intent.putExtra(STOP_SOUND, true);
+        intent.putExtra(EXTRA_STOP_SOUND, true);
         PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(pendingIntent);
 
@@ -264,11 +254,30 @@ class ITagsService extends Service implements
             builder.setChannelId(CHANNEL_DISCONNECT_ID);
         }
         Notification notification = builder.build();
+
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
             notificationManager.notify(NOTIFICATION_DISCONNECT_ID, notification);
         }
     }
+
+
+    @Override
+    public void onLocation(@NonNull Location location) {
+        UploadJobService.enqueueUploadLocation(this, location);
+    }
+
+    @Override
+    public void onTrackID(@NonNull String trackID) {
+        if ("".equals(trackID))
+            return;
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        sp.edit().putString("tid", trackID).apply();
+        sp.edit().putBoolean("wtfirst", false).apply();
+    }
+
+    private LocationsUpdater gpsLocatonUpdater;
 
     public void startWayToday(int frequency) {
         final SharedPreferences preferences =

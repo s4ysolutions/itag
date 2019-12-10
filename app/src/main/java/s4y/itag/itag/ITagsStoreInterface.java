@@ -7,6 +7,7 @@ import s4y.rasat.Observable;
 
 public interface ITagsStoreInterface {
     int count();
+    boolean isDisconnectAlert();
     @NonNull
     Observable<StoreOp> observable();
     @Nullable
