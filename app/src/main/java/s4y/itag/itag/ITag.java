@@ -33,6 +33,9 @@ public class ITag {
     private static final DisposableBag disposables = new DisposableBag();
     private static final DisposableBag disposablesConnections = new DisposableBag();
 
+    private static final Map<String, Thread> asyncConnections = new HashMap<>();
+    private static final Map<String, DisposableBag> connectionBags = new HashMap<>();
+
     public static void initITag(Context context) {
         ble = BLEDefault.shared(context);
         store = new ITagsStoreDefault(ITagApplication.context);
@@ -67,12 +70,30 @@ public class ITag {
 
     }
 
-    public static void close() throws Exception {
-        ble.close();
-        for (String id : reconnectListeners.keySet()) {
-            disableReconnect(id);
+    public static void close() {
+        try {
+            ble.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        synchronized (reconnectListeners) {
+            for (String id : reconnectListeners.keySet()) {
+                disableReconnect(id);
+            }
+        }
+        synchronized (asyncConnections) {
+            for (Thread thread : asyncConnections.values()) {
+                //noinspection deprecation
+                thread.stop();
+            }
+        }
+        synchronized (connectionBags) {
+            for (DisposableBag bag : connectionBags.values()) {
+                bag.dispose();
+            }
         }
         disposables.dispose();
+        disposablesConnections.dispose();
     }
 
     private static void subscribeDisconnections() {
@@ -145,9 +166,6 @@ public class ITag {
     static void connectAsync(final BLEConnectionInterface connection, Runnable onComplete) {
         connectAsync(connection, true, onComplete);
     }
-
-    private static final Map<String, Thread> asyncConnections = new HashMap<>();
-    private static final Map<String, DisposableBag> connectionBags = new HashMap<>();
 
     @SuppressWarnings("SameParameterValue")
     public static void connectAsync(final BLEConnectionInterface connection, boolean infinity, Runnable onComplete) {

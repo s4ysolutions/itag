@@ -18,6 +18,7 @@ import android.os.Bundle;
 
 import androidx.preference.PreferenceManager;
 
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
@@ -131,7 +132,7 @@ public class MainActivity extends FragmentActivity {
                     break;
             }
         }));
-        bindService(ITagsService.intent(this), mServiceConnection, 0);
+        bindService(ITagsService.intentBind(this), mServiceConnection, 0);
     }
 
     @Override
@@ -384,11 +385,17 @@ public class MainActivity extends FragmentActivity {
             //noinspection SwitchStatementWithTooFewBranches
             switch (item.getItemId()) {
                 case R.id.exit:
+                    ITag.close();
+                    Waytoday.stop();
+                    ITagsService.stop(this);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         finishAndRemoveTask();
                     } else {
                         finishAffinity();
                     }
+                    new Handler(getMainLooper()).postDelayed(()->{
+                        System.exit(0);
+                    }, 5000);
                     break;
             }
             return true;

@@ -17,13 +17,14 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
-import s4y.itag.itag.ITag;
-import s4y.waytoday.locations.LocationsTracker;
-
 import static s4y.itag.Notifications.EXTRA_STOP_SOUND;
 
 
 public class ITagsService extends Service {
+    static final String ACTION_STOP = "s4y.itag.stop";
+    static final String ACTION_BIND = "s4y.itag.bind";
+    static final String ACTION_START = "s4y.itag.start";
+
     private static final int FOREGROUND_ID = 1;
     static final String FOREGROUND_CHANNEL_ID = "itag3";
 
@@ -35,22 +36,40 @@ public class ITagsService extends Service {
         }
     }
 
-    final private IBinder mBinder = new ITagBinder();
+    private final IBinder mBinder = new ITagBinder();
 
-    static Intent intent(Context context) {
+    private static Intent intent(Context context) {
         return new Intent(context, ITagsService.class);
+    }
+
+    static Intent intentStart(Context context) {
+        Intent intent = intent(context);
+        intent.setAction(ACTION_START);
+        return intent;
+    }
+
+    static Intent intentBind(Context context) {
+        Intent intent = intent(context);
+        intent.setAction(ACTION_BIND);
+        return intent;
+    }
+
+    static Intent intentStop(Context context) {
+        Intent intent = intent(context);
+        intent.setAction(ACTION_STOP);
+        return intent;
     }
 
     public static void start(@NonNull Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent(context));
+            context.startForegroundService(intentStart(context));
         } else {
-            context.startService(intent(context));
+            context.startService(intentStart(context));
         }
     }
 
     public static void stop(@NonNull Context context) {
-        context.stopService(intent(context));
+        context.stopService(intentStop(context));
     }
 
     @Override
@@ -79,24 +98,26 @@ public class ITagsService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (!inForeground) {
-            putInForeground();
-        }
         if (intent != null) {
-            if (intent.getBooleanExtra(EXTRA_STOP_SOUND, false)) {
-                MediaPlayerUtils.getInstance().stopSound(this);
+            if (ACTION_STOP.equals(intent.getAction())) {
+                stopSelf();
+                return START_NOT_STICKY;
+            } else if (ACTION_START.equals(intent.getAction())) {
+                if (!inForeground) {
+                    putInForeground();
+                }
+                if (intent.getBooleanExtra(EXTRA_STOP_SOUND, false)) {
+                    MediaPlayerUtils.getInstance().stopSound(this);
+                }
+                return START_REDELIVER_INTENT;
+            } else if (ACTION_BIND.equals(intent.getAction())) {
+                if (inForeground) {
+                    removeFromForeground();
+                }
+                return START_REDELIVER_INTENT;
             }
-            /*
-            boolean showActivity = intent.getBooleanExtra(EXTRA_SHOW_ACTIVITY, false);
-            if (showActivity && !MainActivity.sIsShown) {
-                Intent intentActivity = new Intent(this, MainActivity.class);
-                intentActivity.addFlags(FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intentActivity);
-            }
-             */
-
         }
-        return START_REDELIVER_INTENT;
+        return START_NOT_STICKY;
     }
 
     public void putInForeground() {

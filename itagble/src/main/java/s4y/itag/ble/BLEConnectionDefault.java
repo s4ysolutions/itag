@@ -612,7 +612,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         clickChannel.broadcast(0);
         BLEPeripheralInterace p = peripheral();
         if (p != null) {
-            p.close();
+            p.disconnect();
         }
         disposables.dispose();
     }

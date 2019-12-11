@@ -185,24 +185,23 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
                 Log.d(LT, "disconnect id=" + identifier() + ", already disconnected, no action");
             }
         } else {
-            if (isConnected()) {
+            BluetoothGatt gatt = gatt();
+            boolean connected = isConnected();
+            if (connected && gatt!=null) {
                 if (BuildConfig.DEBUG) {
                     Log.d(LT, "disconnect id=" + identifier() + ", connected, will wait connection change");
                 }
                 setState(BLEPeripheralState.disconnecting);
-                gatt().disconnect();
+                gatt.disconnect();
             } else {
                 if (BuildConfig.DEBUG) {
                     Log.d(LT, "disconnect id=" + identifier() + ", not connected will simulate connection change");
                 }
                 setState(BLEPeripheralState.disconnecting);
-                synchronized (gatt) {
-                    if (gatt[0] != null) {
-                        gatt[0].disconnect();
-                    }
-                }
+                if (gatt != null)
+                        gatt.disconnect(); // just in case ?
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

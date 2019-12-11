@@ -107,6 +107,13 @@ public class BLEDefault implements BLEInterface {
 
     @Override
     public void close() {
+        for (BLEConnectionInterface connection: map.values()) {
+            try {
+                connection.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         context.unregisterReceiver(stateReceiver);
     }
 }
