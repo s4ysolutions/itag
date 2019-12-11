@@ -138,7 +138,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         this.context = context;
         int type = device.getType();
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "BLEPeripheralDefault addr="+device.getAddress()+" name="+device.getName()+" type="+type);
+            Log.d(LT, "BLEPeripheralDefault addr=" + device.getAddress() + " name=" + device.getName() + " type=" + type);
         }
         this.cached = type != DEVICE_TYPE_UNKNOWN;
     }
@@ -164,7 +164,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         setState(BLEPeripheralState.connecting);
         BluetoothGatt g;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            g = device.connectGatt(context,  auto, callback, TRANSPORT_LE);
+            g = device.connectGatt(context, auto, callback, TRANSPORT_LE);
         } else {
             g = device.connectGatt(context, auto, callback);
         }
@@ -182,21 +182,25 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     public void disconnect() {
         if (BLEPeripheralState.disconnected.equals(state)) {
             if (BuildConfig.DEBUG) {
-                Log.d(LT, "disconnect id=" + identifier()+", already disconnected, no action");
+                Log.d(LT, "disconnect id=" + identifier() + ", already disconnected, no action");
             }
         } else {
             if (isConnected()) {
                 if (BuildConfig.DEBUG) {
-                    Log.d(LT, "disconnect id=" + identifier()+", connected, will wait connection change");
+                    Log.d(LT, "disconnect id=" + identifier() + ", connected, will wait connection change");
                 }
                 setState(BLEPeripheralState.disconnecting);
                 gatt().disconnect();
             } else {
                 if (BuildConfig.DEBUG) {
-                    Log.d(LT, "disconnect id=" + identifier()+", not connected will simulate connection change");
+                    Log.d(LT, "disconnect id=" + identifier() + ", not connected will simulate connection change");
                 }
                 setState(BLEPeripheralState.disconnecting);
-                gatt().disconnect();
+                synchronized (gatt) {
+                    if (gatt[0] != null) {
+                        gatt[0].disconnect();
+                    }
+                }
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -366,7 +370,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             ret = gatt[0];
         }
         if (BuildConfig.DEBUG) {
-            Log.v(LT, "getGatt null:" +(ret==null?"yes":"no")+" id="+identifier());
+            Log.v(LT, "getGatt null:" + (ret == null ? "yes" : "no") + " id=" + identifier());
         }
         return ret;
     }
@@ -374,7 +378,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private void setGatt(BluetoothGatt gatt) {
         synchronized (this.gatt) {
             if (BuildConfig.DEBUG) {
-                Log.v(LT, "setGatt null:" +(gatt==null?"yes":"no")+" id="+identifier());
+                Log.v(LT, "setGatt null:" + (gatt == null ? "yes" : "no") + " id=" + identifier());
             }
             if (this.gatt[0] != null) {
                 Log.w(LT, "Overwrite not null gatt, id=" + identifier());
