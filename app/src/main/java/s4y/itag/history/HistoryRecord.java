@@ -268,6 +268,7 @@ public final class HistoryRecord implements Serializable {
 
     public static void clear(Context context, String addr) {
         if (BuildConfig.DEBUG) Log.d(LT, "clear history" + addr);
+        checkRecords(context);
         records.remove(addr);
         save(context);
         LocationListener locationListener = sLocationListeners.get(addr);
