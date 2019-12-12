@@ -5,7 +5,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import s4y.itag.BuildConfig;
@@ -71,15 +73,20 @@ public class ITag {
     }
 
     public static void close() {
+        List<String>  ids;
         synchronized (reconnectListeners) {
-            for (String id : reconnectListeners.keySet()) {
-                disableReconnect(id);
-            }
+            ids = new ArrayList<>(reconnectListeners.keySet());
         }
+        for (String id : ids) {
+            disableReconnect(id);
+        }
+
+        List<Thread> threads;
         synchronized (asyncConnections) {
-            for (Thread thread : asyncConnections.values()) {
-                thread.interrupt();
-            }
+            threads = new ArrayList<>(asyncConnections.values());
+        }
+        for (Thread thread : threads) {
+            thread.interrupt();
         }
         try {
             ble.close();
