@@ -290,7 +290,16 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
                 try {
                     // wait before discovery a bit
+                    // or it will fail on the older devices
                     Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }else {
+                try {
+                    // wait before discovery a bit
+                    // in order to let the gatt to be set in another thread
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
