@@ -466,12 +466,11 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                             .subscribe(event -> monitorDisconnect.setPayload(event.status))
             );
             monitorDisconnect.waitFor(() -> peripheral().disconnect(), timeoutSec);
+            if (monitorDisconnect.isTimedOut()) {
+               return BLEError.timeout;
+            }
             lastStatus = monitorDisconnect.payload();
-            return monitorDisconnect.isTimedOut()
-                    ? BLEError.timeout
-                    : lastStatus == GATT_SUCCESS
-                    ? BLEError.ok
-                    : BLEError.badStatus;
+            return  lastStatus == GATT_SUCCESS ? BLEError.ok : BLEError.badStatus;
         }
     }
 
@@ -605,10 +604,10 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     @Override
     public void resetFindeMe() {
        clickChannel.broadcast(0);
-    };
+    }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         clickChannel.broadcast(0);
         BLEPeripheralInterace p = peripheral();
         if (p != null) {

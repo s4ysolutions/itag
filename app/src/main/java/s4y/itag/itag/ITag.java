@@ -71,11 +71,6 @@ public class ITag {
     }
 
     public static void close() {
-        try {
-            ble.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         synchronized (reconnectListeners) {
             for (String id : reconnectListeners.keySet()) {
                 disableReconnect(id);
@@ -83,9 +78,13 @@ public class ITag {
         }
         synchronized (asyncConnections) {
             for (Thread thread : asyncConnections.values()) {
-                //noinspection deprecation
-                thread.stop();
+                thread.interrupt();
             }
+        }
+        try {
+            ble.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         synchronized (connectionBags) {
             for (DisposableBag bag : connectionBags.values()) {
@@ -201,11 +200,13 @@ public class ITag {
                         Log.d(LT, "BLE Connect thread connect " + connection.id() + "/" + itag.name() + " " + Thread.currentThread().getName());
                     }
                     connection.connect(infinity);
-                } while (itag.isAlertDisconnected() && infinity && !connection.isConnected());
+                } while (!isInterrupted() && itag.isAlertDisconnected() && infinity && !connection.isConnected());
                 // stop sound on connection in any case
                 MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
-                if (onComplete != null) {
-                    onComplete.run();
+                if (!isInterrupted()) {
+                    if (onComplete != null) {
+                        onComplete.run();
+                    }
                 }
                 synchronized (asyncConnections) {
                     asyncConnections.remove(connection.id());
