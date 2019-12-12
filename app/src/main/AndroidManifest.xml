@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="s4y.itag"
-    android:versionCode="128"
-    android:versionName="2.03beta"
+    android:versionCode="129"
+    android:versionName="2.04beta"
     >
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
