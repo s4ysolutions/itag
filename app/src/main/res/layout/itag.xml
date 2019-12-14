@@ -123,7 +123,7 @@
             android:layout_height="@android:dimen/app_icon_size"
             android:contentDescription="@string/manage_alert"
             android:onClick="onDisconnectAlert"
-            android:src="@drawable/alert" />
+            android:src="@drawable/keyfinder" />
 
         <Space
             android:layout_width="wrap_content"

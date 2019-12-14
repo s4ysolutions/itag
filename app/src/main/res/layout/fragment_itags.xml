@@ -32,6 +32,16 @@
             android:text="@string/app_name" />
 
         <ImageView
+            android:id="@+id/btn_mute"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="@string/start_scan"
+            android:scaleType="fitCenter"
+            android:src="@drawable/mute" />
+
+        <ImageView
             android:id="@+id/btn_waytoday"
             android:layout_width="40dp"
             android:layout_height="match_parent"

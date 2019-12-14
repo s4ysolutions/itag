@@ -83,4 +83,5 @@
     <string name="bt_lost">утерян</string>
     <string name="bt_call">сигнал</string>
     <string name="bt_disconnecting">отключение</string>
+    <string name="mute">Бесшумный режим</string>
 </resources>

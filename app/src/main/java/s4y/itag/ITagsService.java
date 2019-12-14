@@ -103,19 +103,26 @@ public class ITagsService extends Service {
                 stopSelf();
                 return START_NOT_STICKY;
             } else if (ACTION_START.equals(intent.getAction())) {
-                if (!inForeground) {
-                    putInForeground();
-                }
                 if (intent.getBooleanExtra(EXTRA_STOP_SOUND, false)) {
                     MediaPlayerUtils.getInstance().stopSound(this);
+                    return START_STICKY;
+                } else {
+                    if (!inForeground) {
+                        putInForeground();
+                    }
+                    return START_REDELIVER_INTENT;
                 }
-                return START_REDELIVER_INTENT;
             } else if (ACTION_BIND.equals(intent.getAction())) {
                 if (inForeground) {
                     removeFromForeground();
                 }
-                return START_REDELIVER_INTENT;
+                return START_NOT_STICKY;
             }
+        } else {
+            if (!inForeground) {
+                putInForeground();
+            }
+            return START_STICKY;
         }
         return START_NOT_STICKY;
     }

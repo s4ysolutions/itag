@@ -45,7 +45,7 @@ public class Notifications {
                 .setPriority(Notification.PRIORITY_MAX)
                 .setAutoCancel(true);
 
-        Intent intent = new Intent(context, ITagsService.class);
+        Intent intent = ITagsService.intentStart(context);
         intent.putExtra(EXTRA_STOP_SOUND, true);
         PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(pendingIntent);

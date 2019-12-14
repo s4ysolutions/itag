@@ -58,6 +58,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             }
             if (status == GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    setGatt(gatt);
                     setState(BLEPeripheralState.connected);
                     observables.channelConnected.broadcast(new BLEPeripheralObservablesInterface.ConnectedEvent());
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
@@ -175,6 +176,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             Log.w(LT, "will init gatt to null, id=" + identifier());
 
         }
+        // TODO: it aready should be set in onConnectionStateChange but just in case
         setGatt(g);
     }
 

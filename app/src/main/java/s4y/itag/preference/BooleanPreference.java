@@ -26,4 +26,6 @@ public class BooleanPreference {
         preferences.edit().putBoolean(key, value).apply();
     }
 
+    public void toggle() {set(!get());}
+
 }

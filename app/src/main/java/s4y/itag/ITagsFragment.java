@@ -29,8 +29,8 @@ import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
+import s4y.itag.preference.MutePreference;
 import s4y.rasat.DisposableBag;
-import s4y.waytoday.grpc.LocationOuterClass;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsTracker;
 
@@ -142,7 +142,8 @@ public class ITagsFragment extends Fragment
             Log.e(LT, "no waytoday imageview", new Exception("no waytoday imagegview"));
             return;
         }
-        if (BuildConfig.DEBUG) Log.d(LT, "updateWayToday, updating=" + LocationsTracker.isUpdating+" trackID="+trackID);
+        if (BuildConfig.DEBUG)
+            Log.d(LT, "updateWayToday, updating=" + LocationsTracker.isUpdating + " trackID=" + trackID);
         if (LocationsTracker.isUpdating && !"".equals(trackID)) {
             waytoday.setVisibility(View.VISIBLE);
             TextView wtid = waytoday.findViewById(R.id.text_wt_id);
@@ -271,7 +272,7 @@ public class ITagsFragment extends Fragment
         Activity activity = getActivity();
         if (activity == null) return; //
         final ImageView btnAlert = rootView.findViewById(R.id.btn_alert);
-        btnAlert.setImageResource(isAlertDisconnected || isConnected ? R.drawable.alert : R.drawable.noalert);
+        btnAlert.setImageResource(isAlertDisconnected || isConnected ? R.drawable.linked : R.drawable.keyfinder);
     }
 
     private void updateAlertButton(@NonNull String id) {
@@ -384,7 +385,21 @@ public class ITagsFragment extends Fragment
             trackID = sp.getString("tid", "");
         }
 
-        return inflater.inflate(R.layout.fragment_itags, container, false);
+        final MutePreference mute = new MutePreference(getContext());
+        View root = inflater.inflate(R.layout.fragment_itags, container, false);
+        if (root != null) {
+            final ImageView imgMute = root.findViewById(R.id.btn_mute);
+            boolean m = mute.get();
+            imgMute.setImageResource(m ? R.drawable.mute : R.drawable.nomute);
+            imgMute.setOnClickListener(v -> {
+                mute.toggle();
+                boolean mm = mute.get();
+                imgMute.setImageResource(mm ? R.drawable.mute : R.drawable.nomute);
+            });
+        }
+
+
+        return root;
     }
 
     // TODO: ugly

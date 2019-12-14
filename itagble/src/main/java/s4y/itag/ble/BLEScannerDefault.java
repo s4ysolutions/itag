@@ -17,12 +17,11 @@ class BLEScannerDefault implements BLEScannerInterface {
     // private final List<BLEDiscoveryResult> resultList = new ArrayList<>();
     private final Handler handlerTimer = new Handler(Looper.getMainLooper());
     private Handler handlerStart;
-    private int timeout = 0;
     private final Runnable runnableTimer = new Runnable() {
         @Override
         public void run() {
+            int timeout = channelTimer.observable.value() - 1;
             channelTimer.broadcast(timeout);
-            timeout--;
             if (timeout < 0) {
                 if (handlerStart == null) {
                     stop();
@@ -40,6 +39,7 @@ class BLEScannerDefault implements BLEScannerInterface {
     }
 
     private final Boolean[] isScanning = new Boolean[]{false};
+
     @Override
     public boolean isScanning() {
         synchronized (isScanning) {
@@ -47,9 +47,9 @@ class BLEScannerDefault implements BLEScannerInterface {
         }
     }
 
-    private void setScanning(boolean scanning){
+    private void setScanning(boolean scanning) {
         synchronized (isScanning) {
-            isScanning[0]=scanning;
+            isScanning[0] = scanning;
         }
     }
 
@@ -87,10 +87,10 @@ class BLEScannerDefault implements BLEScannerInterface {
                         event -> channelScan.broadcast(new BLEScanResult(event.peripheral.address(), event.peripheral.name(), event.rssi))
                 ));
         setScanning(true);
-        this.timeout = timeout;
         manager.scanForPeripherals();
-        handlerTimer.post(runnableTimer);
+        channelTimer.broadcast(timeout);
         channelActive.broadcast(true);
+        handlerTimer.postDelayed(runnableTimer, 1000);
     }
 
     @Override
@@ -98,7 +98,7 @@ class BLEScannerDefault implements BLEScannerInterface {
         handlerTimer.removeCallbacks(runnableTimer);
         handlerStart = null;
         manager.stopScan();
-     //   resultList.clear();
+        //   resultList.clear();
         disposableBag.dispose();
         setScanning(false);
         channelActive.broadcast(false);

@@ -26,6 +26,7 @@
 
     <string name="color">Change iTag color</string>
     <string name="color_label">Color</string>
+    <string name="mute">Mute</string>
     <string name="start_scan">Scan for new iTags</string>
     <string name="rememebr">Remember iTag</string>
     <string name="forget">Forget iTag</string>
@@ -94,7 +95,7 @@
     <string name="waytoday">WayToday</string>
     <string name="trackid">WayToday ID:</string>
     <string name="wt_new_id">Change ID</string>
-    <string name="wt_share">Share locaiton</string>
+    <string name="wt_share">Share location</string>
     <string name="share_title">Share via…</string>
     <string name="share_link"><![CDATA[Track my location by clicking https://way.today/#%1$s!30m or use ID %1$s on the site https://way.today]]></string>
     <string name="share_subj">WayToday location note</string>

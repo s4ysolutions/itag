@@ -83,4 +83,5 @@
     <string name="scanning_stopped">تم الانتهاء</string>
     <string name="bt_lost">ضائع</string>
     <string name="bt_disconnecting">قطع</string>
+    <string name="mute">كتم الصوت</string>
 </resources>
