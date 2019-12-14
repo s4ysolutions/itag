@@ -50,7 +50,7 @@
                 android:minWidth="40sp"
                 android:text="@string/empty"
                 android:textAlignment="center"
-                android:textSize="8sp" />
+                android:textSize="14sp" />
         </LinearLayout>
 
     </LinearLayout>
