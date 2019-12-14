@@ -64,7 +64,7 @@
     <string name="bt_disconnecting">disconnecting</string>
     <string name="bt_setup">lost</string>
     <string name="bt_call">yelling</string>
-    <string name="bt">chained</string>
+    <string name="bt">linked</string>
     <string name="bt_unk">faint</string>
     <string name="bt_lost">lost</string>
     <string name="last_seen">Last+seen+here+%d+%s+ago</string>
@@ -103,6 +103,6 @@
     <string name="about_cancel">Close</string>
     <string name="about_message">With a short living personal code WayToday lets you share the current location with others without hurting your privacy.\n\nYou can track your iTag on WayToday site right now or install the standalone app which does not require the gadget.\n\nWe recommend to give it a try because of some nice features iTag One does not have.</string>
     <string name="disable_wt">Remove it</string>
-    <string name="disable_wt_msg">This action will remove and disable WayToday forever.\n\nThe only way to restore the traking is removing and installing the application.</string>
+    <string name="disable_wt_msg">This action will remove and disable WayToday forever.\n\nThe only way to restore the tracking is removing and re-installing the application.</string>
     <string name="disable_wt_ok">Disable WayToday</string>
 </resources>
