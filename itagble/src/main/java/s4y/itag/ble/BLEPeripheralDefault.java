@@ -174,10 +174,11 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         }
         if (g == null) {
             Log.w(LT, "will init gatt to null, id=" + identifier());
-
         }
         // TODO: it aready should be set in onConnectionStateChange but just in case
-        setGatt(g);
+        if (g != null) {
+            setGatt(g);
+        }
     }
 
     @Override
