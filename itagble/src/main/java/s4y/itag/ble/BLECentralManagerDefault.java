@@ -24,7 +24,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         @Override
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] data) {
             if (BuildConfig.DEBUG) {
-                Log.d(L,"onLeScan address="+bluetoothDevice.getAddress()+" rsss="+ rssi);
+                Log.d(L,"onLeScan address="+bluetoothDevice.getAddress()+" rsss="+ rssi + " thread="+Thread.currentThread().getName());
             }
             observables
                     .observablePeripheralDiscovered
@@ -95,10 +95,10 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
 
     public void scanForPeripherals() {
         BluetoothAdapter adapter = getAdapter();
+        if (BuildConfig.DEBUG) {
+            Log.d(L,"startLeScan, thread="+Thread.currentThread().getName()+", adapter="+(adapter==null?"null":"not null"));
+        }
         if (adapter != null) {
-            if (BuildConfig.DEBUG) {
-                Log.d(L,"scanForPeripherals");
-            }
             if (!isScanning(adapter)) {
                 adapter.startLeScan(leScanCallback);
                 isScanning = true;
@@ -108,6 +108,9 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
 
     public void stopScan() {
         BluetoothAdapter adapter = getAdapter();
+        if (BuildConfig.DEBUG) {
+            Log.d(L,"stopLeScan, thread="+Thread.currentThread().getName()+", adapter="+(adapter==null?"null":"not null")+" isCanning="+isScanning(adapter));
+        }
         if (isScanning(adapter)) {
             try {
                 adapter.stopLeScan(leScanCallback);

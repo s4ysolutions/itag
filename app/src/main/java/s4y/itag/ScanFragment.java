@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import s4y.itag.ble.BLEScanResult;
+import s4y.itag.ble.BuildConfig;
 import s4y.itag.itag.ITag;
 import s4y.rasat.DisposableBag;
 
@@ -27,6 +29,7 @@ import s4y.rasat.DisposableBag;
  * A simple {@link Fragment} subclass.
  */
 public class ScanFragment extends Fragment {
+    private static final String LT = ScanFragment.class.getName();
     private final DisposableBag disposableBag = new DisposableBag();
     private final Map<String, Integer> id2rssi = new HashMap<>();
 
@@ -39,6 +42,9 @@ public class ScanFragment extends Fragment {
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "getView position=" + position + " thread=" + Thread.currentThread().getName());
+            }
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.fragment_le_scan_item, parent, false);
             }
@@ -62,7 +68,7 @@ public class ScanFragment extends Fragment {
                 }
                 if (addr.equals(result.id)) {
                     Integer rssiLast = id2rssi.get(result.id);
-                    int rssi = rssiLast == null  ? result.rssi : rssiLast;
+                    int rssi = rssiLast == null ? result.rssi : rssiLast;
                     rssiView.setRssi(rssi);
                     if (getActivity() != null && isAdded()) {
                         // issue #38 Fragment not attached to Activity

@@ -45,7 +45,6 @@ import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagDefault;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
-import s4y.itag.preference.MutePreference;
 import s4y.itag.waytoday.Waytoday;
 import s4y.rasat.DisposableBag;
 import s4y.waytoday.idservice.IDService;
@@ -117,6 +116,9 @@ public class MainActivity extends FragmentActivity {
         disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
         disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
                 event -> {
+                    if (s4y.itag.ble.BuildConfig.DEBUG) {
+                        Log.d(LT, "ble.scanner activeEvent=" + event + " isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
+                    }
                     setupContent();
                     setupProgressBar();
                 }
@@ -184,6 +186,9 @@ public class MainActivity extends FragmentActivity {
         final FragmentManager fragmentManager = getSupportFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         Fragment fragment = null;
+        if (s4y.itag.ble.BuildConfig.DEBUG) {
+            Log.d(LT, "setupContent isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
+        }
         if (ITag.ble.scanner().isScanning()) {
             setupProgressBar();
             mEnableAttempts = 0;
@@ -249,6 +254,9 @@ public class MainActivity extends FragmentActivity {
 
     public void onRemember(@NonNull View sender) {
         BLEScanResult scanResult = (BLEScanResult) sender.getTag();
+        if (s4y.itag.ble.BuildConfig.DEBUG) {
+            Log.d(LT, "onRemember  thread=" + Thread.currentThread().getName());
+        }
         if (scanResult == null) {
             ITagApplication.handleError(new Exception("No Scan Result to Remember"), true);
             return;
@@ -355,6 +363,9 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void onStartStopScan(View ignored) {
+        if (s4y.itag.ble.BuildConfig.DEBUG) {
+            Log.d(LT, "onStartStopScan isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
+        }
         if (ITag.ble.scanner().isScanning()) {
             ITag.ble.scanner().stop();
         } else {
@@ -394,9 +405,7 @@ public class MainActivity extends FragmentActivity {
                     } else {
                         finishAffinity();
                     }
-                    new Handler(getMainLooper()).postDelayed(()->{
-                        System.exit(0);
-                    }, 5000);
+                    new Handler(getMainLooper()).postDelayed(() -> System.exit(0), 5000);
                     break;
             }
             return true;

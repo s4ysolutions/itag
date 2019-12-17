@@ -16,18 +16,13 @@ class BLEScannerDefault implements BLEScannerInterface {
     private final Channel<BLEScanResult> channelScan = new Channel<>();
     // private final List<BLEDiscoveryResult> resultList = new ArrayList<>();
     private final Handler handlerTimer = new Handler(Looper.getMainLooper());
-    private Handler handlerStart;
     private final Runnable runnableTimer = new Runnable() {
         @Override
         public void run() {
             int timeout = channelTimer.observable.value() - 1;
             channelTimer.broadcast(timeout);
             if (timeout < 0) {
-                if (handlerStart == null) {
                     stop();
-                } else {
-                    handlerStart.post(() -> stop());
-                }
             } else {
                 handlerTimer.postDelayed(this, 1000);
             }
@@ -72,12 +67,6 @@ class BLEScannerDefault implements BLEScannerInterface {
 
     @Override
     public void start(int timeout, String[] forceCancelIds) {
-        Thread thread = Thread.currentThread();
-        if (thread instanceof HandlerThread) {
-            handlerStart = new Handler(((HandlerThread) Thread.currentThread()).getLooper());
-        } else {
-            handlerStart = null;
-        }
         stop();
         if (!manager.canScan())
             return;
@@ -96,7 +85,6 @@ class BLEScannerDefault implements BLEScannerInterface {
     @Override
     public void stop() {
         handlerTimer.removeCallbacks(runnableTimer);
-        handlerStart = null;
         manager.stopScan();
         //   resultList.clear();
         disposableBag.dispose();
