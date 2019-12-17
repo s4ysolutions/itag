@@ -15,9 +15,6 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-
-import androidx.preference.PreferenceManager;
-
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -32,6 +29,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.PreferenceManager;
 
 import java.util.List;
 import java.util.Locale;
@@ -331,9 +329,7 @@ public class MainActivity extends FragmentActivity {
 
     public void onITagClick(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
-        if (MediaPlayerUtils.getInstance().isSound()) {
-            MediaPlayerUtils.getInstance().stopSound(this);
-        }
+        MediaPlayerUtils.getInstance().stopSound(this);
         final BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
         Notifications.cancelDisconnectNotification(this);
         if (connection.isFindMe()) {

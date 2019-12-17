@@ -19,7 +19,7 @@ import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
 import s4y.itag.history.HistoryRecord;
-import s4y.itag.preference.MutePreference;
+import s4y.itag.preference.VolumePreference;
 import s4y.rasat.DisposableBag;
 
 import static s4y.itag.Notifications.cancelDisconnectNotification;
@@ -131,8 +131,11 @@ public class ITag {
                                             if (itag.isAlertDisconnected() && !connection.isConnected()) {
                                                 if (BuildConfig.DEBUG)
                                                     Log.d(LT, "connection " + connection.id() + " lost");
-                                                if (!(new MutePreference(ITagApplication.context).get())) {
+                                                int volume = new VolumePreference(ITagApplication.context).get();
+                                                if (volume == VolumePreference.LOUD) {
                                                     MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
+                                                } else if (volume == VolumePreference.VIBRATION) {
+                                                    MediaPlayerUtils.getInstance().startVibrate();
                                                 }
                                                 sendDisconnectNotification(ITagApplication.context, itag.name());
                                                 HistoryRecord.add(ITagApplication.context, itag.id());

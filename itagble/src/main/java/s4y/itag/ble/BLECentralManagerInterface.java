@@ -1,12 +1,11 @@
 package s4y.itag.ble;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 
 import androidx.annotation.NonNull;
 
 interface BLECentralManagerInterface {
-    void scanForPeripherals();
+    void startScan();
     boolean isScanning();
     void stopScan();
     boolean canScan();

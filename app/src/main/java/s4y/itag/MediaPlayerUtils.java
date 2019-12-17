@@ -4,8 +4,14 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 
 import java.io.IOException;
+
 import static android.content.Context.AUDIO_SERVICE;
 
 public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
@@ -44,47 +50,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
         mPlayer.reset();
     }
 
-    public void startSoundDisconnected(Context context) {
-        stopSound(context);
-        AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
-
-        if (am == null)
-            return;
-        if(am.getMode()!=AudioManager.MODE_NORMAL) {
-            ITagApplication.faDisconnectDuringCall();
-            return;
-        }
-
-        AssetFileDescriptor afd = null;
-        try {
-            afd = context.getAssets().openFd("lost.mp3");
-
-            if (am != null) {
-                mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_ALARM);
-                am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
-            }
-
-            mPlayer.stop();
-            mPlayer.reset();
-            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
-            mPlayer.reset();
-            mPlayer.setLooping(true);
-            mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
-            mPlayer.prepareAsync();
-            //           mPlayer.start();
-        } catch (IOException e) {
-            ITagApplication.handleError(e, true);
-        } finally {
-            if (afd != null) {
-                try {
-                    afd.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+    private final Handler vibrateHandler = new Handler(Looper.getMainLooper());
 
 
     public void startFindPhone(Context context) {
@@ -120,26 +86,93 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
         }
     }
 
-    public void stopSound(Context context) {
-        stopFindingPhones();
-        MediaPlayerUtils.getInstance().stop();
-        if (mVolumeLevel >= 0) {
-            AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
-            if (am != null) {
-                am.setStreamVolume(AudioManager.STREAM_ALARM, mVolumeLevel, 0);
-                mVolumeLevel = -1;
+    private final Runnable vibration = new Runnable() {
+        @Override
+        public void run() {
+            Vibrator v = (Vibrator) ITagApplication.context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (v == null) {
+                return;
             }
+// Vibrate for 500 milliseconds
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                //deprecated in API 26
+                v.vibrate(500);
+            }
+            vibrateHandler.postDelayed(this, 1000);
         }
-    }
-
-    public boolean isSound(String addr) {
-        return mPlayer.isPlaying();
-    }
+    };
 
     public boolean isSound() {
         return mPlayer.isPlaying();
     }
 
-    private void stopFindingPhones(){
-    };
+    public void startSoundDisconnected(Context context) {
+        stopSound(context);
+        AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
+
+        if (am == null)
+            return;
+        if (am.getMode() != AudioManager.MODE_NORMAL) {
+            ITagApplication.faDisconnectDuringCall();
+            return;
+        }
+
+        AssetFileDescriptor afd = null;
+        try {
+            afd = context.getAssets().openFd("lost.mp3");
+
+            mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_ALARM);
+            am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
+
+            mPlayer.stop();
+            mPlayer.reset();
+            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+            mPlayer.reset();
+            mPlayer.setLooping(true);
+            mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+            mPlayer.prepareAsync();
+            //           mPlayer.start();
+        } catch (IOException e) {
+            ITagApplication.handleError(e, true);
+        } finally {
+            if (afd != null) {
+                try {
+                    afd.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void stopSound(Context context) {
+        if (MediaPlayerUtils.getInstance().isSound()) {
+            stopFindingPhones();
+            MediaPlayerUtils.getInstance().stop();
+            if (mVolumeLevel >= 0) {
+                AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
+                if (am != null) {
+                    am.setStreamVolume(AudioManager.STREAM_ALARM, mVolumeLevel, 0);
+                    mVolumeLevel = -1;
+                }
+            }
+        }
+        stopVibrate();
+    }
+
+    private void stopFindingPhones() {
+    }
+
+    private void stopVibrate() {
+        vibrateHandler.removeCallbacks(vibration);
+
+    }
+
+    public void startVibrate() {
+        stopVibrate();
+        vibrateHandler.post(vibration);
+    }
 }

@@ -1,13 +1,12 @@
 package s4y.itag.ble;
 
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 
-import s4y.rasat.android.Channel;
-import s4y.rasat.android.ChannelDistinct;
 import s4y.rasat.DisposableBag;
 import s4y.rasat.Observable;
+import s4y.rasat.android.Channel;
+import s4y.rasat.android.ChannelDistinct;
 
 class BLEScannerDefault implements BLEScannerInterface {
     private final BLECentralManagerInterface manager;
@@ -76,7 +75,7 @@ class BLEScannerDefault implements BLEScannerInterface {
                         event -> channelScan.broadcast(new BLEScanResult(event.peripheral.address(), event.peripheral.name(), event.rssi))
                 ));
         setScanning(true);
-        manager.scanForPeripherals();
+        manager.startScan();
         channelTimer.broadcast(timeout);
         channelActive.broadcast(true);
         handlerTimer.postDelayed(runnableTimer, 1000);

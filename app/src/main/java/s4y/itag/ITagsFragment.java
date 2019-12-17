@@ -4,9 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.preference.PreferenceManager;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,12 +13,13 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
 
 import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
@@ -29,7 +27,7 @@ import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
-import s4y.itag.preference.MutePreference;
+import s4y.itag.preference.VolumePreference;
 import s4y.rasat.DisposableBag;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsTracker;
@@ -385,16 +383,30 @@ public class ITagsFragment extends Fragment
             trackID = sp.getString("tid", "");
         }
 
-        final MutePreference mute = new MutePreference(getContext());
+        final VolumePreference mute = new VolumePreference(getContext());
         View root = inflater.inflate(R.layout.fragment_itags, container, false);
         if (root != null) {
             final ImageView imgMute = root.findViewById(R.id.btn_mute);
-            boolean m = mute.get();
-            imgMute.setImageResource(m ? R.drawable.mute : R.drawable.nomute);
+            int m = mute.get();
+            imgMute.setImageResource(
+                    m == VolumePreference.MUTE
+                            ? R.drawable.mute
+                            : m == VolumePreference.LOUD
+                            ? R.drawable.nomute
+                            : R.drawable.vibration);
             imgMute.setOnClickListener(v -> {
-                mute.toggle();
-                boolean mm = mute.get();
-                imgMute.setImageResource(mm ? R.drawable.mute : R.drawable.nomute);
+                int volume = mute.get();
+                volume++;
+                if (volume > 2) {
+                    volume = 0;
+                }
+                mute.set(volume);
+                imgMute.setImageResource(
+                        volume == VolumePreference.MUTE
+                                ? R.drawable.mute
+                                : volume == VolumePreference.LOUD
+                                ? R.drawable.nomute
+                                : R.drawable.vibration);
             });
         }
 

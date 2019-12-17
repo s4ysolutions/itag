@@ -347,7 +347,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                                 }
                             })
             );
-            monitorScan.waitFor(manager::scanForPeripherals, 25);
+            monitorScan.waitFor(manager::startScan, 25);
             manager.stopScan();
             if (monitorScan.isTimedOut()) {
                 return BLEError.timeout;
