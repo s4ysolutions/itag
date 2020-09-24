@@ -18,7 +18,6 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
     private final MediaPlayer mPlayer;
     private int mVolumeLevel = -1;
 
-
     private MediaPlayerUtils() {
         mPlayer = new MediaPlayer();
         mPlayer.setOnPreparedListener(this);

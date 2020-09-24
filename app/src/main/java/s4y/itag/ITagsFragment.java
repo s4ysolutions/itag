@@ -70,23 +70,26 @@ public class ITagsFragment extends Fragment
         tagsLayout = activity.getLayoutInflater().inflate(rid, root, false);
         root.addView(tagsLayout, index);
         tagViews.clear();
+
         if (s > 0) {
             ITagInterface itag = ITag.store.byPos(0);
             tagViews.put(itag.id(), root.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
         }
+
         if (s > 1) {
             ITagInterface itag = ITag.store.byPos(1);
             tagViews.put(itag.id(), root.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
         }
+
         if (s > 2) {
             ITagInterface itag = ITag.store.byPos(2);
             tagViews.put(itag.id(), root.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
         }
+
         if (s > 3) {
             ITagInterface itag = ITag.store.byPos(3);
             tagViews.put(itag.id(), root.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
         }
-
 
         for (Map.Entry<String, ViewGroup> entry : tagViews.entrySet()) {
             String id = entry.getKey();
@@ -104,6 +107,7 @@ public class ITagsFragment extends Fragment
             updateState(rootView, id, connection.state());
             updateLocationImage(rootView, id);
         }
+
         updateWayToday();
     }
 
