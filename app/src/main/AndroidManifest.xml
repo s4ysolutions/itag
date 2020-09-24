@@ -2,9 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="s4y.itag"
-    android:versionCode="135"
-    android:versionName="2.09beta"
-    >
+    android:versionCode="136"
+    android:versionName="2.10">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
