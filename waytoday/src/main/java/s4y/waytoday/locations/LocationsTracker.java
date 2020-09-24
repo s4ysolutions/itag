@@ -78,7 +78,7 @@ public class LocationsTracker {
 
         private Location locationAfterUpdateStep(Location location) {
             double xVel, yVel;
-            Location loc = new Location("WayTodayAnroid");
+            Location loc = new Location("iTagAnroid");
             GeoPoint pp = Coordinates.metersToGeoPoint(mKalmanFilter.getCurrentX(),
                     mKalmanFilter.getCurrentY());
             loc.setLatitude(pp.Latitude);
@@ -105,19 +105,26 @@ public class LocationsTracker {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "onLocationChanged");
             }
+
+            double lat = originalLocation.getLatitude();
+            double lon = originalLocation.getLongitude();
+
+            if (lat == 0 || lon == 0) {
+                return;
+            }
+
             lastDataItemGPS = new DataItemGPS(originalLocation);
             if (mKalmanFilter == null) {
-                Location location = originalLocation;
                 double x, y, xVel, yVel, posDev, course, speed;
                 long timeStamp;
-                speed = location.getSpeed();
-                course = location.getBearing();
-                x = location.getLongitude();
-                y = location.getLatitude();
+                speed = originalLocation.getSpeed();
+                course = originalLocation.getBearing();
+                x = originalLocation.getLongitude();
+                y = originalLocation.getLatitude();
                 xVel = speed * Math.cos(course);
                 yVel = speed * Math.sin(course);
-                posDev = location.getAccuracy();
-                timeStamp = Utils.nano2milli(location.getElapsedRealtimeNanos());
+                posDev = originalLocation.getAccuracy();
+                timeStamp = Utils.nano2milli(originalLocation.getElapsedRealtimeNanos());
                 mKalmanFilter = new GPSAccKalmanFilter(
                         false, //todo move to settings
                         Coordinates.longitudeToMeters(x),
@@ -140,15 +147,11 @@ public class LocationsTracker {
             handleUpdate(lastDataItemGPS, lastDataItemGPS.location);
             Location location = locationAfterUpdateStep(lastDataItemGPS.location);
 
-            double lat = location.getLatitude();
-            double lon = location.getLongitude();
+            lat = location.getLatitude();
+            lon = location.getLongitude();
 
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "Request to publish location " + lon + "," + lat);
-            }
-
-            if (lat == 0 || lon == 0) {
-                return;
             }
 
             if (Math.abs(lat - prevLat) < minDistance && Math.abs(lon - prevLon) < minDistance) {
