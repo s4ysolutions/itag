@@ -1,11 +1,11 @@
 package s4y.itag.ble;
 
-import s4y.rasat.android.Channel;
+import solutions.s4y.rasat.Channel;
 import solutions.s4y.rasat.Observable;
 
 class BLEPeripheralObservables implements BLEPeripheralObservablesInterface {
 
-    final Channel<BLEPeripheralObservablesInterface.ConnectedEvent> channelConnected = new Channel<>();
+    final Channel<ConnectedEvent> channelConnected = new Channel<>();
     final Channel<BLEPeripheralObservablesInterface.ConnectionFailedEvent> channelConnectionFailed = new Channel<>();
     final Channel<BLEPeripheralObservablesInterface.DisconnectedEvent> channelDisconnected = new Channel<>();
     final Channel<BLEPeripheralObservablesInterface.DiscoveredServicesEvent> channelDiscoveredServices = new Channel<>();

@@ -49,9 +49,9 @@ dependencies {
     implementation "androidx.preference:preference:1.1.1"
     implementation "androidx.recyclerview:recyclerview:1.1.0"
     implementation  "solutions.s4y.rasat:rasat:1.0.0"
+    implementation  "solutions.s4y.rasat:rasat-android:1.0.0"
 
     implementation project(':waytoday')
-    implementation project(':rasatandroid')
     implementation project(':itagble')
 
     testImplementation 'androidx.test.ext:junit:1.1.2'

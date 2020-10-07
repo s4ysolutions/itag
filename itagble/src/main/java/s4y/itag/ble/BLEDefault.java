@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import s4y.rasat.android.ChannelDistinct;
+import solutions.s4y.rasat.ChannelDistinct;
 import solutions.s4y.rasat.Observable;
 
 public class BLEDefault implements BLEInterface {

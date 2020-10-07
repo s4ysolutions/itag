@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import s4y.itag.preference.BooleanPreference;
-import s4y.rasat.android.Channel;
+import solutions.s4y.rasat.Channel;
 import solutions.s4y.rasat.Observable;
 
 public class ITagsStoreDefault implements ITagsStoreInterface {

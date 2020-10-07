@@ -10,8 +10,8 @@ import androidx.annotation.Nullable;
 
 import java.util.UUID;
 
-import s4y.rasat.android.Channel;
-import s4y.rasat.android.ChannelDistinct;
+import solutions.s4y.rasat.Channel;
+import solutions.s4y.rasat.ChannelDistinct;
 import solutions.s4y.rasat.DisposableBag;
 import solutions.s4y.rasat.Observable;
 
