@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'io.fabric'
 
 android {
     compileSdkVersion 30
@@ -14,10 +13,11 @@ android {
 
     buildTypes {
         debug {
+            minifyEnabled false
             manifestPlaceholders = [analytics_deactivated: "true"]
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             manifestPlaceholders = [analytics_deactivated: "false"]
         }
@@ -41,13 +41,14 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation platform('com.google.firebase:firebase-bom:25.12.0')
+
     implementation 'androidx.annotation:annotation:1.1.0'
-    implementation 'androidx.core:core:1.3.1'
+    implementation 'androidx.core:core:1.3.2'
     implementation 'androidx.fragment:fragment:1.2.5'
     implementation "androidx.preference:preference:1.1.1"
     implementation "androidx.recyclerview:recyclerview:1.1.0"
-    implementation 'com.google.firebase:firebase-core:17.5.0'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
+
     implementation project(':waytoday')
     implementation project(':rasat')
     implementation project(':rasatandroid')
@@ -65,4 +66,3 @@ dependencies {
     androidTestImplementation "org.mockito:mockito-android:3.5.10"
 }
 
-apply plugin: 'com.google.gms.google-services'
