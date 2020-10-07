@@ -3,10 +3,10 @@ package s4y.itag.ble;
 import android.os.Handler;
 import android.os.Looper;
 
-import s4y.rasat.DisposableBag;
-import s4y.rasat.Observable;
 import s4y.rasat.android.Channel;
 import s4y.rasat.android.ChannelDistinct;
+import solutions.s4y.rasat.DisposableBag;
+import solutions.s4y.rasat.Observable;
 
 class BLEScannerDefault implements BLEScannerInterface {
     private final BLECentralManagerInterface manager;

@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import s4y.rasat.android.ChannelDistinct;
-import s4y.rasat.Observable;
+import solutions.s4y.rasat.Observable;
 
 public class BLEDefault implements BLEInterface {
     private static final String LT = BLEDefault.class.getName();

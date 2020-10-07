@@ -1,1 +1,1 @@
-include ':app', ':waytoday', ':itagble', ':rasat', ':rasatandroid'
+include ':app', ':waytoday', ':itagble', ':rasatandroid'

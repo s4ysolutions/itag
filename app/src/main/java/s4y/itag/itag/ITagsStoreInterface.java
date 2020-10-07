@@ -3,7 +3,7 @@ package s4y.itag.itag;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import s4y.rasat.Observable;
+import solutions.s4y.rasat.Observable;
 
 public interface ITagsStoreInterface {
     int count();

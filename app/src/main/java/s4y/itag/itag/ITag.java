@@ -20,7 +20,7 @@ import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.preference.VolumePreference;
-import s4y.rasat.DisposableBag;
+import solutions.s4y.rasat.DisposableBag;
 
 import static s4y.itag.Notifications.cancelDisconnectNotification;
 import static s4y.itag.Notifications.sendDisconnectNotification;

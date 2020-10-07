@@ -3,7 +3,7 @@ package s4y.rasat.android;
 import android.os.Handler;
 import android.os.Looper;
 
-public class ChannelDistinct<T> extends s4y.rasat.ChannelDistinct<T> {
+public class ChannelDistinct<T> extends solutions.s4y.rasat.ChannelDistinct<T> {
     private Handler postHandler;
 
     public ChannelDistinct(T value) {

@@ -28,9 +28,9 @@ import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.preference.VolumePreference;
-import s4y.rasat.DisposableBag;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsTracker;
+import solutions.s4y.rasat.DisposableBag;
 
 import static s4y.itag.itag.ITag.ble;
 

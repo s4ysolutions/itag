@@ -10,10 +10,10 @@ import androidx.annotation.Nullable;
 
 import java.util.UUID;
 
-import s4y.rasat.DisposableBag;
-import s4y.rasat.Observable;
 import s4y.rasat.android.Channel;
 import s4y.rasat.android.ChannelDistinct;
+import solutions.s4y.rasat.DisposableBag;
+import solutions.s4y.rasat.Observable;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 

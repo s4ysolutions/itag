@@ -3,7 +3,7 @@ package s4y.rasat.android;
 import android.os.Handler;
 import android.os.Looper;
 
-public class Channel<T> extends s4y.rasat.Channel<T> {
+public class Channel<T> extends solutions.s4y.rasat.Channel<T> {
     private Handler postHandler;
 
     public Channel(T value, Handler handler) {

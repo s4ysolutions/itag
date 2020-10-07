@@ -1,7 +1,7 @@
 package s4y.itag.ble;
 
 import s4y.rasat.android.Channel;
-import s4y.rasat.Observable;
+import solutions.s4y.rasat.Observable;
 
 class BLEPeripheralObservables implements BLEPeripheralObservablesInterface {
 
@@ -14,7 +14,7 @@ class BLEPeripheralObservables implements BLEPeripheralObservablesInterface {
     final Channel<BLEPeripheralObservablesInterface.RSSIEvent> channelRSSI = new Channel<>();
 
     @Override
-    public Observable<BLEPeripheralObservablesInterface.ConnectedEvent> observableConnected() {
+    public Observable<ConnectedEvent> observableConnected() {
         return channelConnected.observable;
     }
 

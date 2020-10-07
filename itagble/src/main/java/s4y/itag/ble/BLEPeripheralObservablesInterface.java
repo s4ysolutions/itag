@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-import s4y.rasat.Observable;
+import solutions.s4y.rasat.Observable;
 
 interface BLEPeripheralObservablesInterface {
     class ConnectedEvent {
@@ -42,7 +42,7 @@ interface BLEPeripheralObservablesInterface {
         }
     }
 
-    public class RSSIEvent {
+    class RSSIEvent {
         public final int rssi;
         public final int status;
 

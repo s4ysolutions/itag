@@ -1,6 +1,6 @@
 package s4y.itag.ble;
 
-import s4y.rasat.Observable;
+import solutions.s4y.rasat.Observable;
 
 public interface BLEScannerInterface {
     boolean isScanning();

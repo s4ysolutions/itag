@@ -13,7 +13,7 @@ import java.util.Set;
 
 import s4y.itag.preference.BooleanPreference;
 import s4y.rasat.android.Channel;
-import s4y.rasat.Observable;
+import solutions.s4y.rasat.Observable;
 
 public class ITagsStoreDefault implements ITagsStoreInterface {
     private final Context context;

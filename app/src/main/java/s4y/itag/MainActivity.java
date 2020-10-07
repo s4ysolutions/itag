@@ -44,9 +44,9 @@ import s4y.itag.itag.ITagDefault;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
 import s4y.itag.waytoday.Waytoday;
-import s4y.rasat.DisposableBag;
 import s4y.waytoday.idservice.IDService;
 import s4y.waytoday.locations.LocationsTracker;
+import solutions.s4y.rasat.DisposableBag;
 
 public class MainActivity extends FragmentActivity {
     static public final int REQUEST_ENABLE_BT = 1;

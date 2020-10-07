@@ -15,8 +15,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import s4y.rasat.Observable;
-
 @SuppressWarnings("unchecked")
 public class SerializablePreferenceNullable<T> {
     @NonNull

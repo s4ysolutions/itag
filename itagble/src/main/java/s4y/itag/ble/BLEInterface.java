@@ -2,7 +2,7 @@ package s4y.itag.ble;
 
 import androidx.annotation.NonNull;
 
-import s4y.rasat.Observable;
+import solutions.s4y.rasat.Observable;
 
 public interface BLEInterface extends AutoCloseable {
     BLEScannerInterface scanner();

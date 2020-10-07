@@ -48,9 +48,9 @@ dependencies {
     implementation 'androidx.fragment:fragment:1.2.5'
     implementation "androidx.preference:preference:1.1.1"
     implementation "androidx.recyclerview:recyclerview:1.1.0"
+    implementation  "solutions.s4y.rasat:rasat:1.0.0"
 
     implementation project(':waytoday')
-    implementation project(':rasat')
     implementation project(':rasatandroid')
     implementation project(':itagble')
 

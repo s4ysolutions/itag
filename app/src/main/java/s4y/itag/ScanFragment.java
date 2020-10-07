@@ -20,7 +20,7 @@ import java.util.List;
 import s4y.itag.ble.BLEScanResult;
 import s4y.itag.ble.BuildConfig;
 import s4y.itag.itag.ITag;
-import s4y.rasat.DisposableBag;
+import solutions.s4y.rasat.DisposableBag;
 
 /**
  * A simple {@link Fragment} subclass.
