@@ -27,21 +27,20 @@ import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.preference.VolumePreference;
+import s4y.itag.waytoday.Waytoday;
 import solutions.s4y.rasat.DisposableBag;
-import solutions.s4y.waytoday.sdk.id.IDJobService;
-import solutions.s4y.waytoday.sdk.tracker.LocationTracker;
+import solutions.s4y.waytoday.sdk.id.ITrackIDChangeListener;
+import solutions.s4y.waytoday.sdk.id.TrackIDJobService;
+import solutions.s4y.waytoday.sdk.tracker.ITrackingStateListener;
+import solutions.s4y.waytoday.sdk.tracker.TrackerState;
 
 import static s4y.itag.itag.ITag.ble;
 
-
-/**
- * A simple {@link Fragment} subclass.
- */
 public class ITagsFragment extends Fragment
         implements
         HistoryRecord.HistoryRecordListener,
-        LocationTracker.ITrackingStateListener,
-        IDJobService.IIDSeriviceListener {
+        ITrackingStateListener,
+        ITrackIDChangeListener {
     private static final String LT = ITagsFragment.class.getName();
     private Animation mLocationAnimation;
     private Animation mITagAnimation;
@@ -144,8 +143,8 @@ public class ITagsFragment extends Fragment
             return;
         }
         if (BuildConfig.DEBUG)
-            Log.d(LT, "updateWayToday, updating=" + LocationTracker.isUpdating + " trackID=" + trackID);
-        if (LocationTracker.isUpdating && !"".equals(trackID)) {
+            Log.d(LT, "updateWayToday, updating=" + Waytoday.tracker.isUpdating + " trackID=" + trackID);
+        if (Waytoday.tracker.isUpdating && !"".equals(trackID)) {
             waytoday.setVisibility(View.VISIBLE);
             TextView wtid = waytoday.findViewById(R.id.text_wt_id);
             wtid.setText(trackID);
@@ -484,8 +483,8 @@ public class ITagsFragment extends Fragment
         if (wt_disabled) {
             root.findViewById(R.id.btn_waytoday).setVisibility(View.GONE);
         } else {
-            LocationTracker.addOnTrackingStateListener(this);
-            IDJobService.addOnTrackIDChangeListener(this);
+            Waytoday.tracker.addOnTrackingStateListener(this);
+            TrackIDJobService.addOnTrackIDChangeListener(this);
         }
         startRssi();
     }
@@ -498,8 +497,8 @@ public class ITagsFragment extends Fragment
         stopRssi();
         HistoryRecord.removeListener(this);
         disposableBag.dispose();
-        LocationTracker.removeOnTrackingStateListener(this);
-        IDJobService.removeOnTrackIDChangeListener(this);
+        Waytoday.tracker.removeOnTrackingStateListener(this);
+        TrackIDJobService.removeOnTrackIDChangeListener(this);
         super.onPause();
     }
 
@@ -513,7 +512,7 @@ public class ITagsFragment extends Fragment
     }
 
     @Override
-    public void onStateChange(@NonNull LocationTracker.TrackingState state) {
+    public void onStateChange(@NonNull TrackerState state) {
         final View view = getView();
         if (view != null) {
             Activity activity = getActivity();

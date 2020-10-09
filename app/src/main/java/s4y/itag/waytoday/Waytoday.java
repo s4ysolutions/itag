@@ -11,31 +11,22 @@ import androidx.preference.PreferenceManager;
 
 import s4y.itag.BuildConfig;
 import s4y.itag.ITagApplication;
-import solutions.s4y.waytoday.sdk.id.IDJobService;
-import solutions.s4y.waytoday.sdk.locations.LocationsGPSUpdater;
-import solutions.s4y.waytoday.sdk.locations.LocationsUpdater;
-import solutions.s4y.waytoday.sdk.tracker.LocationTracker;
+import solutions.s4y.waytoday.sdk.id.ITrackIDChangeListener;
+import solutions.s4y.waytoday.sdk.id.TrackIDJobService;
+import solutions.s4y.waytoday.sdk.locations.LocationGPSUpdater;
+import solutions.s4y.waytoday.sdk.tracker.ILocationListener;
+import solutions.s4y.waytoday.sdk.tracker.Tracker;
 import solutions.s4y.waytoday.sdk.upload.UploadJobService;
 
 public class Waytoday {
     private static final String LT=Waytoday.class.getName();
-    //private static final HandlerThread thread;
     private static final Handler handler;
-    private static LocationsUpdater gpsLocatonUpdater;
-
-    static {
-     //   thread = new HandlerThread("WayToday");
-      //  thread.start();
-        handler = new Handler(Looper.getMainLooper());
-    }
-
-    private static final LocationTracker.ILocationListener locationListener =
+    private static final ILocationListener locationListener =
             location -> {
                 if (BuildConfig.DEBUG) Log.d(LT, "location=" + location);
                 UploadJobService.enqueueUploadLocation(ITagApplication.context, location);
             };
-
-    private static final IDJobService.IIDSeriviceListener seriviceListener = trackID -> {
+    private static final ITrackIDChangeListener seriviceListener = trackID -> {
         if (BuildConfig.DEBUG) Log.d(LT, "trackID=" + trackID);
         if ("".equals(trackID))
             return;
@@ -45,13 +36,22 @@ public class Waytoday {
         sp.edit().putBoolean("wtfirst", false).apply();
     };
 
+    static {
+        handler = new Handler(Looper.getMainLooper());
+    }
+
+    public static Tracker tracker;
+    private static LocationGPSUpdater gpsLocationUpdater;
 
     public static void init() {
+        TrackIDJobService.init(BuildConfig.WAYTODAY_SECRET);
+        UploadJobService.init(BuildConfig.WAYTODAY_SECRET, "iTagAndroid");
         Context context = ITagApplication.context;
 
-        gpsLocatonUpdater = new LocationsGPSUpdater(context);
-        LocationTracker.addOnLocationListener(locationListener);
-        IDJobService.addOnTrackIDChangeListener(seriviceListener);
+        gpsLocationUpdater = new LocationGPSUpdater(context);
+        tracker = new Tracker();
+        tracker.addOnLocationListener(locationListener);
+        TrackIDJobService.addOnTrackIDChangeListener(seriviceListener);
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         boolean wt = preferences.getBoolean("wt", false);
@@ -65,8 +65,8 @@ public class Waytoday {
     }
 
     public static void done() {
-        LocationTracker.removeOnLocationListener(locationListener);
-        LocationTracker.stop();
+        tracker.removeOnLocationListener(locationListener);
+        tracker.stop();
     }
 
     public static void start(int frequency) {
@@ -80,31 +80,31 @@ public class Waytoday {
         if (tid == null) {
             ITagApplication.faWtNoTrackID();
             if (BuildConfig.DEBUG) Log.d(LT, "will request tid");
-            final IDJobService.IIDSeriviceListener listener = new IDJobService.IIDSeriviceListener() {
+            final ITrackIDChangeListener listener = new ITrackIDChangeListener() {
                 @Override
                 public void onTrackID(@NonNull String trackID) {
-                    IDJobService.removeOnTrackIDChangeListener(this);
+                    TrackIDJobService.removeOnTrackIDChangeListener(this);
                     if (BuildConfig.DEBUG) Log.d(LT, "got new tid=" + trackID);
                     if (!"".equals(trackID)) {
                         // duplicate of ITagsService.onTrackID
                         preferences.edit().putString("tid", trackID).apply();
                         if (BuildConfig.DEBUG) Log.d(LT, "will request start after new tid");
                         handler.post(() ->
-                                LocationTracker.requestStart(gpsLocatonUpdater, frequency));
+                                tracker.requestStart(gpsLocationUpdater, frequency));
                     }
                 }
             };
-            IDJobService.addOnTrackIDChangeListener(listener);
-            IDJobService.enqueueRetrieveId(context, "");
+            TrackIDJobService.addOnTrackIDChangeListener(listener);
+            TrackIDJobService.enqueueRetrieveId(context, "");
         } else {
             if (BuildConfig.DEBUG) Log.d(LT, "will request start immediately");
-            LocationTracker.requestStart(gpsLocatonUpdater, frequency);
+            tracker.requestStart(gpsLocationUpdater, frequency);
         }
     }
 
     public static void stop() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ITagApplication.context);
         preferences.edit().putBoolean("wt", false).apply();
-        LocationTracker.stop();
+        tracker.stop();
     }
 }

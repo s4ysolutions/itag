@@ -45,8 +45,7 @@ import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
 import s4y.itag.waytoday.Waytoday;
 import solutions.s4y.rasat.DisposableBag;
-import solutions.s4y.waytoday.sdk.id.IDJobService;
-import solutions.s4y.waytoday.sdk.tracker.LocationTracker;
+import solutions.s4y.waytoday.sdk.id.TrackIDJobService;
 
 public class MainActivity extends FragmentActivity {
     static public final int REQUEST_ENABLE_BT = 1;
@@ -141,7 +140,7 @@ public class MainActivity extends FragmentActivity {
         unbindService(mServiceConnection);
         disposableBag.dispose();
         sIsShown = false;
-        if (ITag.store.isDisconnectAlert() || LocationTracker.isUpdating) {
+        if (ITag.store.isDisconnectAlert() || Waytoday.tracker.isUpdating) {
             ITagsService.start(this);
         } else {
             ITagsService.stop(this);
@@ -445,7 +444,7 @@ public class MainActivity extends FragmentActivity {
                     break;
                 case R.id.wt_new_tid:
                     ITagApplication.faWtChangeID();
-                    IDJobService.enqueueRetrieveId(this);
+                    TrackIDJobService.enqueueRetrieveId(this);
                     break;
                 case R.id.wt_share:
                     ITagApplication.faWtShare();

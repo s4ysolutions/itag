@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+Properties properties = new Properties()
+properties.load(project.rootProject.file("local.properties").newDataInputStream())
+
 android {
     compileSdkVersion 30
     buildToolsVersion "29.0.2"
@@ -9,6 +12,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 30
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "String", "WAYTODAY_SECRET", System.getenv('WAYTODAY_SECRET') ?: properties.getProperty("waytoday.secret")
     }
 
     buildTypes {
@@ -37,6 +41,7 @@ android {
             includeAndroidResources = true
         }
     }
+
 }
 
 dependencies {
@@ -50,7 +55,7 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:1.1.0"
     implementation  "solutions.s4y.rasat:rasat:1.0.0"
     implementation  "solutions.s4y.rasat:rasat-android:1.0.0"
-    implementation  "solutions.s4y.waytoday:waytoday-sdk:1.0.1"
+    implementation  "solutions.s4y.waytoday:waytoday-sdk:1.0.6"
 
     implementation project(':itagble')
 
