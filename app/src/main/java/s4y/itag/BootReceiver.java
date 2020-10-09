@@ -7,10 +7,8 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
-import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagsStoreDefault;
 import s4y.itag.itag.ITagsStoreInterface;
-import s4y.waytoday.locations.LocationsTracker;
 
 public class BootReceiver extends BroadcastReceiver {
 

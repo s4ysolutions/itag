@@ -50,8 +50,8 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:1.1.0"
     implementation  "solutions.s4y.rasat:rasat:1.0.0"
     implementation  "solutions.s4y.rasat:rasat-android:1.0.0"
+    implementation  "solutions.s4y.waytoday:waytoday-sdk:1.0.1"
 
-    implementation project(':waytoday')
     implementation project(':itagble')
 
     testImplementation 'androidx.test.ext:junit:1.1.2'

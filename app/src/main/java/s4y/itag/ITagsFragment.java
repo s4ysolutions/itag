@@ -19,7 +19,6 @@ import androidx.preference.PreferenceManager;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
@@ -28,9 +27,9 @@ import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.preference.VolumePreference;
-import s4y.waytoday.idservice.IDService;
-import s4y.waytoday.locations.LocationsTracker;
 import solutions.s4y.rasat.DisposableBag;
+import solutions.s4y.waytoday.sdk.id.IDJobService;
+import solutions.s4y.waytoday.sdk.tracker.LocationTracker;
 
 import static s4y.itag.itag.ITag.ble;
 
@@ -41,13 +40,13 @@ import static s4y.itag.itag.ITag.ble;
 public class ITagsFragment extends Fragment
         implements
         HistoryRecord.HistoryRecordListener,
-        LocationsTracker.ITrackingStateListener,
-        IDService.IIDSeriviceListener {
+        LocationTracker.ITrackingStateListener,
+        IDJobService.IIDSeriviceListener {
     private static final String LT = ITagsFragment.class.getName();
     private Animation mLocationAnimation;
     private Animation mITagAnimation;
     private String trackID = "";
-    private DisposableBag disposableBag = new DisposableBag();
+    private final DisposableBag disposableBag = new DisposableBag();
 
     public ITagsFragment() {
         // Required empty public constructor
@@ -145,8 +144,8 @@ public class ITagsFragment extends Fragment
             return;
         }
         if (BuildConfig.DEBUG)
-            Log.d(LT, "updateWayToday, updating=" + LocationsTracker.isUpdating + " trackID=" + trackID);
-        if (LocationsTracker.isUpdating && !"".equals(trackID)) {
+            Log.d(LT, "updateWayToday, updating=" + LocationTracker.isUpdating + " trackID=" + trackID);
+        if (LocationTracker.isUpdating && !"".equals(trackID)) {
             waytoday.setVisibility(View.VISIBLE);
             TextView wtid = waytoday.findViewById(R.id.text_wt_id);
             wtid.setText(trackID);
@@ -453,7 +452,7 @@ public class ITagsFragment extends Fragment
         if (activity == null)
             return;
         ITagApplication.faITagsView(ITag.store.count());
-        final ViewGroup root = (ViewGroup) Objects.requireNonNull(getView());
+        final ViewGroup root = (ViewGroup) requireView();
         setupTags(root);
         disposableBag.add(ITag.store.observable().subscribe(event -> setupTags(root)));
         for (int i = 0; i < ITag.store.count(); i++) {
@@ -485,8 +484,8 @@ public class ITagsFragment extends Fragment
         if (wt_disabled) {
             root.findViewById(R.id.btn_waytoday).setVisibility(View.GONE);
         } else {
-            LocationsTracker.addOnTrackingStateListener(this);
-            IDService.addOnTrackIDChangeListener(this);
+            LocationTracker.addOnTrackingStateListener(this);
+            IDJobService.addOnTrackIDChangeListener(this);
         }
         startRssi();
     }
@@ -499,8 +498,8 @@ public class ITagsFragment extends Fragment
         stopRssi();
         HistoryRecord.removeListener(this);
         disposableBag.dispose();
-        LocationsTracker.removeOnTrackingStateListener(this);
-        IDService.removeOnTrackIDChangeListener(this);
+        LocationTracker.removeOnTrackingStateListener(this);
+        IDJobService.removeOnTrackIDChangeListener(this);
         super.onPause();
     }
 
@@ -514,7 +513,7 @@ public class ITagsFragment extends Fragment
     }
 
     @Override
-    public void onStateChange(@NonNull LocationsTracker.TrackingState state) {
+    public void onStateChange(@NonNull LocationTracker.TrackingState state) {
         final View view = getView();
         if (view != null) {
             Activity activity = getActivity();
