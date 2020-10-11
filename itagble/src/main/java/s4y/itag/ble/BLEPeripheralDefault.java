@@ -30,7 +30,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     @NonNull
     private final BLECentralManagerInterface manager;
     private final BluetoothGatt[] gatt = new BluetoothGatt[]{null};
-    private BLEPeripheralObservables observables = new BLEPeripheralObservables();
+    private static final int RSSI_INTERVAL_MS = 500;
     private BLEService[] services = new BLEService[]{};
 
     private BLEPeripheralState state = BLEPeripheralState.disconnected;
@@ -45,93 +45,8 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
     private final Context context;
     private final boolean cached;
-
-    private final BluetoothGattCallback callback = new BluetoothGattCallback() {
-
-        @Override
-        public void onConnectionStateChange(@NonNull BluetoothGatt gatt, int status, int newState) {
-            if (BuildConfig.DEBUG) {
-                Log.d(LT, "onConnectionStateChange id=" + identifier() +
-                        " addr=" + gatt.getDevice().getAddress() +
-                        " status=" + status +
-                        " newState=" + newState);
-            }
-            if (status == GATT_SUCCESS) {
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    setGatt(gatt);
-                    setState(BLEPeripheralState.connected);
-                    observables.channelConnected.broadcast(new BLEPeripheralObservablesInterface.ConnectedEvent());
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    close();
-                    observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(status));
-                }
-            } else {
-                close();
-                if (getState() == BLEPeripheralState.connecting) {
-                    observables.channelConnectionFailed.broadcast(new BLEPeripheralObservablesInterface.ConnectionFailedEvent(status));
-                } else {
-                    observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(status));
-                }
-            }
-        }
-
-        @Override
-        public void onServicesDiscovered(@NonNull final BluetoothGatt gatt, int status) {
-            if (BuildConfig.DEBUG) {
-                Log.d(LT, "onServicesDiscovered id=" + identifier() +
-                        " addr=" + gatt.getDevice().getAddress() +
-                        " status=" + status);
-            }
-            List<BLEService> serviceList = new ArrayList<>();
-            for (BluetoothGattService service : gatt.getServices()) {
-                serviceList.add(new BLEService(service));
-            }
-            services = new BLEService[serviceList.size()];
-            serviceList.toArray(services);
-            setState(BLEPeripheralState.discovered);
-            observables.channelDiscoveredServices.broadcast(new BLEPeripheralObservablesInterface.DiscoveredServicesEvent(services, status));
-        }
-
-        private int rssi = 0;
-
-        @Override
-        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-            if (rssi != this.rssi) {
-                if (BuildConfig.DEBUG) {
-                    Log.v(LT, "onReadRemoteRssi id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
-                }
-                this.rssi = rssi;
-                observables.channelRSSI.broadcast(new BLEPeripheralObservablesInterface.RSSIEvent(rssi, status));
-            } else {
-                if (BuildConfig.DEBUG) {
-                    Log.v(LT, "onReadRemoteRssi skipped id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
-                }
-            }
-        }
-
-        @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            if (BuildConfig.DEBUG) {
-                Log.d(LT, "onCharacteristicWrite id=" + identifier() +
-                        " addr=" + gatt.getDevice().getAddress() +
-                        " characteristic=" + characteristic.getUuid() +
-                        " status=" + status);
-            }
-            observables.channelWrite.broadcast(new BLEPeripheralObservablesInterface.CharacteristicEvent(
-                    new BLECharacteristic(characteristic),
-                    status));
-        }
-
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            if (BuildConfig.DEBUG) {
-                Log.d(LT, "onCharacteristicChanged id=" + identifier() +
-                        " addr=" + gatt.getDevice().getAddress() +
-                        " characteristic=" + characteristic.getUuid());
-            }
-            observables.channelNotification.broadcast(new BLECharacteristic(characteristic));
-        }
-    };
+    private final BLEPeripheralObservables observables = new BLEPeripheralObservables();
+    private final RSSIFilter filter = new RSSIFilter();
 
     BLEPeripheralDefault(@NonNull Context context, @NonNull BLECentralManagerInterface manager, @NonNull BluetoothDevice device) {
         this.device = device;
@@ -181,38 +96,147 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         }
     }
 
-    @Override
-    public void disconnect() {
-        if (BLEPeripheralState.disconnected.equals(state)) {
+    private final BluetoothGattCallback callback = new BluetoothGattCallback() {
+
+        @Override
+        public void onConnectionStateChange(@NonNull BluetoothGatt gatt, int status, int newState) {
             if (BuildConfig.DEBUG) {
-                Log.d(LT, "disconnect id=" + identifier() + ", already disconnected, no action");
+                Log.d(LT, "onConnectionStateChange id=" + identifier() +
+                        " addr=" + gatt.getDevice().getAddress() +
+                        " status=" + status +
+                        " newState=" + newState);
             }
-        } else {
-            BluetoothGatt gatt = gatt();
-            boolean connected = isConnected();
-            if (connected && gatt!=null) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(LT, "disconnect id=" + identifier() + ", connected, will wait connection change");
+            if (status == GATT_SUCCESS) {
+                if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    setGatt(gatt);
+                    setState(BLEPeripheralState.connected);
+                    observables.channelConnected.broadcast(new BLEPeripheralObservablesInterface.ConnectedEvent());
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    close();
+                    observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(status));
                 }
-                setState(BLEPeripheralState.disconnecting);
-                gatt.disconnect();
             } else {
-                if (BuildConfig.DEBUG) {
-                    Log.d(LT, "disconnect id=" + identifier() + ", not connected will simulate connection change");
-                }
-                setState(BLEPeripheralState.disconnecting);
-                if (gatt != null)
-                        gatt.disconnect(); // just in case ?
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 close();
-                observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(0));
+                if (getState() == BLEPeripheralState.connecting) {
+                    observables.channelConnectionFailed.broadcast(new BLEPeripheralObservablesInterface.ConnectionFailedEvent(status));
+                } else {
+                    observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(status));
+                }
             }
         }
-    }
+
+        @Override
+        public void onServicesDiscovered(@NonNull final BluetoothGatt gatt, int status) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "onServicesDiscovered id=" + identifier() +
+                        " addr=" + gatt.getDevice().getAddress() +
+                        " status=" + status);
+            }
+            List<BLEService> serviceList = new ArrayList<>();
+            for (BluetoothGattService service : gatt.getServices()) {
+                serviceList.add(new BLEService(service));
+            }
+            services = new BLEService[serviceList.size()];
+            serviceList.toArray(services);
+            setState(BLEPeripheralState.discovered);
+            observables.channelDiscoveredServices.broadcast(new BLEPeripheralObservablesInterface.DiscoveredServicesEvent(services, status));
+        }
+
+        private int rssi = 0;
+
+        /*
+                private ArrayList<Integer> rssis = new ArrayList<>();
+                private ArrayList<Integer> rssiVels = new ArrayList<>();
+
+                private double avg = 0;
+                private double avgV = 0;
+
+                private void rssiAvg() {
+                    long sum = 0;
+                    long sumV = 0;
+                    long prev = rssis.get(0);
+                    for (int rssi : rssis) {
+                        sum += rssi;
+                        sumV += (rssi - prev);
+                        prev = rssi;
+                    }
+                    avg = (double) sum / rssis.size();
+                    avgV = (double) sumV / rssis.size();
+                }
+
+                private double sigma = 0;
+                private double sigmaV = 0;
+
+                private void rssiSigma() {
+                    rssiAvg();
+                    long sum = 0;
+                    long sumV = 0;
+                    long prev = rssis.get(0);
+                    for (int rssi : rssis) {
+                        double d = avg - rssi;
+                        sum += d * d;
+                        double v = (rssi - prev);
+                        double dv = avgV - v;
+                        sumV += dv * dv;
+                        prev = rssi;
+                    }
+                    sigma = Math.sqrt((double) sum / rssis.size());
+                    sigmaV = Math.sqrt((double) sumV / rssis.size());
+                };
+        */
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssiRaw, int status) {
+                /*
+                rssis.clear();
+                rssiVels.clear();
+                 */
+            filter.add(rssiRaw);
+            /*
+            rssis.add(rssiRaw);
+            rssiSigma();
+            Log.d(LT, "rssi=" + rssiRaw + " avg=" + avg + " sigma = " + sigma + " avgV=" + avgV + " sigmaV=" + sigmaV);
+             */
+
+            int rssi = filter.get();
+
+            if (rssi != this.rssi) {
+                Log.v(LT, "rssi=" + rssi + " raw=" + rssiRaw);
+                if (BuildConfig.DEBUG) {
+                    Log.v(LT, "onReadRemoteRssi id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
+                }
+                this.rssi = rssi;
+                observables.channelRSSI.broadcast(new BLEPeripheralObservablesInterface.RSSIEvent(rssi, status));
+            } else {
+                if (BuildConfig.DEBUG) {
+                    Log.v(LT, "onReadRemoteRssi skipped id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
+                }
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "onCharacteristicWrite id=" + identifier() +
+                        " addr=" + gatt.getDevice().getAddress() +
+                        " characteristic=" + characteristic.getUuid() +
+                        " status=" + status);
+            }
+            observables.channelWrite.broadcast(new BLEPeripheralObservablesInterface.CharacteristicEvent(
+                    new BLECharacteristic(characteristic),
+                    status));
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "onCharacteristicChanged id=" + identifier() +
+                        " addr=" + gatt.getDevice().getAddress() +
+                        " characteristic=" + characteristic.getUuid());
+            }
+            observables.channelNotification.broadcast(new BLECharacteristic(characteristic));
+        }
+    };
 
     @Override
     public void discoveryServices() {
@@ -298,10 +322,8 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         setGatt(null);
     }
 
-    private static final int RSSI_INTERVAL_MS = 1000;
-
     @NonNull
-    private Runnable mRssiRunable = new Runnable() {
+    private final Runnable mRssiRunable = new Runnable() {
         @Override
         public void run() {
             if (isConnected() && gatt() != null) {
@@ -312,6 +334,39 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         }
     };
 
+    @Override
+    public void disconnect() {
+        if (BLEPeripheralState.disconnected.equals(state)) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "disconnect id=" + identifier() + ", already disconnected, no action");
+            }
+        } else {
+            BluetoothGatt gatt = gatt();
+            boolean connected = isConnected();
+            if (connected && gatt != null) {
+                if (BuildConfig.DEBUG) {
+                    Log.d(LT, "disconnect id=" + identifier() + ", connected, will wait connection change");
+                }
+                setState(BLEPeripheralState.disconnecting);
+                gatt.disconnect();
+            } else {
+                if (BuildConfig.DEBUG) {
+                    Log.d(LT, "disconnect id=" + identifier() + ", not connected will simulate connection change");
+                }
+                setState(BLEPeripheralState.disconnecting);
+                if (gatt != null)
+                    gatt.disconnect(); // just in case ?
+                try {
+                    Thread.sleep(400); // 5 times per 2 secs
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                close();
+                observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(0));
+            }
+        }
+    }
+
     private int rssiCount = 0;
 
     @Override
@@ -319,6 +374,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         rssiCount++;
         Log.d(LT, "enableRSSI id=" + identifier() + " count=" + rssiCount);
         if (rssiCount == 1) {
+            filter.reset();
             manager.postOperation(mRssiRunable);
         }
     }
