@@ -69,6 +69,7 @@
     <string name="trackid">هوية شخصية</string>
     <string name="wt_new_id">تغيير المعرف</string>
     <string name="wt_share">شارك الموقع</string>
+    <string name="wt_map">انظر على الخريطة</string>
     <string name="share_title">شارك عبر…</string>
     <string name="share_link"><![CDATA[تتبع موقعي بالنقر https://way.today/#%1$s!30m]]></string>
     <string name="share_subj">Way.Today location note</string>

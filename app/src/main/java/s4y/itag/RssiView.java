@@ -3,11 +3,12 @@ package s4y.itag;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
+
+import androidx.annotation.Nullable;
 
 public class RssiView extends LinearLayout {
     public RssiView(Context context) {
@@ -47,19 +48,19 @@ public class RssiView extends LinearLayout {
     static private final float BG_ON=1f;
     static private final float BG_OFF=0.1f;
 
-    public void setRssi(int level){
-        l1.setAlpha(level>-115?BG_ON:BG_OFF);
-        l2.setAlpha(level>-110?BG_ON:BG_OFF);
-        l3.setAlpha(level>-105?BG_ON:BG_OFF);
-        l4.setAlpha(level>-100?BG_ON:BG_OFF);
-        l5.setAlpha(level>-95?BG_ON:BG_OFF);
-        l6.setAlpha(level>-90?BG_ON:BG_OFF);
-        l7.setAlpha(level>-85?BG_ON:BG_OFF);
-        l8.setAlpha(level>-80?BG_ON:BG_OFF);
-        l9.setAlpha(level>-75?BG_ON:BG_OFF);
-        l10.setAlpha(level>-70?BG_ON:BG_OFF);
-        l11.setAlpha(level>-65?BG_ON:BG_OFF);
-        l12.setAlpha(level>-60?BG_ON:BG_OFF);
+    public void setRssi(int level) {
+        l1.setAlpha(level > -115 ? BG_ON : BG_OFF);
+        l2.setAlpha(level > -109 ? BG_ON : BG_OFF);
+        l3.setAlpha(level > -103 ? BG_ON : BG_OFF);
+        l4.setAlpha(level > -97 ? BG_ON : BG_OFF);
+        l5.setAlpha(level > -93 ? BG_ON : BG_OFF);
+        l6.setAlpha(level > -89 ? BG_ON : BG_OFF);
+        l7.setAlpha(level > -85 ? BG_ON : BG_OFF);
+        l8.setAlpha(level > -81 ? BG_ON : BG_OFF);
+        l9.setAlpha(level > -77 ? BG_ON : BG_OFF);
+        l10.setAlpha(level > -73 ? BG_ON : BG_OFF);
+        l11.setAlpha(level > -69 ? BG_ON : BG_OFF);
+        l12.setAlpha(level > -65 ? BG_ON : BG_OFF);
     }
 
     private void setup() {

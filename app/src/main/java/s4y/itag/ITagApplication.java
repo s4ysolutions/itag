@@ -20,24 +20,12 @@ public final class ITagApplication extends Application {
     @SuppressLint("StaticFieldLeak")
     public static Context context;
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        faAppCreated();
-        context = this;
-        ITag.initITag(context);
-        Waytoday.init();
+    static public void faWtOn5() {
+        fa("itag_wt_on5");
     }
 
-    @Override
-    public void onTerminate() {
-        Waytoday.done();
-        try {
-            ITag.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        super.onTerminate();
+    static public void faWtOn3600() {
+        fa("itag_wt_on3600");
     }
 
     static public void handleError(@NonNull Throwable th, boolean toast) {
@@ -238,12 +226,28 @@ public final class ITagApplication extends Application {
         fa("itag_wt_on1");
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        faAppCreated();
+        context = this;
+        ITag.initITag(context);
+        Waytoday.init(context);
+    }
+
     static public void faWtNoTrackID() {
         fa("itag_wt_no_track_id");
     }
 
-    static public void faWtOn300() {
-        fa("itag_wt_on300");
+    @Override
+    public void onTerminate() {
+        Waytoday.done(context);
+        try {
+            ITag.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        super.onTerminate();
     }
 
     static public void faWtChangeID() {

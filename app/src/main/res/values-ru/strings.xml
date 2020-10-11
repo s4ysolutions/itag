@@ -67,6 +67,7 @@
     <string name="trackid">Код ПростоПуть:</string>
     <string name="wt_new_id">Сменить код</string>
     <string name="wt_share">Поделиться местоположением</string>
+    <string name="wt_map">Посмотреть на карте</string>
     <string name="share_title">Отправить местоположение…</string>
     <string name="share_link"><![CDATA[Мое положение доступно по ссылке https://way.today/#%1$s!30m или по коду %1$s на сайте простопуть.рф]]></string>
     <string name="share_subj">Собщение с сервиса Way.Today</string>

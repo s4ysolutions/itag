@@ -45,7 +45,11 @@ import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
 import s4y.itag.waytoday.Waytoday;
 import solutions.s4y.rasat.DisposableBag;
+import solutions.s4y.waytoday.sdk.errors.ErrorsObservable;
 import solutions.s4y.waytoday.sdk.id.TrackIDJobService;
+import solutions.s4y.waytoday.sdk.locations.IPermissionListener;
+import solutions.s4y.waytoday.sdk.permissionmanagement.PermissionHandling;
+import solutions.s4y.waytoday.sdk.powermanagement.PowerManagement;
 
 public class MainActivity extends FragmentActivity {
     static public final int REQUEST_ENABLE_BT = 1;
@@ -105,11 +109,20 @@ public class MainActivity extends FragmentActivity {
 
     private final ITagServiceConnection mServiceConnection = new ITagServiceConnection();
 
+    private final ErrorsObservable.IErrorListener mErrorListener = errorNotification -> {
+        runOnUiThread(() -> Toast.makeText(MainActivity.this, errorNotification.getMessage(), Toast.LENGTH_LONG).show());
+        Log.e(LT, errorNotification.getMessage(), errorNotification.th);
+    };
+    private final IPermissionListener gpsPermissionListener = () -> PermissionHandling.requestPermissions(MainActivity.this);
+    private int resumeCount = 0;
+
     @Override
     protected void onResume() {
         super.onResume();
+        ErrorsObservable.addErrorListener(mErrorListener);
         sIsShown = true;
         setupContent();
+        Waytoday.gpsLocationUpdater.addOnPermissionListener(gpsPermissionListener);
         disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
         disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
                 event -> {
@@ -133,6 +146,13 @@ public class MainActivity extends FragmentActivity {
             }
         }));
         bindService(ITagsService.intentBind(this), mServiceConnection, 0);
+        if (Waytoday.tracker.isOn(this) && PowerManagement.needRequestIgnoreOptimization(this)) {
+            if (resumeCount++ > 1) {
+                new Handler(getMainLooper()).post(() ->
+                        PowerManagement.requestIgnoreOptimization(this)
+                );
+            }
+        }
     }
 
     @Override
@@ -145,6 +165,8 @@ public class MainActivity extends FragmentActivity {
         } else {
             ITagsService.stop(this);
         }
+        ErrorsObservable.removeErrorListener(mErrorListener);
+        Waytoday.gpsLocationUpdater.removePermissionListener(gpsPermissionListener);
         super.onPause();
     }
 
@@ -393,7 +415,7 @@ public class MainActivity extends FragmentActivity {
             switch (item.getItemId()) {
                 case R.id.exit:
                     ITag.close();
-                    Waytoday.stop();
+                    Waytoday.stop(this);
                     ITagsService.stop(this);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         finishAndRemoveTask();
@@ -409,11 +431,11 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void onWaytoday(@NonNull View sender) {
-        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        String tid = sp.getString("tid", "");
-        boolean on = sp.getBoolean("wt", false);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         boolean first = sp.getBoolean("wtfirst", true);
-        int freq = sp.getInt("freq", -1);
+        String tid = TrackIDJobService.getTid(this);
+        boolean on = Waytoday.tracker.isOn(this);
+        int freq = Waytoday.tracker.frequencyMs(this);
         final PopupMenu popupMenu = new PopupMenu(this, sender);
         popupMenu.inflate(R.menu.waytoday);
         popupMenu.getMenu().findItem(R.id.wt_about_first).setVisible(first);
@@ -421,84 +443,84 @@ public class MainActivity extends FragmentActivity {
         popupMenu.getMenu().findItem(R.id.wt_min_5).setChecked(on && freq == 300000);
         popupMenu.getMenu().findItem(R.id.wt_hour_1).setChecked(on && freq == 3600000);
         popupMenu.getMenu().findItem(R.id.wt_off).setVisible(on);
-        popupMenu.getMenu().findItem(R.id.wt_new_tid).setVisible(!("".equals(tid) && first));
+        popupMenu.getMenu().findItem(R.id.wt_new_tid).setVisible(!("".equals(tid)));
         popupMenu.getMenu().findItem(R.id.wt_about).setVisible(!first);
         popupMenu.getMenu().findItem(R.id.wt_share).setVisible(!"".equals(tid));
+        popupMenu.getMenu().findItem(R.id.wt_map).setVisible(!"".equals(tid));
         popupMenu.setOnMenuItemClickListener(item -> {
             AlertDialog.Builder builder;
-            switch (item.getItemId()) {
-                case R.id.wt_sec_1:
-                    Waytoday.start(1);
-                    ITagApplication.faWtOn1();
-                    break;
-                case R.id.wt_min_5:
-                    Waytoday.start(300000);
-                    break;
-                case R.id.wt_hour_1:
-                    Waytoday.start(3600000);
-                    ITagApplication.faWtOn300();
-                    break;
-                case R.id.wt_off:
-                    Waytoday.stop();
-                    ITagApplication.faWtOff();
-                    break;
-                case R.id.wt_new_tid:
-                    ITagApplication.faWtChangeID();
-                    TrackIDJobService.enqueueRetrieveId(this);
-                    break;
-                case R.id.wt_share:
-                    ITagApplication.faWtShare();
-                    if (!"".equals(tid)) {
-                        String txt = String.format(getResources().getString(R.string.share_link), tid);
-                        Intent sendIntent = new Intent();
-                        sendIntent.setAction(Intent.ACTION_SEND);
-                        sendIntent.putExtra(Intent.EXTRA_TEXT, txt);
-                        sendIntent.putExtra(Intent.EXTRA_SUBJECT, getResources().getString(R.string.share_subj));
-                        // sendIntent.setType("message/rfc822");
-                        sendIntent.setType("text/plain");
-                        startActivity(Intent.createChooser(sendIntent, getResources().getString(R.string.share_title)));
-                    }
-                    break;
-                case R.id.wt_about_first:
-                case R.id.wt_about:
-                    ITagApplication.faWtAbout();
-                    builder = new AlertDialog.Builder(this);
-                    builder.setTitle(R.string.about_wt)
-                            .setMessage(R.string.about_message)
-                            .setPositiveButton(R.string.about_ok, (dialog, id) -> {
-                                ITagApplication.faWtPlaymarket();
-                                final String appPackageName = "s4y.waytoday";
-                                try {
-                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                                } catch (ActivityNotFoundException anfe) {
-                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-                                }
-                            })
-                            .setNegativeButton(R.string.about_cancel, (dialog, id) -> {
-                                // User cancelled the dialog
-                            });
-                    // Create the AlertDialog object and return it
-                    builder.create().show();
-                    break;
-                case R.id.wt_disable:
-                    builder = new AlertDialog.Builder(this);
-                    builder.setTitle(R.string.disable_wt_ok)
-                            .setMessage(R.string.disable_wt_msg)
-                            .setPositiveButton(R.string.disable_wt_ok, (dialog, id) -> {
-                                ITagApplication.faWtRemove();
-                                // iTagsService.stopWayToday();
-                                sp.edit().putBoolean("wt_disabled", true).apply();
-                                final View v = findViewById(R.id.btn_waytoday);
-                                if (v != null) {
-                                    v.setVisibility(View.GONE);
-                                }
-                            })
-                            .setNegativeButton(R.string.about_cancel, (dialog, id) -> {
-                                // User cancelled the dialog
-                            });
-                    // Create the AlertDialog object and return it
-                    builder.create().show();
-                    break;
+            int id = item.getItemId();
+            if (id == R.id.wt_sec_1) {
+                Waytoday.tracker.setFrequencyMs(this, 1);
+                Waytoday.start(this);
+                ITagApplication.faWtOn1();
+            } else if (id == R.id.wt_min_5) {
+                Waytoday.tracker.setFrequencyMs(this, 5 * 60 * 1000);
+                Waytoday.start(this);
+                ITagApplication.faWtOn5();
+            } else if (id == R.id.wt_hour_1) {
+                Waytoday.tracker.setFrequencyMs(this, 60 * 60 * 1000);
+                Waytoday.start(this);
+                ITagApplication.faWtOn3600();
+            } else if (id == R.id.wt_off) {
+                Waytoday.stop(this);
+                ITagApplication.faWtOff();
+            } else if (id == R.id.wt_new_tid) {
+                ITagApplication.faWtChangeID();
+                TrackIDJobService.enqueueRetrieveId(this);
+            } else if (id == R.id.wt_map) {
+                if (!"".equals(tid)) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://way.today/#" + tid)));
+                }
+            } else if (id == R.id.wt_share) {
+                ITagApplication.faWtShare();
+                if (!"".equals(tid)) {
+                    String txt = String.format(getResources().getString(R.string.share_link), tid);
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, txt);
+                    sendIntent.putExtra(Intent.EXTRA_SUBJECT, getResources().getString(R.string.share_subj));
+                    // sendIntent.setType("message/rfc822");
+                    sendIntent.setType("text/plain");
+                    startActivity(Intent.createChooser(sendIntent, getResources().getString(R.string.share_title)));
+                }
+            } else if (id == R.id.wt_about_first || id == R.id.wt_about) {
+                ITagApplication.faWtAbout();
+                builder = new AlertDialog.Builder(this);
+                builder.setTitle(R.string.about_wt)
+                        .setMessage(R.string.about_message)
+                        .setPositiveButton(R.string.about_ok, (dialog, ignored) -> {
+                            ITagApplication.faWtPlaymarket();
+                            final String appPackageName = "s4y.waytoday";
+                            try {
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                            } catch (ActivityNotFoundException anfe) {
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                            }
+                        })
+                        .setNegativeButton(R.string.about_cancel, (dialog, ignoored) -> {
+                            // User cancelled the dialog
+                        });
+                // Create the AlertDialog object and return it
+                builder.create().show();
+            } else if (id == R.id.wt_disable) {
+                builder = new AlertDialog.Builder(this);
+                builder.setTitle(R.string.disable_wt_ok)
+                        .setMessage(R.string.disable_wt_msg)
+                        .setPositiveButton(R.string.disable_wt_ok, (dialog, ignored) -> {
+                            ITagApplication.faWtRemove();
+                            // iTagsService.stopWayToday();
+                            sp.edit().putBoolean("wt_disabled", true).apply();
+                            final View v = findViewById(R.id.btn_waytoday);
+                            if (v != null) {
+                                v.setVisibility(View.GONE);
+                            }
+                        })
+                        .setNegativeButton(R.string.about_cancel, (dialog, ignored) -> {
+                            // User cancelled the dialog
+                        });
+                // Create the AlertDialog object and return it
+                builder.create().show();
             }
             return true;
         });
@@ -600,6 +622,7 @@ public class MainActivity extends FragmentActivity {
                     break;
             }
         }
+        PermissionHandling.handleOnRequestPermissionsResult(this, requestCode, Waytoday.tracker);
     }
 
     public void onOpenBTSettings(View ignored) {

@@ -460,19 +460,21 @@ public class ITagsFragment extends Fragment
                 continue;
             }
             final String id = itag.id();
-            final BLEConnectionInterface connection = ITag.ble.connectionById(id);
+            final BLEConnectionInterface connection = ble.connectionById(id);
             disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(id, rssi)));
             disposableBag.add(connection.observableImmediateAlert().subscribe(state -> updateITagImageAnimation(itag, connection)));
             disposableBag.add(connection.observableState().subscribe(state -> {
-                updateAlertButton(id);
-                updateState(id, state);
-                updateITagImageAnimation(itag, connection);
-                if (connection.isConnected()) {
-                    connection.enableRSSI();
-                } else {
-                    connection.disableRSSI();
-                    updateRSSI(id, -999);
-                }
+                getActivity().runOnUiThread(() -> {
+                    updateAlertButton(id);
+                    updateState(id, state);
+                    updateITagImageAnimation(itag, connection);
+                    if (connection.isConnected()) {
+                        connection.enableRSSI();
+                    } else {
+                        connection.disableRSSI();
+                        updateRSSI(id, -999);
+                    }
+                });
             }));
             disposableBag.add(connection.observableClick().subscribe(event -> updateITagImageAnimation(itag, connection)));
         }

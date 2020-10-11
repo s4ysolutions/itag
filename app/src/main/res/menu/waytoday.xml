@@ -25,6 +25,9 @@
             android:id="@+id/wt_share"
             android:title="@string/wt_share" />
         <item
+            android:id="@+id/wt_map"
+            android:title="@string/wt_map" />
+        <item
             android:id="@+id/wt_about"
             android:title="@string/about_wt" />
     </group>
