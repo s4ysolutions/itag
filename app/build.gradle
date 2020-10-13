@@ -5,7 +5,7 @@ properties.load(project.rootProject.file("local.properties").newDataInputStream(
 
 android {
     compileSdkVersion 30
-    buildToolsVersion "29.0.2"
+    buildToolsVersion "30.0.2"
 
     defaultConfig {
         applicationId "s4y.itag"
