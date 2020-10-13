@@ -431,7 +431,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void onWaytoday(@NonNull View sender) {
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         boolean first = sp.getBoolean("wtfirst", true);
         String tid = TrackIDJobService.getTid(this);
         boolean on = Waytoday.tracker.isOn(this);
@@ -486,6 +486,7 @@ public class MainActivity extends FragmentActivity {
                 }
             } else if (id == R.id.wt_about_first || id == R.id.wt_about) {
                 ITagApplication.faWtAbout();
+                sp.edit().putBoolean("wtfirst", false).apply();
                 builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.about_wt)
                         .setMessage(R.string.about_message)
@@ -580,10 +581,13 @@ public class MainActivity extends FragmentActivity {
                 ITag.connectAsync(connection);
             }
         }
-        if (itag.isAlertDisconnected())
+        if (itag.isAlertDisconnected()) {
+            Toast.makeText(this, R.string.mode_alertdisconnect, Toast.LENGTH_SHORT).show();
             ITagApplication.faUnmuteTag();
-        else
+        } else {
+            Toast.makeText(this, R.string.mode_keyfinder, Toast.LENGTH_SHORT).show();
             ITagApplication.faMuteTag();
+        }
     }
 
     public void onSetName(@NonNull View sender) {

@@ -12,6 +12,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -409,6 +410,13 @@ public class ITagsFragment extends Fragment
                                 : volume == VolumePreference.LOUD
                                 ? R.drawable.nomute
                                 : R.drawable.vibration);
+
+                int toastId = volume == VolumePreference.MUTE
+                        ? R.string.soundmode_off
+                        : volume == VolumePreference.LOUD
+                        ? R.string.soundmode_on
+                        : R.string.soundmode_vibration;
+                Toast.makeText(getContext(), toastId, Toast.LENGTH_SHORT).show();
             });
         }
 
