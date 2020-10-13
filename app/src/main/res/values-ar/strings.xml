@@ -3,7 +3,7 @@
     <string name="app_name">واحد iTag</string>
     <string name="hello_no_ble_fragment">لا يحتوي جهازك على محول Bluetooth</string>
     <string name="request_permission_title">إذن المطلوبة</string>
-    <string name="request_location_permission">بدءًا من نظام Android 6.0 Marhmallow ، يتطلب النظام ترخيصًا للموقع للبحث عن أجهزة بلوتوث LE.</string>
+    <string name="request_location_permission">بدءًا من نظام Android 6.0 Marshmallow ، يتطلب النظام ترخيصًا للموقع للبحث عن أجهزة بلوتوث LE.</string>
     <string name="confirm_title">يوافق</string>
     <string name="confirm_forget">سوف تنسى الجهاز ، هل أنت متأكد؟ ستتمكن من إعادة توصيل هذا الجهاز وتذكره في أي وقت.  ننسى؟</string>
     <string name="confirm_disconnect">لقد طلبت أن يتم فصل iTag. هذا ليس خطيراً ، لن ننسى iTag وسوف تكون قادراً على الاتصال مرة أخرى مع نفس الجانب الجانب.  هل تريد حقا أن تفصل iTag؟</string>
@@ -75,7 +75,7 @@
     <string name="share_subj">Way.Today location note</string>
     <string name="about_ok">انتقل إلى Play Market</string>
     <string name="about_cancel">إلغاء</string>
-    <string name="about_message">يخزن WayToday آخر 500 موقع للهاتف لمدة أسبوعين أو أثناء عدم تغيير المعرف. \ n \ n يمكنك تتبع iTag على https://way.today باستخدام هذا التطبيق أو تثبيت التطبيق المستقل الذي لا يتطلب iTag . \ n \ n نوصي بتجربته بسبب بعض الميزات الرائعة التي لا يمتلكها iTag One.</string>
+    <string name="about_message">يخزن WayToday آخر 500 موقع للهاتف لمدة أسبوعين أو أثناء عدم تغيير المعرف.\n\nيمكنك تتبع iTag على https://way.today باستخدام هذا التطبيق أو تثبيت التطبيق المستقل الذي لا يتطلب iTag .\n\nنوصي بتجربته بسبب بعض الميزات الرائعة التي لا يمتلكها iTag One.</string>
     <string name="disable_wt">أزلها</string>
     <string name="disable_wt_msg">سيؤدي هذا الإجراء إلى إزالة Way.Today وتعطيله إلى الأبد. الطريقة الوحيدة لاسترداد traking هي إزالة التطبيق وتثبيته.</string>
     <string name="disable_wt_ok">تعطيل Way.Today</string>
