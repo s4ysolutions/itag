@@ -46,7 +46,6 @@ public class RSSIFilter {
         deviations[current] = Math.abs(average - rawmeasurement);
 
         int sumdeviations = 0;
-        // iggnore the last one might be obsolete
         for (int i = 0; i < length; i++) {
             sumdeviations += deviations[i];
         }
