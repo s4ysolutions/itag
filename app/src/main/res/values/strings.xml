@@ -113,5 +113,4 @@
 
     <string name="mode_keyfinder">Key finder mode</string>
     <string name="mode_alertdisconnect">Lost alarm mode</string>
-    <string name="last_seen">Last+seen+here+%d+%s+ago</string>
 </resources>
