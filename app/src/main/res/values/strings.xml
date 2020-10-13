@@ -5,7 +5,7 @@
     <string name="hello_no_ble_fragment">Your device has no Bluetooth adapter</string>
 
     <string name="request_permission_title">Permission required</string>
-    <string name="request_location_permission">Starting from Android 6.0 Marhmallow the system requires location permission in order to scan for Bluetooth LE devices.\\nYou will have to restart scann process after the giving the access.</string>
+    <string name="request_location_permission">Starting from Android 6.0 Marshmallow the system requires location permission in order to scan for Bluetooth LE device.\\nYou will have to restart scann process after the giving the access.</string>
     <string name="confirm_title">Confirm</string>
     <string name="confirm_forget">The device will be forgotten, are you sure? You will be able to reconnect this device and remember it in any moment though.\n\nForget?</string>
     <string name="confirm_disconnect">Flinging with your finger you requested iTag to be disconnected.\nThis is not dangerous, the iTag will not be forgotten and you will be able to connect it back with the same side-to-side fling.\n\nDo you really want disconnect iTag?</string>
@@ -102,8 +102,16 @@
     <string name="share_subj">WayToday location note</string>
     <string name="about_ok">Install WayToday</string>
     <string name="about_cancel">Close</string>
-    <string name="about_message">With a short living personal code WayToday lets you share the current location with others without hurting your privacy.\n\nYou can track your iTag on WayToday site right now or install the standalone app which does not require the gadget.\n\nWe recommend to give it a try because of some nice features iTag One does not have.</string>
+    <string name="about_message">WayToday stores the last 500 locations of the phone for 2 weeks or while the ID is not changed.\n\nYou can track your iTag on https://way.today with this application or install the standalone app which does not require the iTag.\n\nWe recommend to give it a try because of some nice features iTag One does not have.</string>
     <string name="disable_wt">Remove it</string>
     <string name="disable_wt_msg">This action will remove and disable WayToday forever.\n\nThe only way to restore the tracking is removing and re-installing the application.</string>
     <string name="disable_wt_ok">Disable WayToday</string>
+
+    <string name="soundmode_on">Alarm when iTag lost</string>
+    <string name="soundmode_vibration">Vibration when iTag lost</string>
+    <string name="soundmode_off">No alarm when iTag lost</string>
+
+    <string name="mode_keyfinder">Key finder mode</string>
+    <string name="mode_alertdisconnect">Lost alarm mode</string>
+    <string name="last_seen">Last+seen+here+%d+%s+ago</string>
 </resources>

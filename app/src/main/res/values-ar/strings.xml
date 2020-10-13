@@ -75,7 +75,7 @@
     <string name="share_subj">Way.Today location note</string>
     <string name="about_ok">انتقل إلى Play Market</string>
     <string name="about_cancel">إلغاء</string>
-    <string name="about_message">مع رمز شخصي قصير يعيش Way.Today يتيح لك مشاركة الموقع الحالي مع الآخرين دون الإضرار خصوصيتك. يمكنك تتبع iTag على موقع Way.Today الآن أو تثبيت التطبيق المستقل الذي لا يتطلب الأداة. نوصي أن نجربها بسبب بعض الميزات الرائعة التي لا يمتلكها iTagOne.</string>
+    <string name="about_message">يخزن WayToday آخر 500 موقع للهاتف لمدة أسبوعين أو أثناء عدم تغيير المعرف. \ n \ n يمكنك تتبع iTag على https://way.today باستخدام هذا التطبيق أو تثبيت التطبيق المستقل الذي لا يتطلب iTag . \ n \ n نوصي بتجربته بسبب بعض الميزات الرائعة التي لا يمتلكها iTag One.</string>
     <string name="disable_wt">أزلها</string>
     <string name="disable_wt_msg">سيؤدي هذا الإجراء إلى إزالة Way.Today وتعطيله إلى الأبد. الطريقة الوحيدة لاسترداد traking هي إزالة التطبيق وتثبيته.</string>
     <string name="disable_wt_ok">تعطيل Way.Today</string>
@@ -85,4 +85,11 @@
     <string name="bt_lost">ضائع</string>
     <string name="bt_disconnecting">قطع</string>
     <string name="mute">كتم الصوت</string>
+
+    <string name="soundmode_on">إنذار عند فقد iTag</string>
+    <string name="soundmode_vibration">الاهتزاز عند فقد iTag</string>
+    <string name="soundmode_off">لا إنذار عند فقد iTag</string>
+
+    <string name="mode_keyfinder">وضع الباحث عن المفاتيح</string>
+    <string name="mode_alertdisconnect">وضع التنبيه المفقود</string>
 </resources>
