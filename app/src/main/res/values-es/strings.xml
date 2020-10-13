@@ -48,7 +48,7 @@
     <string name="bt_call">Gritando</string>
     <string name="bt_unk">desmayarse</string>
     <string name="bt">vinculado</string>
-    <string name="last_seen">Última+vista+aquí+%d+%s+haceÚltima+vista+aquí+%d+%s+hace</string>
+    <string name="last_seen">Última+vista+aquí+%d+%s+hace</string>
     <string name="not_connected">No conectado</string>
     <string name="status133">El dispositivo parece tener un problema. La función anti-perdida puede fallar.</string>
     <string name="no_geo_activity">Parece que su dispositivo no tiene ninguna ubicación en el mapa</string>
