@@ -489,7 +489,7 @@ public class ITagsFragment extends Fragment
         HistoryRecord.addListener(this);
 
         final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean wt_disabled = sp.getBoolean("wt_disabled", false);
+        boolean wt_disabled = sp.getBoolean("wt_disabled0", false);
         if (wt_disabled) {
             root.findViewById(R.id.btn_waytoday).setVisibility(View.GONE);
         } else {

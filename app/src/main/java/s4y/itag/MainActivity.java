@@ -511,7 +511,7 @@ public class MainActivity extends FragmentActivity {
                         .setPositiveButton(R.string.disable_wt_ok, (dialog, ignored) -> {
                             ITagApplication.faWtRemove();
                             // iTagsService.stopWayToday();
-                            sp.edit().putBoolean("wt_disabled", true).apply();
+                            sp.edit().putBoolean("wt_disabled0", true).apply();
                             final View v = findViewById(R.id.btn_waytoday);
                             if (v != null) {
                                 v.setVisibility(View.GONE);
