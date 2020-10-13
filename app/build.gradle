@@ -54,7 +54,7 @@ dependencies {
     implementation "androidx.preference:preference:1.1.1"
     implementation "androidx.recyclerview:recyclerview:1.1.0"
     implementation  "solutions.s4y.rasat:rasat-android:1.0.3"
-    implementation  "solutions.s4y.waytoday:waytoday-sdk:1.0.30"
+    implementation  "solutions.s4y.waytoday:waytoday-sdk:1.0.32"
 
     implementation project(':itagble')
 
