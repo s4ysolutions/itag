@@ -89,4 +89,5 @@
     <string name="soundmode_off">Nenhum alarme quando a iTag perdeu</string>
     <string name="mode_keyfinder">Modo localizador de chave</string>
     <string name="mode_alertdisconnect">Modo de alarme perdido</string>
+    <string name="app_name">iTag One</string>
 </resources>

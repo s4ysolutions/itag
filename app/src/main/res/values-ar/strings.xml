@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">واحد iTag</string>
+    <string name="app_name">iTag One</string>
     <string name="hello_no_ble_fragment">لا يحتوي جهازك على محول Bluetooth</string>
     <string name="request_permission_title">إذن المطلوبة</string>
     <string name="request_location_permission">بدءًا من نظام Android 6.0 Marshmallow ، يتطلب النظام ترخيصًا للموقع للبحث عن أجهزة بلوتوث LE.</string>
