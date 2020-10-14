@@ -14,19 +14,18 @@ android {
         minSdkVersion 19
         targetSdkVersion 30
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "String", "WAYTODAY_SECRET", "\"${System.getenv('WAYTODAY_SECRET') ?: properties.getProperty('waytoday.secret')}\""
     }
 
     buildTypes {
         debug {
             minifyEnabled false
             manifestPlaceholders = [analytics_deactivated: "true"]
-            buildConfigField "String", "WAYTODAY_SECRET", System.getenv('WAYTODAY_SECRET') ?: properties.getProperty("waytoday.secret")
         }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             manifestPlaceholders = [analytics_deactivated: "false"]
-            buildConfigField "String", "WAYTODAY_SECRET", System.getenv('WAYTODAY_SECRET') ?: properties.getProperty("waytoday.secret")
         }
     }
     compileOptions {
