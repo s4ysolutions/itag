@@ -13,8 +13,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
-import java.util.Objects;
-
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 
@@ -25,7 +23,7 @@ public class SetNameDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        final LayoutInflater inflater = Objects.requireNonNull(getActivity()).getLayoutInflater();
+        final LayoutInflater inflater = requireActivity().getLayoutInflater();
         @SuppressLint("InflateParams") final View view = inflater.inflate(R.layout.fragment_set_name, null);
         final TextView textName = view.findViewById(R.id.text_name);
         textName.setText(iTag.name());

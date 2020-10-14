@@ -27,7 +27,7 @@
     <string name="itag">ITag conectado</string>
     <string name="connect">iTag se conectará</string>
     <string name="disconnect">iTag se desconectará</string>
-    <string name="rssi">Intensidad de la señal:% d</string>
+    <string name="rssi">Intensidad de la señal:%d</string>
     <string name="white">Blanco</string>
     <string name="red">Rojo</string>
     <string name="black">Negro</string>
@@ -35,7 +35,7 @@
     <string name="blue">Azul</string>
     <string name="service_in_background">Haga doble clic en el botón de iTag para encontrar el teléfono</string>
     <string name="service_description">Haga clic en la imagen de iTag para que suene la etiqueta.</string>
-    <string name="notify_disconnect">% s desconectado</string>
+    <string name="notify_disconnect">%s desconectado</string>
     <string name="click_to_silent">Haga clic para detener la alarma</string>
     <string name="help_longpress">Pulsación larga para encontrar el iTag</string>
     <string name="help_scan">Aún no tiene dispositivos iTag conectados.\n\nHaga clic en el botón Escanear arriba para comenzar a buscar.</string>

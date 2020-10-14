@@ -15,10 +15,10 @@
     <string name="itag_alarm_delay_5">5 sec</string>
     <string name="itag_alarm_delay_10">10 sec</string>
     <string name="itag_alarm_delay_description">سوف إنذار تأخير Itag منع الضوضاء في استراحة قصيرة</string>
-    <string name="scanning">جارٍ البحث عن iTags ...</string>
+    <string name="scanning">جارٍ البحث عن iTags …</string>
     <string name="manage_alert">تمكين / تعطيل التنبيه عند قطع الاتصال</string>
-    <string name="scanning_new">جارٍ البحث عن iTags جديدة ...</string>
-    <string name="scanning_more">البحث عن المزيد من iTags ...</string>
+    <string name="scanning_new">جارٍ البحث عن iTags جديدة …</string>
+    <string name="scanning_more">البحث عن المزيد من iTags …</string>
     <string name="color">تغيير لون الجهاز</string>
     <string name="color_label">اللون</string>
     <string name="start_scan">مسح للأجهزة الجديدة</string>
