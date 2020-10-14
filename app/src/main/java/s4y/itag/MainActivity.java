@@ -36,11 +36,9 @@ import java.util.Locale;
 
 import s4y.itag.ble.AlertVolume;
 import s4y.itag.ble.BLEConnectionInterface;
-import s4y.itag.ble.BLEScanResult;
 import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
-import s4y.itag.itag.ITagDefault;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
 import s4y.itag.waytoday.Waytoday;
@@ -268,21 +266,6 @@ public class MainActivity extends FragmentActivity {
             ITag.ble.scanner().stop();
         } else {
             super.onBackPressed();// your code.
-        }
-    }
-
-    public void onRemember(@NonNull View sender) {
-        BLEScanResult scanResult = (BLEScanResult) sender.getTag();
-        if (s4y.itag.ble.BuildConfig.DEBUG) {
-            Log.d(LT, "onRemember  thread=" + Thread.currentThread().getName());
-        }
-        if (scanResult == null) {
-            ITagApplication.handleError(new Exception("No Scan Result to Remember"), true);
-            return;
-        }
-        if (!ITag.store.remembered(scanResult.id)) {
-            ITag.store.remember(new ITagDefault(scanResult));
-            ITag.ble.scanner().stop();
         }
     }
 

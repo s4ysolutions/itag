@@ -20,6 +20,7 @@ import java.util.List;
 import s4y.itag.ble.BLEScanResult;
 import s4y.itag.ble.BuildConfig;
 import s4y.itag.itag.ITag;
+import s4y.itag.itag.ITagDefault;
 import solutions.s4y.rasat.DisposableBag;
 
 /**
@@ -153,24 +154,36 @@ public class ScanFragment extends Fragment {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "onBindViewHolder position=" + position + " thread=" + Thread.currentThread().getName());
             }
-            BLEScanResult r = scanResults.get(position);
-            assert r != null;
+            final BLEScanResult scanResult = scanResults.get(position);
+            assert scanResult != null;
 
-            holder.textName.setText(r.name);
-            holder.textAddr.setText(r.id);
-            holder.btnRemember.setTag(r);
-            holder.btnRemember2.setTag(r);
+            View.OnClickListener onClickListener = sender -> {
+                if (BuildConfig.DEBUG) {
+                    Log.d(LT, "onRemember  thread=" + Thread.currentThread().getName());
+                }
+                if (!ITag.store.remembered(scanResult.id)) {
+                    ITag.store.remember(new ITagDefault(scanResult));
+                    ITag.ble.scanner().stop();
+                }
+
+            };
+            holder.textName.setText(scanResult.name);
+            holder.textAddr.setText(scanResult.id);
+            holder.btnRemember.setTag(scanResult);
+            holder.btnRemember.setOnClickListener(onClickListener);
+            holder.btnRemember2.setOnClickListener(onClickListener);
+
             if (position % 2 == 1) {
                 holder.itemView.setBackgroundColor(0xffe0e0e0);
             } else {
                 holder.itemView.setBackgroundColor(Color.TRANSPARENT);
             }
-            holder.rssiView.setRssi(r.rssi);
+            holder.rssiView.setRssi(scanResult.rssi);
             if (getActivity() != null && isAdded()) {
                 // issue #38 Fragment not attached to Activity
-                holder.textRSSI.setText(String.format(getString(R.string.rssi), r.rssi));
+                holder.textRSSI.setText(String.format(getString(R.string.rssi), scanResult.rssi));
             } else if (ITagApplication.context != null) {
-                holder.textRSSI.setText(String.format(ITagApplication.context.getString(R.string.rssi), r.rssi));
+                holder.textRSSI.setText(String.format(ITagApplication.context.getString(R.string.rssi), scanResult.rssi));
             } else {
                 holder.textRSSI.setText("");
             }
