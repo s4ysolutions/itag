@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -72,22 +73,30 @@ public class ITagsFragment extends Fragment
 
         if (s > 0) {
             ITagInterface itag = ITag.store.byPos(0);
-            tagViews.put(itag.id(), root.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
+            if (itag != null) {
+                tagViews.put(itag.id(), root.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
+            }
         }
 
         if (s > 1) {
             ITagInterface itag = ITag.store.byPos(1);
-            tagViews.put(itag.id(), root.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
+            if (itag != null) {
+                tagViews.put(itag.id(), root.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
+            }
         }
 
         if (s > 2) {
             ITagInterface itag = ITag.store.byPos(2);
-            tagViews.put(itag.id(), root.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
+            if (itag != null) {
+                tagViews.put(itag.id(), root.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
+            }
         }
 
         if (s > 3) {
             ITagInterface itag = ITag.store.byPos(3);
-            tagViews.put(itag.id(), root.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
+            if (itag != null) {
+                tagViews.put(itag.id(), root.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
+            }
         }
 
         for (Map.Entry<String, ViewGroup> entry : tagViews.entrySet()) {
@@ -328,7 +337,12 @@ public class ITagsFragment extends Fragment
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "updateITagImageAnimation: Start animation");
             }
-            imageITag.startAnimation(animShake);
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                imageITag.startAnimation(animShake);
+            } else {
+                final Animation anim = animShake;
+                getActivity().runOnUiThread(() -> imageITag.startAnimation(anim));
+            }
         }
     }
 
@@ -471,19 +485,17 @@ public class ITagsFragment extends Fragment
             final BLEConnectionInterface connection = ble.connectionById(id);
             disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(id, rssi)));
             disposableBag.add(connection.observableImmediateAlert().subscribe(state -> updateITagImageAnimation(itag, connection)));
-            disposableBag.add(connection.observableState().subscribe(state -> {
-                getActivity().runOnUiThread(() -> {
-                    updateAlertButton(id);
-                    updateState(id, state);
-                    updateITagImageAnimation(itag, connection);
-                    if (connection.isConnected()) {
-                        connection.enableRSSI();
-                    } else {
-                        connection.disableRSSI();
-                        updateRSSI(id, -999);
-                    }
-                });
-            }));
+            disposableBag.add(connection.observableState().subscribe(state -> getActivity().runOnUiThread(() -> {
+                updateAlertButton(id);
+                updateState(id, state);
+                updateITagImageAnimation(itag, connection);
+                if (connection.isConnected()) {
+                    connection.enableRSSI();
+                } else {
+                    connection.disableRSSI();
+                    updateRSSI(id, -999);
+                }
+            })));
             disposableBag.add(connection.observableClick().subscribe(event -> updateITagImageAnimation(itag, connection)));
         }
         HistoryRecord.addListener(this);

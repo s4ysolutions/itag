@@ -101,7 +101,6 @@ public class MainActivity extends FragmentActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-
         }
     }
 
@@ -155,7 +154,11 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     protected void onPause() {
-        unbindService(mServiceConnection);
+        try {
+            unbindService(mServiceConnection);
+        } catch (IllegalArgumentException e) {
+            // ignore
+        }
         disposableBag.dispose();
         sIsShown = false;
         if (ITag.store.isDisconnectAlert() || Waytoday.tracker.isUpdating) {
