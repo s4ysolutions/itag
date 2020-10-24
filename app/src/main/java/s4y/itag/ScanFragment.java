@@ -65,6 +65,8 @@ public class ScanFragment extends Fragment {
             return adapter(listView());
         }
     */
+    private long lastUpdate = 0;
+
     @Override
     public void onResume() {
         super.onResume();
@@ -91,10 +93,21 @@ public class ScanFragment extends Fragment {
                         }
                     }
                     if (!found) {
+                        if (BuildConfig.DEBUG) {
+                            Log.d(LT, "found=" + found);
+                        }
                         scanResults.add(result);
-                    }
-                    if (!found || modified) {
                         adapter.notifyDataSetChanged();
+                        lastUpdate = System.currentTimeMillis();
+                    }
+                    if (modified) {
+                        if (System.currentTimeMillis() - lastUpdate > 1000) {
+                            if (BuildConfig.DEBUG) {
+                                Log.d(LT, "modified=" + modified);
+                            }
+                            adapter.notifyDataSetChanged();
+                            lastUpdate = System.currentTimeMillis();
+                        }
                     }
                 })
         );
