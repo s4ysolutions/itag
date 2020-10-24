@@ -9,6 +9,8 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -47,6 +49,25 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private final boolean cached;
     private final BLEPeripheralObservables observables = new BLEPeripheralObservables();
     private final RSSIFilter filter = new RSSIFilter();
+
+    final Handler handler = new Handler(Looper.getMainLooper());
+    final int CLOSE_DELAY_MS = 200;
+    @NonNull
+    private final Runnable mRssiRunable = new Runnable() {
+        @Override
+        public void run() {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "RSSI runnable id=" + identifier() + " isConnected=" + isConnected());
+            }
+            if (gatt() != null && isConnected()) {
+                Log.v(LT, "request RSSI id=" + identifier());
+                gatt().readRemoteRssi();
+            }
+            manager.postOperation(this, RSSI_INTERVAL_MS);
+        }
+    };
+    private int lastStatus;
+    private final Runnable closeSuccessRunnable = this::waitForClose;
 
     BLEPeripheralDefault(@NonNull Context context, @NonNull BLECentralManagerInterface manager, @NonNull BluetoothDevice device) {
         this.device = device;
@@ -95,7 +116,6 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             setGatt(g);
         }
     }
-
     private final BluetoothGattCallback callback = new BluetoothGattCallback() {
 
         @Override
@@ -106,22 +126,18 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
                         " status=" + status +
                         " newState=" + newState);
             }
+            lastStatus = status;
             if (status == GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     setGatt(gatt);
                     setState(BLEPeripheralState.connected);
                     observables.channelConnected.broadcast(new BLEPeripheralObservablesInterface.ConnectedEvent());
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    close();
-                    observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(status));
+                    waitForClose();
                 }
             } else {
-                close();
-                if (getState() == BLEPeripheralState.connecting) {
-                    observables.channelConnectionFailed.broadcast(new BLEPeripheralObservablesInterface.ConnectionFailedEvent(status));
-                } else {
-                    observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(status));
-                }
+                gatt.disconnect();
+                waitForClose();
             }
         }
 
@@ -306,6 +322,21 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         return observables;
     }
 
+    private void waitForClose() {
+        if (isConnected()) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "post close device " + device.getAddress());
+            }
+            handler.postDelayed(closeSuccessRunnable, CLOSE_DELAY_MS);
+        } else {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "close device " + device.getAddress());
+            }
+            close();
+            observables.channelDisconnected.broadcast(new BLEPeripheralObservablesInterface.DisconnectedEvent(lastStatus));
+        }
+    }
+
     @Override
     synchronized public void close() {
         setState(BLEPeripheralState.disconnected);
@@ -319,20 +350,11 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             Log.d(LT, "close");
             gatt().close();
         }
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "set gatt null");
+        }
         setGatt(null);
     }
-
-    @NonNull
-    private final Runnable mRssiRunable = new Runnable() {
-        @Override
-        public void run() {
-            if (isConnected() && gatt() != null) {
-                Log.v(LT, "request RSSI id=" + identifier());
-                gatt().readRemoteRssi();
-            }
-            manager.postOperation(this, RSSI_INTERVAL_MS);
-        }
-    };
 
     @Override
     public void disconnect() {
@@ -403,7 +425,11 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     @Override
     public boolean isConnected() {
         boolean connected = manager.connected(device);
-        if (gatt() == null && connected) {
+        if (BuildConfig.DEBUG) {
+            Log.w(LT, "isConnected, device=" + device.getAddress() + " manager.connected=" + connected);
+        }
+        BluetoothGatt g = gatt();
+        if (g == null && connected) {
             Log.w(LT, "isConnected, but gatt == null, id=" + identifier());
         }
         return connected;
@@ -438,8 +464,8 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             if (BuildConfig.DEBUG) {
                 Log.v(LT, "setGatt null:" + (gatt == null ? "yes" : "no") + " id=" + identifier());
             }
-            if (this.gatt[0] != null) {
-                Log.w(LT, "Overwrite not null gatt, id=" + identifier());
+            if (gatt != null && this.gatt[0] != null) {
+                Log.w(LT, "Overwrite not null gatt with other not null, id=" + identifier());
             }
             this.gatt[0] = gatt;
         }

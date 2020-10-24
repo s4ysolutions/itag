@@ -282,6 +282,9 @@ public class ITagsFragment extends Fragment
         Activity activity = getActivity();
         if (activity == null) return; //
         final ImageView btnAlert = rootView.findViewById(R.id.btn_alert);
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "updateAlertButton2 isAlertDisconnected=" + isAlertDisconnected + " isConnected=" + isConnected);
+        }
         btnAlert.setImageResource(isAlertDisconnected || isConnected ? R.drawable.linked : R.drawable.keyfinder);
     }
 
@@ -290,14 +293,28 @@ public class ITagsFragment extends Fragment
         if (activity == null) return; //
         ViewGroup view = tagViews.get(id);
         if (view == null) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "updateAlertButton1 id=" + id + " view null");
+            }
             return;
         }
         ITagInterface itag = ITag.store.byId(id);
         if (itag == null) {
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "updateAlertButton1 id=" + id + " itag null");
+            }
             return;
         }
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "updateAlertButton connectionById " + id);
+        }
         BLEConnectionInterface connection = ble.connectionById(id);
-        updateAlertButton(view, itag.isAlertDisconnected(), connection.isConnected());
+        boolean isConnected = connection.isConnected();
+        boolean isAlertDisconnected = itag.isAlertDisconnected();
+        if (BuildConfig.DEBUG) {
+            Log.d(LT, "id = " + id + " updateAlertButton2 isAlertDisconnected=" + isAlertDisconnected + " isConnected=" + isConnected);
+        }
+        updateAlertButton(view, isAlertDisconnected, isConnected);
     }
 
     private void updateITagImageAnimation(@NonNull ViewGroup rootView, ITagInterface itag, BLEConnectionInterface connection) {
@@ -313,7 +330,7 @@ public class ITagsFragment extends Fragment
             Log.d(LT, "updateITagImageAnimation isFindMe:" + connection.isFindMe() +
                     " isAlerting:" + connection.isAlerting() +
                     " isAlertDisconnected:" + itag.isAlertDisconnected() +
-                    " not conencted:" + !connection.isConnected()
+                    " not connected:" + !connection.isConnected()
             );
         }
         if (connection.isAlerting() ||
@@ -446,8 +463,10 @@ public class ITagsFragment extends Fragment
         for (int i = 0; i < ITag.store.count(); i++) {
             ITagInterface itag = ITag.store.byPos(i);
             BLEConnectionInterface connection = ble.connectionById(itag.id());
-            if (connection.isConnected()) {
+            if (connection.state() == BLEConnectionState.connected) {
                 connection.enableRSSI();
+            } else {
+                updateRSSI(itag.id(), -999);
             }
         }
     }
@@ -482,14 +501,20 @@ public class ITagsFragment extends Fragment
                 continue;
             }
             final String id = itag.id();
+            if (BuildConfig.DEBUG) {
+                Log.d(LT, "onResume connectionById " + id);
+            }
             final BLEConnectionInterface connection = ble.connectionById(id);
             disposableBag.add(connection.observableRSSI().subscribe(rssi -> updateRSSI(id, rssi)));
             disposableBag.add(connection.observableImmediateAlert().subscribe(state -> updateITagImageAnimation(itag, connection)));
             disposableBag.add(connection.observableState().subscribe(state -> getActivity().runOnUiThread(() -> {
+                if (BuildConfig.DEBUG) {
+                    Log.d(LT, "connection " + id + " state changed " + connection.state().toString());
+                }
                 updateAlertButton(id);
                 updateState(id, state);
                 updateITagImageAnimation(itag, connection);
-                if (connection.isConnected()) {
+                if (connection.state() == BLEConnectionState.connected) { //isConnected()) {
                     connection.enableRSSI();
                 } else {
                     connection.disableRSSI();

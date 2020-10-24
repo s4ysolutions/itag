@@ -31,7 +31,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     @NonNull
     private final BLECentralManagerInterface manager;
     @NonNull
-    private String id;
+    private final String id;
     private int lastStatus;
     private final DisposableBag disposables = new DisposableBag();
     private final ChannelDistinct<AlertVolume> alertChannel = new ChannelDistinct<>(AlertVolume.NO_ALERT);
@@ -39,30 +39,17 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private final ChannelDistinct<BLEConnectionState> stateChannel = new ChannelDistinct<>(BLEConnectionState.disconnected);
     private final ChannelDistinct<Integer> rssiChannel = new ChannelDistinct<>(-999);
 
-    private class ClickHandler {
-        private static final int CLICK_INTERVAL = 600;
-
-        private Handler clickHandler = new Handler(Looper.getMainLooper());
-        private int count = 0;
-        private final Runnable waitNext = () -> {
-            Log.d(LT, "ClickHandler.waitNext postDelayed");
-            int c;
-            synchronized (this) {
-               c = count;
-               count = 0;
+    @Override
+    public boolean isConnected() {
+        synchronized (peripheral) {
+            if (BuildConfig.DEBUG) {
+                if (peripheral[0] == null) {
+                    Log.d(LT, "peripheral[0] is null");
+                } else {
+                    Log.d(LT, "peripheral[0] " + peripheral[0].address() + " isConnected=" + peripheral[0].isConnected());
+                }
             }
-            clickChannel.broadcast(c);
-        };
-
-        private synchronized void inc() {
-            count++;
-        }
-
-        synchronized void handleClick() {
-            clickHandler.removeCallbacks(BLEConnectionDefault.this.clickHandler.waitNext);
-            inc();
-            Log.d(LT, "ClickHandler.handleClick postDelayed");
-            clickHandler.postDelayed(BLEConnectionDefault.this.clickHandler.waitNext, CLICK_INTERVAL);
+            return peripheral[0] != null && peripheral[0].isConnected();
         }
     }
 
@@ -143,12 +130,72 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         }
     }
 
-
     @Override
-    public boolean isConnected() {
-        synchronized (peripheral) {
-            return peripheral[0] != null && peripheral[0].isConnected();
+    public BLEError connect(boolean infinity) {
+        clickChannel.broadcast(0);
+        alertChannel.broadcast(AlertVolume.NO_ALERT);
+
+        manager.stopScan();
+        if (isConnected()) {
+            if (peripheral() == null) {
+                Log.w("LT", "isConnected but peripheral is null");
+            }
+            return BLEError.ok;
         }
+        // stop broadcast peripherial states during connect
+        disposables.dispose();
+        stateChannel.broadcast(BLEConnectionState.connecting);
+
+        assertPeripheral();
+
+        boolean scan = false;
+
+        while (peripheral() == null || !peripheral().cached()) {
+            scan = true;
+            // scan for not cached/not known peripheral
+            // endlessly if timeout = 0
+            if (BuildConfig.DEBUG) Log.d(LT,
+                    "Attempt to scan for device, peripheral=null:" +
+                            (peripheral() == null ? "yes" : "no") + " cached=" +
+                            (peripheral() != null && peripheral().cached()));
+            BLEError error = waitForScan();
+            // waitForScan will set the peripheral if can
+            if (peripheral() == null) {
+                if (infinity) {
+                    if (BuildConfig.DEBUG) Log.d(LT, "Scan failed no peripheral, will try again");
+                    try {
+                        //noinspection BusyWait
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    if (BuildConfig.DEBUG) Log.d(LT, "Scan failed no peripheral, will abort");
+                    return BLEError.ok.equals(error) ? BLEError.noPeripheral : error;
+                }
+            } else {
+                if (BuildConfig.DEBUG) Log.d(LT, "Scan got peripheral, will connect");
+            }
+        }
+
+        // connect as soon as a peripheral scanned
+        if (BuildConfig.DEBUG) Log.d(LT, "Attempt to connect. Scan run: " + (scan ? "yes" : "no"));
+        BLEError error = waitForConnect(infinity);
+        if (!BLEError.ok.equals(error) || !isConnected()) {
+            if (BuildConfig.DEBUG) Log.d(LT, "Attempt to connect failed");
+            stateChannel.broadcast(BLEConnectionState.disconnected);
+            return error;
+        }
+
+        if (findMeCharacteristic() != null) {
+            peripheral().setNotify(findMeCharacteristic(), true);
+        }
+
+        startObserve();
+        if (BuildConfig.DEBUG) Log.d(LT, "Connected");
+        stateChannel.broadcast(BLEConnectionState.connected);
+        return BLEError.ok;
+// TODO: check for isConencted?
     }
 
     @Override
@@ -194,7 +241,6 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         return null;
     }
 
-    @SuppressWarnings("unused")
     private BLECharacteristic findMeCharacteristic() {
         BLEService service = findMeService();
         if (service != null) {
@@ -357,72 +403,31 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         }
     }
 
+    private class ClickHandler {
+        private static final int CLICK_INTERVAL = 600;
 
-    @Override
-    public BLEError connect(boolean infinity) {
-        clickChannel.broadcast(0);
-        alertChannel.broadcast(AlertVolume.NO_ALERT);
-
-        manager.stopScan();
-        if (isConnected()) {
-            if (peripheral() == null) {
-                Log.w("LT", "isConnected but peripheral is null");
+        private final Handler clickHandler = new Handler(Looper.getMainLooper());
+        private int count = 0;
+        private final Runnable waitNext = () -> {
+            Log.d(LT, "ClickHandler.waitNext postDelayed");
+            int c;
+            synchronized (this) {
+                c = count;
+                count = 0;
             }
-            return BLEError.ok;
-        }
-        // stop broadcast peripherial states during connect
-        disposables.dispose();
-        stateChannel.broadcast(BLEConnectionState.connecting);
+            clickChannel.broadcast(c);
+        };
 
-        assertPeripheral();
-
-        boolean scan = false;
-
-        while (peripheral() == null || !peripheral().cached()) {
-            scan = true;
-            // scan for not cached/not known peripheral
-            // endlessly if timeout = 0
-            if (BuildConfig.DEBUG) Log.d(LT,
-                    "Attempt to scan for device, peripheral=null:" +
-                            (peripheral() == null ? "yes" : "no") + " cached=" +
-                            (peripheral() != null && peripheral().cached()));
-            BLEError error = waitForScan();
-            // waitForScan will set the peripheral if can
-            if (peripheral() == null) {
-                if (infinity) {
-                    if (BuildConfig.DEBUG) Log.d(LT, "Scan failed no peripheral, will try again");
-                    try {
-                        Thread.sleep(10000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    if (BuildConfig.DEBUG) Log.d(LT, "Scan failed no peripheral, will abort");
-                    return BLEError.ok.equals(error) ? BLEError.noPeripheral : error;
-                }
-            } else {
-                if (BuildConfig.DEBUG) Log.d(LT, "Scan got peripheral, will connect");
-            }
+        private synchronized void inc() {
+            count++;
         }
 
-        // connect as soon as a peripheral scanned
-        if (BuildConfig.DEBUG) Log.d(LT, "Attempt to connect. Scan run: " + (scan ? "yes" : "no"));
-        BLEError error = waitForConnect(infinity);
-        if (!BLEError.ok.equals(error) || !isConnected()) {
-            if (BuildConfig.DEBUG) Log.d(LT, "Attempt to connect failed");
-            stateChannel.broadcast(BLEConnectionState.disconnected);
-            return error;
+        synchronized void handleClick() {
+            clickHandler.removeCallbacks(BLEConnectionDefault.this.clickHandler.waitNext);
+            inc();
+            Log.d(LT, "ClickHandler.handleClick postDelayed");
+            clickHandler.postDelayed(BLEConnectionDefault.this.clickHandler.waitNext, CLICK_INTERVAL);
         }
-
-        if (findMeCharacteristic() != null) {
-            peripheral().setNotify(findMeCharacteristic(), true);
-        }
-
-        startObserve();
-        if (BuildConfig.DEBUG) Log.d(LT, "Connected");
-        stateChannel.broadcast(BLEConnectionState.connected);
-        return BLEError.ok;
-// TODO: check for isConencted?
     }
 
     @Override

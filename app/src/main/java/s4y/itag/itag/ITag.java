@@ -180,7 +180,7 @@ public class ITag {
         connectAsync(connection, infinity, null);
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "RedundantSuppression"})
     static void connectAsync(final BLEConnectionInterface connection, Runnable onComplete) {
         connectAsync(connection, true, onComplete);
     }
