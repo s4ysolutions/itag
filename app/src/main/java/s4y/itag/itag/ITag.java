@@ -28,7 +28,7 @@ import static s4y.itag.Notifications.sendDisconnectNotification;
 public class ITag {
     private static final String LT = ITag.class.getName();
     public static final int BLE_TIMEOUT = 30;
-    public static final int SCAN_TIMEOUT = 25;
+    public static final int SCAN_TIMEOUT = 60;
     public static BLEInterface ble;
     public static ITagsStoreInterface store;
 
