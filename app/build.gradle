@@ -12,7 +12,7 @@ android {
     defaultConfig {
         applicationId "s4y.itag"
         minSdkVersion 19
-        targetSdkVersion 29
+        targetSdkVersion 30
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "WAYTODAY_SECRET", "\"${System.getenv('WAYTODAY_SECRET') ?: properties.getProperty('waytoday.secret')}\""
     }
@@ -23,9 +23,9 @@ android {
             manifestPlaceholders = [analytics_deactivated: "true"]
         }
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            manifestPlaceholders = [analytics_deactivated: "false"]
+            manifestPlaceholders = [analytics_deactivated: "true"]
         }
     }
     compileOptions {
