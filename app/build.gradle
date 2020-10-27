@@ -12,7 +12,7 @@ android {
     defaultConfig {
         applicationId "s4y.itag"
         minSdkVersion 19
-        targetSdkVersion 30
+        targetSdkVersion 29
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "WAYTODAY_SECRET", "\"${System.getenv('WAYTODAY_SECRET') ?: properties.getProperty('waytoday.secret')}\""
     }
