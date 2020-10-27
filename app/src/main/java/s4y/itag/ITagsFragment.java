@@ -139,6 +139,10 @@ public class ITagsFragment extends Fragment
         View rootView;
         if (ITag.store.count() > 0) {
             ITagInterface itag = ITag.store.byPos(0);
+            if (itag == null) {
+                Log.e(LT, "no itag in store in pos 0", new Exception("no itag in store in pos 0"));
+                return;
+            }
             rootView = tagViews.get(itag.id());
         } else {
             rootView = getView();
