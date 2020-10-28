@@ -41,9 +41,11 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         this.state = state;
     }
 
+    /*
     private synchronized BLEPeripheralState getState() {
         return this.state;
     }
+     */
 
     private final Context context;
     private final boolean cached;
@@ -393,21 +395,32 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
     @Override
     public void enableRSSI() {
+        /*
         rssiCount++;
         Log.d(LT, "enableRSSI id=" + identifier() + " count=" + rssiCount);
         if (rssiCount == 1) {
             filter.reset();
             manager.postOperation(mRssiRunable);
         }
+         */
+        Log.d(LT, "enableRSSI id=" + identifier());
+        filter.reset();
+        rssiCount = 1;
+        manager.postOperation(mRssiRunable);
     }
 
     @Override
     public void disableRSSI() {
+        /*
         if (rssiCount > 0) {
             rssiCount--;
             Log.d(LT, "disableRSSI id=" + identifier() + " count=" + rssiCount);
             manager.cancelOperation(mRssiRunable);
         }
+         */
+        Log.d(LT, "disableRSSI id=" + identifier());
+        manager.cancelOperation(mRssiRunable);
+        rssiCount = 0;
     }
 
     public BLEService[] services() {
