@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import s4y.itag.preference.BooleanPreference;
 import solutions.s4y.rasat.Channel;
 import solutions.s4y.rasat.Observable;
 
@@ -26,39 +25,45 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     public ITagsStoreDefault(Context context) {
         this.context = context;
 
-        ids = new PreferenceIDs(context).get();
-        idsForever = new PreferenceIDsForever(context).get();
+        List<String> ids0 = new PreferenceIDs(context).get();
+        synchronized (this) {
+            idsForever = new PreferenceIDsForever(context).get();
 
-        for (String id : idsForever) {
-            // TODO: hardcoded reference to Default implementation
-            ITagInterface tag = new PreferenceTagDefault(context, id).get();
-            if (tag != null) {
-                tags.put(id, tag);
+            for (String id : idsForever) {
+                // TODO: hardcoded reference to Default implementation
+                ITagInterface tag = new PreferenceTagDefault(context, id).get();
+                if (tag != null) {
+                    tags.put(id, tag);
+                }
             }
-        }
 
-        if (ids.size() == 0) {
-            BooleanPreference prefUpgradeDone = new BooleanPreference(context, "upgradeDone", false);
-            if (!prefUpgradeDone.get()) {
-                List<ITagInterface> itags = ITagFileStore.load(context);
-                if (itags.size() > 0) {
-                    for (ITagInterface itag : itags) {
-                        remember(itag);
+            if (ids0.size() > 0) {
+                ArrayList<String> absent = new ArrayList<>();
+                for (String id : ids0) {
+                    if (!tags.containsKey(id) || tags.get(id) == null) {
+                        absent.add(id);
                     }
                 }
-                prefUpgradeDone.set(true);
+                for (String id : absent) {
+                    int pos = ids0.indexOf(id);
+                    while (pos >= 0) {
+                        ids0.remove(pos);
+                        pos = ids0.indexOf(id);
+                    }
+                }
             }
+            ids = ids0;
         }
     }
 
     @Override
-    public int count() {
+    synchronized public int count() {
         return ids.size();
     }
 
     @Override
-    public boolean isDisconnectAlert() {
-        for (String id: ids){
+    synchronized public boolean isDisconnectAlert() {
+        for (String id : ids) {
             ITagInterface itag = tags.get(id);
             if (itag != null && itag.isAlertDisconnected()) {
                 return true;
@@ -75,12 +80,12 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
 
     @Nullable
     @Override
-    public ITagInterface byId(@NonNull String id) {
+    synchronized public ITagInterface byId(@NonNull String id) {
         return tags.get(id);
     }
 
     @Override
-    public ITagInterface byPos(int pos) {
+    synchronized public ITagInterface byPos(int pos) {
         if (pos >= ids.size()) {
             return null;
         }
@@ -88,7 +93,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    public ITagInterface everById(@NonNull String id) {
+    synchronized public ITagInterface everById(@NonNull String id) {
         ITagInterface active = byId(id);
         if (active != null) {
             return active;
@@ -99,7 +104,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
 
     @NonNull
     @Override
-    public String[] forgottenIDs() {
+    synchronized public String[] forgottenIDs() {
         List<String> ret = new ArrayList<>(idsForever.size());
 
         for (String id : idsForever) {
@@ -111,7 +116,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    public void forget(@NonNull String id) {
+    synchronized public void forget(@NonNull String id) {
         int pos = ids.indexOf(id);
         if (pos >= 0) {
             ids.remove(pos);
@@ -124,12 +129,12 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    public void forget(@NonNull ITagInterface tag) {
+    synchronized public void forget(@NonNull ITagInterface tag) {
         forget(tag.id());
     }
 
     @Override
-    public void remember(@NonNull ITagInterface tag) {
+    synchronized public void remember(@NonNull ITagInterface tag) {
         if (!ids.contains(tag.id())) {
             ids.add(tag.id());
             new PreferenceIDs(context).set(ids);
@@ -152,12 +157,12 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    public boolean remembered(@NonNull String id) {
+    synchronized public boolean remembered(@NonNull String id) {
         return ids.contains(id);
     }
 
     @Override
-    public void setAlertDelay(@NonNull String id, int delay) {
+    synchronized public void setAlertDelay(@NonNull String id, int delay) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
@@ -168,7 +173,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    public void setAlert(@NonNull String id, boolean alert) {
+    synchronized public void setAlert(@NonNull String id, boolean alert) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
@@ -179,7 +184,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    public void setColor(@NonNull String id, @NonNull TagColor color) {
+    synchronized public void setColor(@NonNull String id, @NonNull TagColor color) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
@@ -190,7 +195,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    public void setName(@NonNull String id, String name) {
+    synchronized public void setName(@NonNull String id, String name) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;

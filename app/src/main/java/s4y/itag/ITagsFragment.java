@@ -484,8 +484,10 @@ public class ITagsFragment extends Fragment
         }
         for (int i = 0; i < ITag.store.count(); i++) {
             ITagInterface itag = ITag.store.byPos(i);
-            BLEConnectionInterface connection = ble.connectionById(itag.id());
-            connection.disableRSSI();
+            if (itag != null) {
+                BLEConnectionInterface connection = ble.connectionById(itag.id());
+                connection.disableRSSI();
+            }
         }
     }
 

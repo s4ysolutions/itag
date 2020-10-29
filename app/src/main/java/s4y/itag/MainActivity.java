@@ -336,6 +336,9 @@ public class MainActivity extends FragmentActivity {
 
     public void onITagClick(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
+        if (itag == null) {
+            return;
+        }
         MediaPlayerUtils.getInstance().stopSound(this);
         final BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
         Notifications.cancelDisconnectNotification(this);
