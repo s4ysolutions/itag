@@ -130,8 +130,8 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             }
             lastStatus = status;
             if (status == GATT_SUCCESS) {
+                setGatt(gatt);
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    setGatt(gatt);
                     setState(BLEPeripheralState.connected);
                     observables.channelConnected.broadcast(new BLEPeripheralObservablesInterface.ConnectedEvent());
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {

@@ -345,7 +345,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                 try {
                     // wait before discovery a bit
                     // in order to let the gatt to be set in another thread
-                    Thread.sleep(100);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
