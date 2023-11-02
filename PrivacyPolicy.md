@@ -6,9 +6,9 @@ This Privacy Policy explains how ITagOne ("we," "our," or "us") collects, uses, 
 
 2. Information We Collect
 
-Personal Information: We do not collect any  personal information, such as your name, email address, and other contact information. We only collect non-personal information such as 
-device information.
-
+Personal Information: We do not collect any  personal information, such as your name, email address, a number, account or IMEI and other contact information. We only collect non-personal information such as 
+device information and possible crashes and misbehaviour.
+ 
 3. How We Use Your Information
 
 We may use your non-personal information for the following purposes:
@@ -17,6 +17,9 @@ To provide, maintain, and improve the App.
 To respond to your inquiries or comments.
 To send you updates.
 To comply with legal obligations.
+
+The info about the possible crashes and misbehaviour and send it to Google servers.
+
 4. Information Sharing
 
 We do not sell, trade, or rent your personal information to third parties. 
