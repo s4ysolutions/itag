@@ -46,4 +46,4 @@ Moreover the application is open source and nobody is prevented from use it with
 
 ## Privace Policy
 
-We gather info about the possible crashes and misbehaviour and send it to Google servers. We got technical info like phone model but we got no personal info like a number, account or IMEI.
+The Privacy Policy is [here](PrivacyPolicy.md).
