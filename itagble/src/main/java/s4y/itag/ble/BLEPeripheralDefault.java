@@ -51,6 +51,8 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private final boolean cached;
     private final BLEPeripheralObservables observables = new BLEPeripheralObservables();
     private final RSSIFilter filter = new RSSIFilter();
+    
+    private final Boolean debug;
 
     final Handler handler = new Handler(Looper.getMainLooper());
     final int CLOSE_DELAY_MS = 200;
@@ -58,7 +60,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private final Runnable mRssiRunable = new Runnable() {
         @Override
         public void run() {
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 Log.d(LT, "RSSI runnable id=" + identifier() + " isConnected=" + isConnected());
             }
             if (gatt() != null && isConnected()) {
@@ -71,12 +73,13 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     private int lastStatus;
     private final Runnable closeSuccessRunnable = this::waitForClose;
 
-    BLEPeripheralDefault(@NonNull Context context, @NonNull BLECentralManagerInterface manager, @NonNull BluetoothDevice device) {
+    BLEPeripheralDefault(@NonNull Context context, @NonNull BLECentralManagerInterface manager, @NonNull BluetoothDevice device, boolean debug){
         this.device = device;
         this.manager = manager;
         this.context = context;
+        this.debug = debug;
         int type = device.getType();
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.d(LT, "BLEPeripheralDefault addr=" + device.getAddress() + " name=" + device.getName() + " type=" + type);
         }
         this.cached = type != DEVICE_TYPE_UNKNOWN;
@@ -90,7 +93,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
     @Override
     public void connect(boolean auto) {
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.d(LT, "connect id=" + identifier());
         }
         if (isConnected()) {
@@ -107,7 +110,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         } else {
             g = device.connectGatt(context, auto, callback);
         }
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.d(LT, "init gatt id=" + identifier() + " gatt is null: " + (g == null ? "yes" : "no") + " id=" + identifier());
         }
         if (g == null) {
@@ -122,7 +125,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
         @Override
         public void onConnectionStateChange(@NonNull BluetoothGatt gatt, int status, int newState) {
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 Log.d(LT, "onConnectionStateChange id=" + identifier() +
                         " addr=" + gatt.getDevice().getAddress() +
                         " status=" + status +
@@ -145,7 +148,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
         @Override
         public void onServicesDiscovered(@NonNull final BluetoothGatt gatt, int status) {
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 Log.d(LT, "onServicesDiscovered id=" + identifier() +
                         " addr=" + gatt.getDevice().getAddress() +
                         " status=" + status);
@@ -220,13 +223,13 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
             if (rssi != this.rssi) {
                 Log.v(LT, "rssi=" + rssi + " raw=" + rssiRaw);
-                if (BuildConfig.DEBUG) {
+                if (debug) {
                     Log.v(LT, "onReadRemoteRssi id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
                 }
                 this.rssi = rssi;
                 observables.channelRSSI.broadcast(new BLEPeripheralObservablesInterface.RSSIEvent(rssi, status));
             } else {
-                if (BuildConfig.DEBUG) {
+                if (debug) {
                     Log.v(LT, "onReadRemoteRssi skipped id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
                 }
             }
@@ -234,7 +237,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 Log.d(LT, "onCharacteristicWrite id=" + identifier() +
                         " addr=" + gatt.getDevice().getAddress() +
                         " characteristic=" + characteristic.getUuid() +
@@ -247,7 +250,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 Log.d(LT, "onCharacteristicChanged id=" + identifier() +
                         " addr=" + gatt.getDevice().getAddress() +
                         " characteristic=" + characteristic.getUuid());
@@ -258,7 +261,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
     @Override
     public void discoveryServices() {
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.d(LT, "discoveryServices id=" + identifier());
         }
         if (isConnected()) {
@@ -269,7 +272,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
     @Override
     public BLEError writeInt8(BLECharacteristic characteristic, int value) {
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.d(LT, "writeInt8 id=" + identifier() +
                     " gatt=" + (gatt() == null ? "null" : gatt().getDevice().getAddress()) +
                     " connected=" + manager.connected(device) +
@@ -326,12 +329,12 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
     private void waitForClose() {
         if (isConnected()) {
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 Log.d(LT, "post close device " + device.getAddress());
             }
             handler.postDelayed(closeSuccessRunnable, CLOSE_DELAY_MS);
         } else {
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 Log.d(LT, "close device " + device.getAddress());
             }
             close();
@@ -352,7 +355,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             Log.d(LT, "close");
             gatt().close();
         }
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.d(LT, "set gatt null");
         }
         setGatt(null);
@@ -361,20 +364,20 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     @Override
     public void disconnect() {
         if (BLEPeripheralState.disconnected.equals(state)) {
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 Log.d(LT, "disconnect id=" + identifier() + ", already disconnected, no action");
             }
         } else {
             BluetoothGatt gatt = gatt();
             boolean connected = isConnected();
             if (connected && gatt != null) {
-                if (BuildConfig.DEBUG) {
+                if (debug) {
                     Log.d(LT, "disconnect id=" + identifier() + ", connected, will wait connection change");
                 }
                 setState(BLEPeripheralState.disconnecting);
                 gatt.disconnect();
             } else {
-                if (BuildConfig.DEBUG) {
+                if (debug) {
                     Log.d(LT, "disconnect id=" + identifier() + ", not connected will simulate connection change");
                 }
                 setState(BLEPeripheralState.disconnecting);
@@ -438,7 +441,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     @Override
     public boolean isConnected() {
         boolean connected = manager.connected(device);
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.w(LT, "isConnected, device=" + device.getAddress() + " manager.connected=" + connected);
         }
         BluetoothGatt g = gatt();
@@ -466,7 +469,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         synchronized (gatt) {
             ret = gatt[0];
         }
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.v(LT, "getGatt null:" + (ret == null ? "yes" : "no") + " id=" + identifier());
         }
         return ret;
@@ -474,7 +477,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
     private void setGatt(BluetoothGatt gatt) {
         synchronized (this.gatt) {
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 Log.v(LT, "setGatt null:" + (gatt == null ? "yes" : "no") + " id=" + identifier());
             }
             if (gatt != null && this.gatt[0] != null) {

@@ -34,10 +34,10 @@ public final class HistoryRecord implements Serializable {
     private static final long serialVersionUID = 1845673754412L;
     private static final String LT = HistoryRecord.class.getName();
 
-    public String addr;
-    public Double latitude;
-    public Double longitude;
-    public long ts;
+    public final String addr;
+    public final Double latitude;
+    public final Double longitude;
+    public final long ts;
 
     public interface HistoryRecordListener {
         void onHistoryRecordChange();
@@ -91,7 +91,7 @@ public final class HistoryRecord implements Serializable {
     }
 
     private static void save(Context context) {
-        if (records == null || records.size() <= 0) {
+        if (records == null || records.size() == 0) {
             try {
                 //noinspection ResultOfMethodCallIgnored
                 getDbFile(context).delete();
@@ -107,9 +107,6 @@ public final class HistoryRecord implements Serializable {
             rl.addAll(records.values());
             oos.writeObject(rl);
             oos.close();
-        } catch (FileNotFoundException e) {
-            ITagApplication.handleError(e, true);
-            e.printStackTrace();
         } catch (IOException e) {
             ITagApplication.handleError(e, true);
             e.printStackTrace();
@@ -135,7 +132,6 @@ public final class HistoryRecord implements Serializable {
 
     public static void add(final Context context, String id) {
 
-        final String addr = id;
         final LocationManager locationManager = (LocationManager) context
                 .getSystemService(Context.LOCATION_SERVICE);
 
@@ -162,7 +158,7 @@ public final class HistoryRecord implements Serializable {
                             Log.d(LT, "getLastKnownLocation from GPS in " + (System.currentTimeMillis() - location.getTime()) / 1000 + "sec. id:" + id);
                         }
                     }
-                    add(context, new HistoryRecord(addr, location, System.currentTimeMillis()));
+                    add(context, new HistoryRecord(id, location, System.currentTimeMillis()));
                     gotBestLocation = System.currentTimeMillis() - location.getTime() > 30000;
                 }
             } catch (SecurityException e) {
@@ -176,7 +172,7 @@ public final class HistoryRecord implements Serializable {
                         .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 if (networklocation != null) {
                     if (location == null || location.getTime() < System.currentTimeMillis() - 30000)
-                        add(context, new HistoryRecord(addr, networklocation, System.currentTimeMillis()));
+                        add(context, new HistoryRecord(id, networklocation, System.currentTimeMillis()));
                 }
                 if (BuildConfig.DEBUG) {
                     if (location == null) {
@@ -190,16 +186,16 @@ public final class HistoryRecord implements Serializable {
             }
         }
 
-        if (isGPSEnabled && !sLocationListeners.containsKey(addr)) {
+        if (isGPSEnabled && !sLocationListeners.containsKey(id)) {
             LocationListener locationListener =
-                    new HistoryLocationListener(context, locationManager, addr);
+                    new HistoryLocationListener(context, locationManager, id);
 
             try {
                 Log.d(LT, "will request GPS location id:" + id);
                 locationManager.requestLocationUpdates(
                         LocationManager.GPS_PROVIDER, 1, 1, locationListener, Looper.getMainLooper());
-                if (BuildConfig.DEBUG) Log.d(LT, "GPS requestLocationUpdates " + addr);
-                sLocationListeners.put(addr, locationListener);
+                if (BuildConfig.DEBUG) Log.d(LT, "GPS requestLocationUpdates " + id);
+                sLocationListeners.put(id, locationListener);
                 ITagApplication.faIssuedGpsRequest();
             } catch (SecurityException e) {
                 ITagApplication.handleError(e, R.string.can_not_get_gps_location);
@@ -266,12 +262,12 @@ public final class HistoryRecord implements Serializable {
         }
 
         @Override
-        public void onProviderEnabled(String provider) {
+        public void onProviderEnabled(@NonNull String provider) {
 
         }
 
         @Override
-        public void onProviderDisabled(String provider) {
+        public void onProviderDisabled(@NonNull String provider) {
 
         }
     }
@@ -316,6 +312,7 @@ public final class HistoryRecord implements Serializable {
             Object read = ois.readObject();
 
             if (read instanceof List) {
+                //noinspection rawtypes
                 List rr = (List) read;
                 records.clear();
                 for (Object r : rr) {
@@ -325,13 +322,7 @@ public final class HistoryRecord implements Serializable {
                 }
             }
             ois.close();
-        } catch (FileNotFoundException e) {
-            ITagApplication.handleError(e, true);
-            e.printStackTrace();
-        } catch (IOException e) {
-            ITagApplication.handleError(e, true);
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             ITagApplication.handleError(e, true);
             e.printStackTrace();
         }

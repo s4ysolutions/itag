@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 
 import androidx.preference.PreferenceManager;
 
-public abstract class IntPreference {
+public class IntPreference {
     private final SharedPreferences preferences;
     private final String key;
     private final int defaultValue;

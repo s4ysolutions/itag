@@ -1,5 +1,6 @@
 package s4y.itag;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import s4y.itag.ble.BLEScanResult;
-import s4y.itag.ble.BuildConfig;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagDefault;
 import solutions.s4y.rasat.DisposableBag;
@@ -67,6 +67,7 @@ public class ScanFragment extends Fragment {
     */
     private long lastUpdate = 0;
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onResume() {
         super.onResume();
@@ -94,7 +95,7 @@ public class ScanFragment extends Fragment {
                     }
                     if (!found) {
                         if (BuildConfig.DEBUG) {
-                            Log.d(LT, "found=" + found);
+                            Log.d(LT, "found=false");
                         }
                         scanResults.add(result);
                         adapter.notifyDataSetChanged();
@@ -103,7 +104,7 @@ public class ScanFragment extends Fragment {
                     if (modified) {
                         if (System.currentTimeMillis() - lastUpdate > 1000) {
                             if (BuildConfig.DEBUG) {
-                                Log.d(LT, "modified=" + modified);
+                                Log.d(LT, "modified=true");
                             }
                             adapter.notifyDataSetChanged();
                             lastUpdate = System.currentTimeMillis();

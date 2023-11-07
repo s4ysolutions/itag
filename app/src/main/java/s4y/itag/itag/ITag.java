@@ -40,7 +40,7 @@ public class ITag {
     private static final Map<String, DisposableBag> connectionBags = new HashMap<>();
 
     public static void initITag(Context context) {
-        ble = BLEDefault.shared(context);
+        ble = BLEDefault.shared(context, BuildConfig.DEBUG);
         store = new ITagsStoreDefault(ITagApplication.context);
         for (int i = 0; i < store.count(); i++) {
             ITagInterface itag = store.byPos(i);
@@ -140,7 +140,7 @@ public class ITag {
                                                 sendDisconnectNotification(ITagApplication.context, itag.name());
                                                 HistoryRecord.add(ITagApplication.context, itag.id());
                                             }
-                                        }, itag.alertDelay() * 1000);
+                                        }, itag.alertDelay() * 1000L);
                                     }
                                 } else if (BLEConnectionState.connected.equals(connection.state())) {
                                     if (BuildConfig.DEBUG)

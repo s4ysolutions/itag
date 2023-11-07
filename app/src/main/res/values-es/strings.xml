@@ -68,9 +68,9 @@
     <string name="waytoday">WayToday</string>
     <string name="trackid">WayToday ID:</string>
     <string name="wt_new_id">Cambiar ID</string>
-    <string name="wt_share">Comparte ubicacion</string>
+    <string name="wt_share">Comparte ubicación</string>
     <string name="wt_map">Mostrar en el mapa</string>
-    <string name="share_title">Compartir via…</string>
+    <string name="share_title">Compartir vía…</string>
     <string name="share_link"><![CDATA[Rastrea mi ubicación haciendo clic en https://way.today/#%1$s!30m o usa el ID%1$s en el sitio https://way.today]]></string>
     <string name="share_subj">Nota de ubicación de WayToday</string>
     <string name="about_ok">Instalar WayToday</string>

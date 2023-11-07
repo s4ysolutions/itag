@@ -1,9 +1,11 @@
 package s4y.itag.ble;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
@@ -23,19 +25,21 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
     private final Handler operationsHandler;
     private final Map<String, BLEPeripheralInterace> scanned = new HashMap<>();
 
+    private final Boolean debug;
+
     private final BLECentralManagerObservables observables = new BLECentralManagerObservables();
     private final BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] data) {
-            if (BuildConfig.DEBUG) {
-                Log.d(L,"onLeScan address="+bluetoothDevice.getAddress()+" rsss="+ rssi + " thread="+Thread.currentThread().getName());
+            if (debug) {
+                Log.d(L, "onLeScan address=" + bluetoothDevice.getAddress() + " rsss=" + rssi + " thread=" + Thread.currentThread().getName());
             }
             BLEPeripheralInterace peripheral = scanned.get(bluetoothDevice.getAddress());
             if (peripheral == null) {
                 peripheral = new BLEPeripheralDefault(
                         context,
                         BLECentralManagerDefault.this,
-                        bluetoothDevice);
+                        bluetoothDevice, debug);
                 scanned.put(bluetoothDevice.getAddress(), peripheral);
             }
             observables
@@ -48,9 +52,10 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         }
     };
 
-    BLECentralManagerDefault(Context context) {
+    BLECentralManagerDefault(Context context, Boolean debug) {
         this.context = context;
         operationsThread.start();
+        this.debug = debug;
         operationsHandler = new Handler(operationsThread.getLooper());
     }
 
@@ -66,6 +71,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
     }
 
     public boolean canScan() {
+        // TODO: why always true?
         return true;
     }
 
@@ -105,7 +111,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
     public void startScan() {
         scanned.clear();
         BluetoothAdapter adapter = getAdapter();
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.d(L,"startLeScan, thread="+Thread.currentThread().getName()+", adapter="+(adapter==null?"null":"not null"));
         }
         if (adapter != null) {
@@ -119,7 +125,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
     public void stopScan() {
         scanned.clear();
         BluetoothAdapter adapter = getAdapter();
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             Log.d(L,"stopLeScan, thread="+Thread.currentThread().getName()+", adapter="+(adapter==null?"null":"not null")+" isCanning="+isScanning(adapter));
         }
         if (isScanning(adapter)) {
@@ -134,7 +140,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
 
     public BLEPeripheralInterace retrievePeripheral(@NonNull String id) {
         BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(id);
-        return new BLEPeripheralDefault(context, this, device);
+        return new BLEPeripheralDefault(context, this, device, debug);
     }
 
     @Override

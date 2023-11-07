@@ -3,9 +3,9 @@ package s4y.itag.ble;
 import java.util.Arrays;
 
 public class RSSIFilter {
-    int[] measurements = {0, 0, 0, 0, 0, 0, 0};
-    int[] deviations = {0, 0, 0, 0, 0, 0, 0};
-    int[] spikes = {0, 0, 0};
+    final int[] measurements = {0, 0, 0, 0, 0, 0, 0};
+    final int[] deviations = {0, 0, 0, 0, 0, 0, 0};
+    final int[] spikes = {0, 0, 0};
     int spikecount = 0;
     int current = 0;
     int length = 0;

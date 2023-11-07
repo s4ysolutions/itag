@@ -6,15 +6,16 @@ class BLEConnectionFactoryDefault implements BLEConnectionFactoryInterface {
     @Override
     public BLEConnectionInterface connection(
             @NonNull BLECentralManagerInterface manager,
-            @NonNull String id) {
+            @NonNull String id,
+            Boolean debug) {
 
-        return new BLEConnectionDefault(manager, id);
+        return new BLEConnectionDefault(manager, id, debug);
     }
 
     @Override
     public BLEConnectionInterface connection(@NonNull BLECentralManagerInterface manager,
-                                             @NonNull BLEPeripheralInterace peripheral) {
-        return new BLEConnectionDefault(manager, peripheral);
+                                             @NonNull BLEPeripheralInterace peripheral, Boolean debug) {
+        return new BLEConnectionDefault(manager, peripheral, debug);
     }
 
 }

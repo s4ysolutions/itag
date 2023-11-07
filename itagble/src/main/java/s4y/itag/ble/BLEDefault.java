@@ -19,13 +19,14 @@ public class BLEDefault implements BLEInterface {
     private static final String LT = BLEDefault.class.getName();
     private static BLEInterface _shared;
 
-    public static BLEInterface shared(Context context) {
+    public static BLEInterface shared(Context context, Boolean debug) {
         if (_shared == null) {
             _shared = new BLEDefault(
                     context,
                     new BLEConnectionFactoryDefault(),
-                    new BLECentralManagerDefault(context),
-                    new BLEScannerFactoryDefault()
+                    new BLECentralManagerDefault(context, debug),
+                    new BLEScannerFactoryDefault(),
+                    debug
             );
         }
         return _shared;
@@ -48,18 +49,21 @@ public class BLEDefault implements BLEInterface {
             }
         }
     };
+    private final Boolean debug;
 
     private BLEDefault(
             Context context,
             BLEConnectionFactoryInterface connectionFactory,
             BLECentralManagerInterface manager,
-            BLEScannerFactoryInterface scannerFactory
+            BLEScannerFactoryInterface scannerFactory,
+            Boolean debug
     ) {
         this.context = context;
         this.connectionFactory = connectionFactory;
         this.manager = manager;
         this.channelState = new ChannelDistinct<>(manager.state());
         this.scanner = scannerFactory.scanner(manager);
+        this.debug = debug;
         context.registerReceiver(
                 stateReceiver,
                 new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
@@ -93,11 +97,11 @@ public class BLEDefault implements BLEInterface {
         synchronized (map) {
             BLEConnectionInterface connection = map.get(id);
             if (connection == null) {
-                connection = connectionFactory.connection(manager, id);
+                connection = connectionFactory.connection(manager, id, debug);
                 map.put(id, connection);
                 Log.d(LT, "connectionById make id=" + id);
             } else {
-                if (BuildConfig.DEBUG) {
+                if (debug) {
                     Log.d(LT, "connectionById reused id=" + id);
                 }
             }

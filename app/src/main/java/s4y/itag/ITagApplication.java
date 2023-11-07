@@ -19,6 +19,7 @@ public final class ITagApplication extends Application {
     // context is not used outside Application so there's a hope there will be no memory leak
     @SuppressLint("StaticFieldLeak")
     public static Context context;
+    public static Application application;
 
     static public void faWtOn5() {
         fa("itag_wt_on5");
@@ -232,7 +233,7 @@ public final class ITagApplication extends Application {
         faAppCreated();
         context = this;
         ITag.initITag(context);
-        Waytoday.init(context);
+        Waytoday.init(this);
     }
 
     static public void faWtNoTrackID() {
@@ -241,7 +242,7 @@ public final class ITagApplication extends Application {
 
     @Override
     public void onTerminate() {
-        Waytoday.done(context);
+        Waytoday.done();
         try {
             ITag.close();
         } catch (Exception e) {

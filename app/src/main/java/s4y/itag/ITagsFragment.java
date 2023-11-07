@@ -2,7 +2,6 @@ package s4y.itag;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
@@ -17,7 +16,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.preference.PreferenceManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +26,7 @@ import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
+import s4y.itag.preference.WayTodayDisabled0Preference;
 import s4y.itag.preference.VolumePreference;
 import s4y.itag.waytoday.Waytoday;
 import solutions.s4y.rasat.DisposableBag;
@@ -46,7 +45,6 @@ public class ITagsFragment extends Fragment
     private static final String LT = ITagsFragment.class.getName();
     private Animation mLocationAnimation;
     private Animation mITagAnimation;
-    private String trackID = "";
     private final DisposableBag disposableBag = new DisposableBag();
 
     public ITagsFragment() {
@@ -156,9 +154,10 @@ public class ITagsFragment extends Fragment
             Log.e(LT, "no waytoday imageview", new Exception("no waytoday imagegview"));
             return;
         }
-        if (BuildConfig.DEBUG)
-            Log.d(LT, "updateWayToday, updating=" + Waytoday.tracker.isUpdating + " trackID=" + trackID);
-        if (Waytoday.tracker.isUpdating && !"".equals(trackID)) {
+        if (Waytoday.tracker.isUpdating && TrackIDJobService.hasTid(getActivity())) {
+            String trackID = TrackIDJobService.getTid(getActivity());
+            if (BuildConfig.DEBUG)
+                Log.d(LT, "updateWayToday, updating=" + Waytoday.tracker.isUpdating + " trackID=" + trackID);
             waytoday.setVisibility(View.VISIBLE);
             TextView wtid = waytoday.findViewById(R.id.text_wt_id);
             wtid.setText(trackID);
@@ -416,10 +415,6 @@ public class ITagsFragment extends Fragment
         mLocationAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shadow_location);
         mITagAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
         Context context = getContext();
-        if (context != null) {
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
-            trackID = sp.getString("tid", "");
-        }
 
         final VolumePreference mute = new VolumePreference(getContext());
         View root = inflater.inflate(R.layout.fragment_itags, container, false);
@@ -534,9 +529,8 @@ public class ITagsFragment extends Fragment
         }
         HistoryRecord.addListener(this);
 
-        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean wt_disabled = sp.getBoolean("wt_disabled0", false);
-        if (wt_disabled) {
+        boolean wt_disabled0 = WayTodayDisabled0Preference.get(getActivity());
+        if (wt_disabled0) {
             root.findViewById(R.id.btn_waytoday).setVisibility(View.GONE);
         } else {
             Waytoday.tracker.addOnTrackingStateListener(this);
@@ -567,6 +561,7 @@ public class ITagsFragment extends Fragment
         activity.runOnUiThread(this::updateLocationImages);
     }
 
+    // ITrackingStateListener
     @Override
     public void onStateChange(@NonNull TrackerState state) {
         final View view = getView();
@@ -579,10 +574,10 @@ public class ITagsFragment extends Fragment
         }
     }
 
+    //  ITrackIDChangeListener
     @Override
     public void onTrackID(@NonNull String trackID) {
         if (BuildConfig.DEBUG) Log.d(LT, "onTrackID: " + trackID);
-        this.trackID = trackID;
         Activity activity = getActivity();
         if (activity == null)
             return;

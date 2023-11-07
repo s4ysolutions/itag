@@ -1,10 +1,10 @@
 package s4y.itag;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -33,6 +33,8 @@ public class Notifications {
         }
     }
 
+    // TODO: i do not understand what's is the reason of the warning to supress
+    @SuppressLint("LaunchActivityFromNotification")
     public static void sendDisconnectNotification(Context context, String name) {
         createDisconnectNotificationChannel();
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ITagsService.FOREGROUND_CHANNEL_ID);
@@ -47,7 +49,11 @@ public class Notifications {
 
         Intent intent = ITagsService.intentStart(context);
         intent.putExtra(EXTRA_STOP_SOUND, true);
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent =
+                PendingIntent.getService(context,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
         builder.setContentIntent(pendingIntent);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

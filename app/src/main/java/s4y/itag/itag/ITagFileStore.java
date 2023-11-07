@@ -56,6 +56,7 @@ public class ITagFileStore {
             ObjectInputStream ois = new ObjectInputStream(fis);
             Object read = ois.readObject();
             if (read instanceof List) {
+                //noinspection rawtypes
                 List dd = (List) read;
                 for (Object d : dd) {
                     if (d instanceof ITagDevice) {

@@ -38,14 +38,14 @@ public class SetNameDialogFragment extends DialogFragment {
                 *
          */
         grpAlarm.clearCheck();
-        int alarm =iTag.alertDelay();
-        if (alarm<3) {
+        int alarm = iTag.alertDelay();
+        if (alarm < 3) {
             btnAlarm0.setChecked(true);
-        }else if (alarm < 5){
+        } else if (alarm < 5) {
             btnAlarm3.setChecked(true);
-        }else if (alarm <10) {
+        } else if (alarm < 10) {
             btnAlarm5.setChecked(true);
-        }else {
+        } else {
             btnAlarm10.setChecked(true);
         }
 
@@ -54,19 +54,15 @@ public class SetNameDialogFragment extends DialogFragment {
                 .setPositiveButton(android.R.string.ok, (dialog, id) -> {
                     ITag.store.setName(iTag.id(), textName.getText().toString());
                     ITagApplication.faNameITag();
-                    switch (grpAlarm.getCheckedRadioButtonId()) {
-                        case R.id.alarm_delay_0:
-                            ITag.store.setAlertDelay(iTag.id(), 0);
-                            break;
-                        case R.id.alarm_delay_3:
-                            ITag.store.setAlertDelay(iTag.id(), 3);
-                            break;
-                        case R.id.alarm_delay_5:
-                            ITag.store.setAlertDelay(iTag.id(), 5);
-                            break;
-                        default:
-                            ITag.store.setAlertDelay(iTag.id(), 10);
-                            break;
+                    int bid = grpAlarm.getCheckedRadioButtonId();
+                    if (bid == R.id.alarm_delay_0) {
+                        ITag.store.setAlertDelay(iTag.id(), 0);
+                    } else if (bid == R.id.alarm_delay_3) {
+                        ITag.store.setAlertDelay(iTag.id(), 3);
+                    } else if (bid == R.id.alarm_delay_5) {
+                        ITag.store.setAlertDelay(iTag.id(), 5);
+                    } else {
+                        ITag.store.setAlertDelay(iTag.id(), 10);
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, (dialog, id) -> {

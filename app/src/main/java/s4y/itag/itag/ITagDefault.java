@@ -26,6 +26,7 @@ private static final long serialVersionUID = 1575220516;
         this.id = id;
         this.name = name == null ? ITagApplication.context.getString(R.string.unknown):name;
         this.color = color == null? TagColor.black : color;
+        //noinspection SimplifiableConditionalExpression
         this.alert = alert == null ? false : alert;
         this.alertDelay = alertDelay == null ? 5: alertDelay;
     }

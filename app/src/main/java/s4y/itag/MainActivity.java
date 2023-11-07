@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,9 +28,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.preference.PreferenceManager;
 
-import java.util.List;
 import java.util.Locale;
 
 import s4y.itag.ble.AlertVolume;
@@ -41,6 +38,8 @@ import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
+import s4y.itag.preference.WayTodayDisabled0Preference;
+import s4y.itag.preference.WayTodayFirstPreference;
 import s4y.itag.waytoday.Waytoday;
 import solutions.s4y.rasat.DisposableBag;
 import solutions.s4y.waytoday.sdk.errors.ErrorsObservable;
@@ -62,12 +61,6 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        /*
-        // ATTENTION: This was auto-generated to handle app linksI
-        Intent appLinkIntent = getIntent();
-        String appLinkAction = appLinkIntent.getAction();
-        Uri appLinkData = appLinkIntent.getData();
-        */
     }
 
     private void setupProgressBar() {
@@ -123,7 +116,7 @@ public class MainActivity extends FragmentActivity {
         disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
         disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
                 event -> {
-                    if (s4y.itag.ble.BuildConfig.DEBUG) {
+                    if (BuildConfig.DEBUG) {
                         Log.d(LT, "ble.scanner activeEvent=" + event + " isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
                     }
                     setupContent();
@@ -206,7 +199,7 @@ public class MainActivity extends FragmentActivity {
         final FragmentManager fragmentManager = getSupportFragmentManager();
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         Fragment fragment = null;
-        if (s4y.itag.ble.BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             Log.d(LT, "setupContent isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
         }
         if (ITag.ble.scanner().isScanning()) {
@@ -316,6 +309,14 @@ public class MainActivity extends FragmentActivity {
                     String.format(Locale.ENGLISH, getString(R.string.last_seen), ts, unit));
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
 
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                ITagApplication.handleError(e);
+                Toast.makeText(this, R.string.no_geo_activity, Toast.LENGTH_LONG).show();
+            }
+
+            /* NOTE: removed because of extra permission, it is not needed, because of Exception above
             PackageManager packageManager = getPackageManager();
             List<ResolveInfo> activities = packageManager.queryIntentActivities(intent, 0);
             boolean isIntentSafe = activities.size() > 0;
@@ -331,6 +332,7 @@ public class MainActivity extends FragmentActivity {
                 ITagApplication.handleError(new Exception("No Activity for geo"));
                 Toast.makeText(this, R.string.no_geo_activity, Toast.LENGTH_LONG).show();
             }
+             */
         }
     }
 
@@ -369,7 +371,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void onStartStopScan(View ignored) {
-        if (s4y.itag.ble.BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             Log.d(LT, "onStartStopScan isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
         }
         if (ITag.ble.scanner().isScanning()) {
@@ -384,12 +386,11 @@ public class MainActivity extends FragmentActivity {
                                 .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
                                 .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
                                 .show();
-                        return;
                     } else {
                         // isScanRequestAbortedBecauseOfPermission=true;
                         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
-                        return;
                     }
+                    return;
                 }
             }
             ITag.ble.scanner().start(ITag.SCAN_TIMEOUT, new String[]{});
@@ -400,19 +401,16 @@ public class MainActivity extends FragmentActivity {
         final PopupMenu popupMenu = new PopupMenu(this, sender);
         popupMenu.inflate(R.menu.app);
         popupMenu.setOnMenuItemClickListener(item -> {
-            //noinspection SwitchStatementWithTooFewBranches
-            switch (item.getItemId()) {
-                case R.id.exit:
-                    ITag.close();
-                    Waytoday.stop(this);
-                    ITagsService.stop(this);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        finishAndRemoveTask();
-                    } else {
-                        finishAffinity();
-                    }
-                    new Handler(getMainLooper()).postDelayed(() -> System.exit(0), 5000);
-                    break;
+            if (item.getItemId() == R.id.exit) {
+                ITag.close();
+                Waytoday.stop();
+                ITagsService.stop(this);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    finishAndRemoveTask();
+                } else {
+                    finishAffinity();
+                }
+                new Handler(getMainLooper()).postDelayed(() -> System.exit(0), 5000);
             }
             return true;
         });
@@ -420,8 +418,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void onWaytoday(@NonNull View sender) {
-        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean first = sp.getBoolean("wtfirst", true);
+        boolean first = WayTodayFirstPreference.get(this);
         String tid = TrackIDJobService.getTid(this);
         boolean on = Waytoday.tracker.isOn(this);
         int freq = Waytoday.tracker.frequencyMs(this);
@@ -441,18 +438,18 @@ public class MainActivity extends FragmentActivity {
             int id = item.getItemId();
             if (id == R.id.wt_sec_1) {
                 Waytoday.tracker.setFrequencyMs(this, 1);
-                Waytoday.start(this);
+                Waytoday.start();
                 ITagApplication.faWtOn1();
             } else if (id == R.id.wt_min_5) {
                 Waytoday.tracker.setFrequencyMs(this, 5 * 60 * 1000);
-                Waytoday.start(this);
+                Waytoday.start();
                 ITagApplication.faWtOn5();
             } else if (id == R.id.wt_hour_1) {
                 Waytoday.tracker.setFrequencyMs(this, 60 * 60 * 1000);
-                Waytoday.start(this);
+                Waytoday.start();
                 ITagApplication.faWtOn3600();
             } else if (id == R.id.wt_off) {
-                Waytoday.stop(this);
+                Waytoday.stop();
                 ITagApplication.faWtOff();
             } else if (id == R.id.wt_new_tid) {
                 ITagApplication.faWtChangeID();
@@ -475,7 +472,7 @@ public class MainActivity extends FragmentActivity {
                 }
             } else if (id == R.id.wt_about_first || id == R.id.wt_about) {
                 ITagApplication.faWtAbout();
-                sp.edit().putBoolean("wtfirst", false).apply();
+                WayTodayFirstPreference.set(this, false);
                 builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.about_wt)
                         .setMessage(R.string.about_message)
@@ -499,8 +496,9 @@ public class MainActivity extends FragmentActivity {
                         .setMessage(R.string.disable_wt_msg)
                         .setPositiveButton(R.string.disable_wt_ok, (dialog, ignored) -> {
                             ITagApplication.faWtRemove();
+                            // TODO: why don not stop it?
                             // iTagsService.stopWayToday();
-                            sp.edit().putBoolean("wt_disabled0", true).apply();
+                            WayTodayDisabled0Preference.set(this, true);
                             final View v = findViewById(R.id.btn_waytoday);
                             if (v != null) {
                                 v.setVisibility(View.GONE);
@@ -526,25 +524,19 @@ public class MainActivity extends FragmentActivity {
         final PopupMenu popupMenu = new PopupMenu(this, sender);
         popupMenu.inflate(R.menu.color);
         popupMenu.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.black:
-                    ITag.store.setColor(itag.id(), TagColor.black);
-                    break;
-                case R.id.white:
-                    ITag.store.setColor(itag.id(), TagColor.white);
-                    break;
-                case R.id.red:
-                    ITag.store.setColor(itag.id(), TagColor.red);
-                    break;
-                case R.id.green:
-                    ITag.store.setColor(itag.id(), TagColor.green);
-                    break;
-                case R.id.gold:
-                    ITag.store.setColor(itag.id(), TagColor.gold);
-                    break;
-                case R.id.blue:
-                    ITag.store.setColor(itag.id(), TagColor.blue);
-                    break;
+            int id = item.getItemId();
+            if (id == R.id.black) {
+                ITag.store.setColor(itag.id(), TagColor.black);
+            } else if (id == R.id.white) {
+                ITag.store.setColor(itag.id(), TagColor.white);
+            } else if (id == R.id.red) {
+                ITag.store.setColor(itag.id(), TagColor.red);
+            } else if (id == R.id.green) {
+                ITag.store.setColor(itag.id(), TagColor.green);
+            } else if (id == R.id.gold) {
+                ITag.store.setColor(itag.id(), TagColor.gold);
+            } else if (id == R.id.blue) {
+                ITag.store.setColor(itag.id(), TagColor.blue);
             }
             ITagApplication.faColorITag();
             return true;
@@ -616,10 +608,16 @@ public class MainActivity extends FragmentActivity {
             }
         }
         PermissionHandling.handleOnRequestPermissionsResult(this, requestCode, Waytoday.tracker);
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     public void onOpenBTSettings(View ignored) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivity(enableBtIntent);
+        try {
+            startActivity(enableBtIntent);
+        } catch (SecurityException e) {
+            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
     }
 }

@@ -112,7 +112,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
                 ret.add(id);
             }
         }
-        return (String[]) ret.toArray();
+        return ret.toArray(new String[0]);
     }
 
     @Override

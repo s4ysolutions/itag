@@ -3,30 +3,25 @@
 buildscript {
     
     repositories {
+        gradlePluginPortal()
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.2'
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.13'
+        classpath "com.android.tools.build:gradle:8.1.2"
     }
 }
 
 allprojects {
     repositories {
         google()
-        jcenter()
-        mavenLocal()
-        maven { url 'https://maven.google.com/' }
+        mavenCentral()
         maven { url 'https://jitpack.io' }
     }
+
     gradle.projectsEvaluated {
         tasks.withType(JavaCompile) {
             options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
         }
     }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
 }
