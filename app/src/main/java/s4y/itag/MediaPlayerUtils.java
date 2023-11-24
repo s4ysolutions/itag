@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.telephony.TelephonyManager;
 
 import java.io.IOException;
 
@@ -109,6 +110,12 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
 
     public void startSoundDisconnected(Context context) {
         stopSound(context);
+        // return if we are in a call
+        TelephonyManager manager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+        if(manager.getCallState() != TelephonyManager.CALL_STATE_IDLE){
+            return;
+        }
+
         AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
 
         if (am == null)

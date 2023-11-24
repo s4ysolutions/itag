@@ -92,4 +92,7 @@
 
     <string name="mode_keyfinder">وضع الباحث عن المفاتيح</string>
     <string name="mode_alertdisconnect">وضع التنبيه المفقود</string>
+    <string name="wt_tracking_stopped">توقف تتبع WayToday</string>
+    <string name="gps_permissions_off">غير قادر على الحصول على الموقع الحالي بسبب عدم وجود أذونات الموقع</string>
+    <string name="gps_permission_request">مطلوب الإذن لتحديد الموقع الحالي في حالة فقدان الاتصال</string>
 </resources>

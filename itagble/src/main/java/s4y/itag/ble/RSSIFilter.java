@@ -1,8 +1,54 @@
 package s4y.itag.ble;
 
+import org.apache.commons.math3.filter.DefaultMeasurementModel;
+import org.apache.commons.math3.filter.DefaultProcessModel;
+import org.apache.commons.math3.filter.KalmanFilter;
+import org.apache.commons.math3.filter.MeasurementModel;
+import org.apache.commons.math3.filter.ProcessModel;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
+
 import java.util.Arrays;
 
 public class RSSIFilter {
+    private KalmanFilter filter;
+
+    public RSSIFilter() {
+        reset();
+    }
+
+    public void reset() {
+        // A = [ 1 ] constant rssi
+        RealMatrix A = new Array2DRowRealMatrix(new double[]{1d});
+// no control input
+        RealMatrix B = null;
+// H = [ 1 ]
+        RealMatrix H = new Array2DRowRealMatrix(new double[]{1d});
+// Q = [ 0 ] process noise
+        // 1 indicator level ~ 1 dBm
+        RealMatrix Q = new Array2DRowRealMatrix(new double[]{3 * 3});
+// R = [ 0 ] measurement noise
+        // RSSI varies from -65 to -115 dBm = 50 dBm
+        // assume the measurement is within that range
+        RealMatrix R = new Array2DRowRealMatrix(new double[]{25 * 25});
+        // initial state -85 dBm - empirical ~1-2m
+        ProcessModel pm
+                = new DefaultProcessModel(A, B, Q, new ArrayRealVector(new double[]{85}), null);
+        MeasurementModel mm = new DefaultMeasurementModel(H, R);
+
+        filter = new KalmanFilter(pm, mm);
+    }
+
+    public void add(int rawmeasurement) {
+        filter.predict();
+        filter.correct(new double[]{-rawmeasurement});
+    }
+
+    public int get() {
+        return - (int) filter.getStateEstimation()[0];
+    }
+    /*
     final int[] measurements = {0, 0, 0, 0, 0, 0, 0};
     final int[] deviations = {0, 0, 0, 0, 0, 0, 0};
     final int[] spikes = {0, 0, 0};
@@ -55,4 +101,5 @@ public class RSSIFilter {
     public int get() {
         return average;
     }
+     */
 }

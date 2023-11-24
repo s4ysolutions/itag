@@ -90,4 +90,7 @@
     <string name="mode_keyfinder">Modo localizador de chave</string>
     <string name="mode_alertdisconnect">Modo de alarme perdido</string>
     <string name="app_name">iTag One</string>
+    <string name="wt_tracking_stopped">Rastreamento WayToday parado</string>
+    <string name="gps_permissions_off">Incapaz de obter a posição atual devido à falta de permissões de localização</string>
+    <string name="gps_permission_request">É necessário permissão para determinar a localização atual em caso de perda de conexão</string>
 </resources>

@@ -29,8 +29,13 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 
+import s4y.gps.sdk.android.GPSPermissionManager;
+import s4y.gps.sdk.android.GPSPowerManager;
+import s4y.gps.sdk.android.GPSUpdatesForegroundService;
 import s4y.itag.ble.AlertVolume;
 import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEState;
@@ -40,17 +45,12 @@ import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
 import s4y.itag.preference.WayTodayDisabled0Preference;
 import s4y.itag.preference.WayTodayFirstPreference;
-import s4y.itag.waytoday.Waytoday;
+import s4y.itag.waytoday.WayToday;
 import solutions.s4y.rasat.DisposableBag;
-import solutions.s4y.waytoday.sdk.errors.ErrorsObservable;
-import solutions.s4y.waytoday.sdk.id.TrackIDJobService;
-import solutions.s4y.waytoday.sdk.locations.IPermissionListener;
-import solutions.s4y.waytoday.sdk.permissionmanagement.PermissionHandling;
-import solutions.s4y.waytoday.sdk.powermanagement.PowerManagement;
 
 public class MainActivity extends FragmentActivity {
     static public final int REQUEST_ENABLE_BT = 1;
-    static public final int REQUEST_ENABLE_LOCATION = 2;
+    static public final int REQUEST_ONSCAN = 2;
     public ITagsService iTagsService;
     public static boolean sIsShown = false;
     private static final String LT = MainActivity.class.getName();
@@ -61,6 +61,18 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent != null) {
+            String gpsNotification = intent.getStringExtra(GPSUpdatesForegroundService.GPS_SERVICE_NOTIFICATION);
+            if (Objects.equals(gpsNotification, GPSUpdatesForegroundService.ACTION_STOP_TRACKING)) {
+                WayToday.getInstance().turnTrackingOff();
+                Toast.makeText(this, R.string.wt_tracking_stopped, Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     private void setupProgressBar() {
@@ -99,20 +111,23 @@ public class MainActivity extends FragmentActivity {
 
     private final ITagServiceConnection mServiceConnection = new ITagServiceConnection();
 
+    /*
+    TODO: error handling
     private final ErrorsObservable.IErrorListener mErrorListener = errorNotification -> {
         runOnUiThread(() -> Toast.makeText(MainActivity.this, errorNotification.getMessage(), Toast.LENGTH_LONG).show());
         Log.e(LT, errorNotification.getMessage(), errorNotification.th);
     };
-    private final IPermissionListener gpsPermissionListener = () -> PermissionHandling.requestPermissions(MainActivity.this);
+     */
+    // TODO: private final IPermissionListener gpsPermissionListener = () -> PermissionHandling.requestPermissions(MainActivity.this);
     private int resumeCount = 0;
 
     @Override
     protected void onResume() {
         super.onResume();
-        ErrorsObservable.addErrorListener(mErrorListener);
+        // TODO: ErrorsObservable.addErrorListener(mErrorListener);
         sIsShown = true;
         setupContent();
-        Waytoday.gpsLocationUpdater.addOnPermissionListener(gpsPermissionListener);
+        // TODO: Waytoday.gpsLocationUpdater.addOnPermissionListener(gpsPermissionListener);
         disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
         disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
                 event -> {
@@ -136,11 +151,18 @@ public class MainActivity extends FragmentActivity {
             }
         }));
         bindService(ITagsService.intentBind(this), mServiceConnection, 0);
-        if (Waytoday.tracker.isOn(this) && PowerManagement.needRequestIgnoreOptimization(this)) {
-            if (resumeCount++ > 1) {
+        // unconditionally stop background service
+        if (WayToday.getInstance().isTrackingOn()) {
+            if (GPSPermissionManager.needPermissionRequest(this)) {
                 new Handler(getMainLooper()).post(() ->
-                        PowerManagement.requestIgnoreOptimization(this)
+                        GPSPermissionManager.requestPermissions(this)
                 );
+            } else if (GPSPowerManager.needRequestIgnoreOptimization(this)) {
+                if (resumeCount++ > 1) {
+                    new Handler(getMainLooper()).post(() ->
+                            GPSPowerManager.requestIgnoreOptimization(this)
+                    );
+                }
             }
         }
     }
@@ -154,13 +176,19 @@ public class MainActivity extends FragmentActivity {
         }
         disposableBag.dispose();
         sIsShown = false;
-        if (ITag.store.isDisconnectAlert() || Waytoday.tracker.isUpdating) {
-            ITagsService.start(this);
-        } else {
-            ITagsService.stop(this);
+        if (!exitting) {
+            if (ITag.store.isDisconnectAlert()) {
+                ITagsService.start(this);
+            } else {
+                ITagsService.stop(this);
+            }
+
+            if (WayToday.getInstance().isTrackingOn() && !GPSPermissionManager.needPermissionRequest(this)) {
+                GPSUpdatesForegroundService.start(this);
+            }
         }
-        ErrorsObservable.removeErrorListener(mErrorListener);
-        Waytoday.gpsLocationUpdater.removePermissionListener(gpsPermissionListener);
+
+        // TODO: Waytoday.gpsLocationUpdater.removePermissionListener(gpsPermissionListener);
         super.onPause();
     }
 
@@ -171,8 +199,11 @@ public class MainActivity extends FragmentActivity {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus != mHasFocus) {
             mHasFocus = hasFocus;
-            if (mHasFocus && iTagsService != null) {
-                iTagsService.removeFromForeground();
+            if (mHasFocus) {
+                GPSUpdatesForegroundService.removeFromForeground(this);
+                if (iTagsService != null) {
+                    iTagsService.removeFromForeground();
+                }
             }
         }
     }
@@ -383,12 +414,16 @@ public class MainActivity extends FragmentActivity {
                         AlertDialog.Builder builder = new AlertDialog.Builder(this);
                         builder.setMessage(R.string.request_location_permission)
                                 .setTitle(R.string.request_permission_title)
-                                .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
-                                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
+                                .setPositiveButton(android.R.string.ok,
+                                        (dialog, which) ->
+                                                requestAllPermissions(MainActivity.REQUEST_ONSCAN))
+                                .setNegativeButton(android.R.string.cancel,
+                                        (dialog, which) ->
+                                                dialog.cancel())
                                 .show();
                     } else {
                         // isScanRequestAbortedBecauseOfPermission=true;
-                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
+                        requestAllPermissions(MainActivity.REQUEST_ONSCAN);
                     }
                     return;
                 }
@@ -397,13 +432,31 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    private void requestAllPermissions(int code) {
+        ArrayList<String> permissionsList = new ArrayList<>();
+        permissionsList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            permissionsList.add(Manifest.permission.BLUETOOTH_CONNECT);
+            permissionsList.add(Manifest.permission.BLUETOOTH_SCAN);
+        }
+        String[] permissions = permissionsList.toArray(new String[0]);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S)
+            ITagApplication.faWtRequestBlePermissions();
+
+        requestPermissions(permissions, code);
+    }
+
+    private Boolean exitting = false;
+
     public void onAppMenu(@NonNull View sender) {
         final PopupMenu popupMenu = new PopupMenu(this, sender);
         popupMenu.inflate(R.menu.app);
         popupMenu.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.exit) {
+                exitting = true;
                 ITag.close();
-                Waytoday.stop();
+                WayToday.getInstance().gpsUpdatesManager.stop();
                 ITagsService.stop(this);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     finishAndRemoveTask();
@@ -419,48 +472,46 @@ public class MainActivity extends FragmentActivity {
 
     public void onWaytoday(@NonNull View sender) {
         boolean first = WayTodayFirstPreference.get(this);
-        String tid = TrackIDJobService.getTid(this);
-        boolean on = Waytoday.tracker.isOn(this);
-        int freq = Waytoday.tracker.frequencyMs(this);
+        String tid = WayToday.getInstance().wtClient.getCurrentTrackerId();
+        boolean on = WayToday.getInstance().isTrackingOn() && !GPSPermissionManager.needPermissionRequest(this);
+        int freq = WayToday.getInstance().gpsUpdatesManager.getIntervalSec();
         final PopupMenu popupMenu = new PopupMenu(this, sender);
         popupMenu.inflate(R.menu.waytoday);
         popupMenu.getMenu().findItem(R.id.wt_about_first).setVisible(first);
         popupMenu.getMenu().findItem(R.id.wt_sec_1).setChecked(on && freq == 1);
-        popupMenu.getMenu().findItem(R.id.wt_min_5).setChecked(on && freq == 300000);
-        popupMenu.getMenu().findItem(R.id.wt_hour_1).setChecked(on && freq == 3600000);
+        popupMenu.getMenu().findItem(R.id.wt_min_5).setChecked(on && freq == 300);
+        popupMenu.getMenu().findItem(R.id.wt_hour_1).setChecked(on && freq == 3600);
         popupMenu.getMenu().findItem(R.id.wt_off).setVisible(on);
-        popupMenu.getMenu().findItem(R.id.wt_new_tid).setVisible(!("".equals(tid)));
+        popupMenu.getMenu().findItem(R.id.wt_new_tid).setVisible(!(tid.isEmpty()));
         popupMenu.getMenu().findItem(R.id.wt_about).setVisible(!first);
-        popupMenu.getMenu().findItem(R.id.wt_share).setVisible(!"".equals(tid));
-        popupMenu.getMenu().findItem(R.id.wt_map).setVisible(!"".equals(tid));
+        popupMenu.getMenu().findItem(R.id.wt_share).setVisible(!tid.isEmpty());
+        popupMenu.getMenu().findItem(R.id.wt_map).setVisible(!tid.isEmpty());
         popupMenu.setOnMenuItemClickListener(item -> {
             AlertDialog.Builder builder;
             int id = item.getItemId();
             if (id == R.id.wt_sec_1) {
-                Waytoday.tracker.setFrequencyMs(this, 1);
-                Waytoday.start();
+                WayToday.getInstance().gpsUpdatesManager.setIntervalSec(1);
                 ITagApplication.faWtOn1();
             } else if (id == R.id.wt_min_5) {
-                Waytoday.tracker.setFrequencyMs(this, 5 * 60 * 1000);
-                Waytoday.start();
+                WayToday.getInstance().gpsUpdatesManager.setIntervalSec(5 * 60);
                 ITagApplication.faWtOn5();
             } else if (id == R.id.wt_hour_1) {
-                Waytoday.tracker.setFrequencyMs(this, 60 * 60 * 1000);
-                Waytoday.start();
+                WayToday.getInstance().gpsUpdatesManager.setIntervalSec(60 * 60);
                 ITagApplication.faWtOn3600();
             } else if (id == R.id.wt_off) {
-                Waytoday.stop();
+                WayToday.getInstance().turnTrackingOff();
+                WayToday.getInstance().gpsUpdatesManager.stop();
                 ITagApplication.faWtOff();
             } else if (id == R.id.wt_new_tid) {
                 ITagApplication.faWtChangeID();
-                TrackIDJobService.enqueueRetrieveId(this);
+                WayToday.getInstance().enqueueTrackIdWorkRequest(this);
             } else if (id == R.id.wt_map) {
-                if (!"".equals(tid)) {
+                if (!tid.isEmpty()) {
                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://way.today/#" + tid)));
                 }
             } else if (id == R.id.wt_share) {
                 ITagApplication.faWtShare();
-                if (!"".equals(tid)) {
+                if (!tid.isEmpty()) {
                     String txt = String.format(getResources().getString(R.string.share_link), tid);
                     Intent sendIntent = new Intent();
                     sendIntent.setAction(Intent.ACTION_SEND);
@@ -509,6 +560,14 @@ public class MainActivity extends FragmentActivity {
                         });
                 // Create the AlertDialog object and return it
                 builder.create().show();
+            }
+            if (id == R.id.wt_sec_1 || id == R.id.wt_min_5 || id == R.id.wt_hour_1) {
+                if (GPSPermissionManager.needPermissionRequest(this)) {
+                    WayToday.getInstance().enableTrackingOn();
+                    GPSPermissionManager.requestPermissions(this);
+                } else {
+                    WayToday.getInstance().turnTrackingOn();
+                }
             }
             return true;
         });
@@ -565,6 +624,9 @@ public class MainActivity extends FragmentActivity {
         if (itag.isAlertDisconnected()) {
             Toast.makeText(this, R.string.mode_alertdisconnect, Toast.LENGTH_SHORT).show();
             ITagApplication.faUnmuteTag();
+            if (GPSPermissionManager.needPermissionRequest(this)) {
+                GPSPermissionManager.requestPermissions(this, getString(R.string.gps_permission_request));
+            }
         } else {
             Toast.makeText(this, R.string.mode_keyfinder, Toast.LENGTH_SHORT).show();
             ITagApplication.faMuteTag();
@@ -602,12 +664,16 @@ public class MainActivity extends FragmentActivity {
                 case REQUEST_ENABLE_BT:
                     setupContent();
                     break;
-                case REQUEST_ENABLE_LOCATION:
+                case REQUEST_ONSCAN:
                     onStartStopScan(null);
                     break;
             }
         }
-        PermissionHandling.handleOnRequestPermissionsResult(this, requestCode, Waytoday.tracker);
+        GPSPermissionManager
+                .handleOnRequestPermissionsResult(
+                        requestCode,
+                        WayToday.getInstance().gpsUpdatesManager,
+                        WayToday.getInstance().isTrackingOn());
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 

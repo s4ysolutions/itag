@@ -11,8 +11,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
+
+import s4y.gps.sdk.android.GPSPermissionManager;
+import s4y.gps.sdk.android.GPSUpdatesForegroundService;
 import s4y.itag.itag.ITag;
-import s4y.itag.waytoday.Waytoday;
+import s4y.itag.waytoday.WayToday;
 
 public final class ITagApplication extends Application {
     private final static String LT = ITagApplication.class.getName();
@@ -33,13 +38,13 @@ public final class ITagApplication extends Application {
         new Handler(Looper.getMainLooper()).post(() -> {
             if (context == null) {
                 Log.e(LT, "Attempt to handle error before application created", th);
-                // FirebaseCrashlytics.getInstance().recordException(th);
+                FirebaseCrashlytics.getInstance().recordException(th);
             } else {
                 Log.e(LT, "Toasted", th);
                 if (toast) {
                     Toast.makeText(context, th.getMessage(), Toast.LENGTH_LONG).show();
                 }
-                // FirebaseCrashlytics.getInstance().recordException(th);
+                FirebaseCrashlytics.getInstance().recordException(th);
             }
         });
     }
@@ -61,16 +66,17 @@ public final class ITagApplication extends Application {
         handleError(th, BuildConfig.DEBUG);
     }
 
-    // private static FirebaseAnalytics sFirebaseAnalytics;
+    private static FirebaseAnalytics sFirebaseAnalytics;
 
     static public void fa(@NonNull final String event, Bundle bundle) {
-        if (context == null) return;
-        /*
+        if (context == null) {
+            FirebaseCrashlytics.getInstance().recordException(new IllegalStateException("Attempt to log event before the context assigned"));
+            return;
+        }
         if (sFirebaseAnalytics == null) {
             sFirebaseAnalytics = FirebaseAnalytics.getInstance(context);
         }
         sFirebaseAnalytics.logEvent(event, bundle);
-         */
         if (BuildConfig.DEBUG) {
             Log.d(LT, "FA log " + event);
         }
@@ -98,23 +104,19 @@ public final class ITagApplication extends Application {
 
     static public void faScanView(boolean empty) {
         Bundle bundle = new Bundle();
-        /*
         bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "itag_scan_view_is_empty");
         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "First Scan");
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "boolean");
         bundle.putBoolean(FirebaseAnalytics.Param.VALUE, empty);
-         */
         fa("itag_scan_view", bundle);
     }
 
     static public void faITagsView(int devices) {
         Bundle bundle = new Bundle();
-        /*
         bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "itag_itags_view_device");
         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Remembered Devices");
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "int");
         bundle.putInt(FirebaseAnalytics.Param.VALUE, devices);
-         */
         fa("itag_itags_view");
     }
 
@@ -172,12 +174,10 @@ public final class ITagApplication extends Application {
 
     static public void faITagLost(boolean error) {
         Bundle bundle = new Bundle();
-        /*
         bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "itag_itag_lost_error");
         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Lost with error");
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "boolean");
         bundle.putBoolean(FirebaseAnalytics.Param.VALUE, error);
-         */
         fa("itag_itag_lost");
     }
 
@@ -200,21 +200,27 @@ public final class ITagApplication extends Application {
     static public void faIssuedGpsRequest() {
         fa("itag_issued_gps_request");
     }
+
     static public void faRemovedGpsRequestBySuccess() {
         fa("itag_removed_gps_request_by_success");
     }
+
     static public void faRemovedGpsRequestByConnect() {
         fa("itag_removed_gps_request_by_connect");
     }
+
     static public void faRemovedGpsRequestByTimeout() {
         fa("itag_removed_gps_request_by_timeout");
     }
+
     static public void faGotGpsLocation() {
         fa("itag_got_gps_location");
     }
+
     static public void faGpsPermissionError() {
         fa("itag_gps_permission_error");
     }
+
     static public void faDisconnectDuringCall() {
         fa("itag_disconnect_during_call");
     }
@@ -230,10 +236,15 @@ public final class ITagApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        faAppCreated();
         context = this;
+
+        faAppCreated();
         ITag.initITag(context);
-        Waytoday.init(this);
+
+        WayToday.init(context);
+        if (WayToday.getInstance().isTrackingOn() && !GPSPermissionManager.needPermissionRequest(this)) {
+            GPSUpdatesForegroundService.start(this);
+        }
     }
 
     static public void faWtNoTrackID() {
@@ -242,7 +253,6 @@ public final class ITagApplication extends Application {
 
     @Override
     public void onTerminate() {
-        Waytoday.done();
         try {
             ITag.close();
         } catch (Exception e) {
@@ -273,5 +283,9 @@ public final class ITagApplication extends Application {
 
     static public void faWtRemove() {
         fa("itag_wt_remove");
+    }
+
+    static public void faWtRequestBlePermissions() {
+        fa("itag_ble_request_permissions");
     }
 }

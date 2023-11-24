@@ -90,4 +90,7 @@
     <string name="soundmode_off">Nessun allarme quando iTag ha perso</string>
     <string name="mode_keyfinder">Modalità ricerca chiavi</string>
     <string name="mode_alertdisconnect">Modalità di allarme perso</string>
+    <string name="wt_tracking_stopped">WayToday tracking fermato</string>
+    <string name="gps_permissions_off">Impossibile ottenere la posizione corrente a causa della mancanza di autorizzazioni per la localizzazione</string>
+    <string name="gps_permission_request">È richiesto il permesso per determinare la posizione attuale in caso di perdita di connessione</string>
 </resources>

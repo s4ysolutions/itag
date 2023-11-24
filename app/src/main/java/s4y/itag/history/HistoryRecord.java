@@ -1,18 +1,29 @@
 package s4y.itag.history;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+
+import com.google.android.gms.location.CurrentLocationRequest;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.Granularity;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
+import com.google.android.gms.tasks.CancellationTokenSource;
+import com.google.android.gms.tasks.Task;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -23,6 +34,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import s4y.gps.sdk.GPSCurrentPositionManager;
+import s4y.gps.sdk.android.GPSPermissionManager;
+import s4y.gps.sdk.android.implementation.FusedGPSCurrentPositionProvider;
 import s4y.itag.BuildConfig;
 import s4y.itag.ITagApplication;
 import s4y.itag.R;
@@ -137,7 +151,13 @@ public final class HistoryRecord implements Serializable {
 
         if (locationManager == null) return;
 
-        boolean isGPSEnabled = locationManager
+        boolean gpsPermitted = ActivityCompat
+                .checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+                &&
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED;
+        boolean isGPSEnabled = gpsPermitted && locationManager
                 .isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         boolean isNetworkEnabled = locationManager
@@ -152,14 +172,14 @@ public final class HistoryRecord implements Serializable {
                         .getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 if (location != null) {
                     if (BuildConfig.DEBUG) {
-                        if (location == null) {
-                            Log.d(LT, "can't getLastKnownLocation from GPS. id:" + id);
-                        } else {
-                            Log.d(LT, "getLastKnownLocation from GPS in " + (System.currentTimeMillis() - location.getTime()) / 1000 + "sec. id:" + id);
-                        }
+                        Log.d(LT, "getLastKnownLocation from GPS in " + (System.currentTimeMillis() - location.getTime()) / 1000 + "sec. id:" + id);
                     }
                     add(context, new HistoryRecord(id, location, System.currentTimeMillis()));
                     gotBestLocation = System.currentTimeMillis() - location.getTime() > 30000;
+                } else {
+                    if (BuildConfig.DEBUG) {
+                        Log.d(LT, "can't getLastKnownLocation from GPS. id:" + id);
+                    }
                 }
             } catch (SecurityException e) {
                 ITagApplication.handleError(e);

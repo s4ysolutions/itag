@@ -9,5 +9,6 @@ public enum BLEError {
     notConnected,
     noImmediateAlertCharacteristic,
     noFindMeAlertCharacteristic,
-    badStatus
+    badStatus,
+    noPermission,
 }

@@ -79,7 +79,7 @@
     <string name="uint_min" translatable="false"> min </string>
     <string name="uint_hour" translatable="false"> hr </string>
 
-    <string name="menu_app_exit">Stop tracking</string>
+    <string name="menu_app_exit">Exit</string>
 
     <string name="freq_hour_1">1 hour</string>
     <string name="freq_min_30">Half an hour</string>
@@ -113,4 +113,8 @@
 
     <string name="mode_keyfinder">Key finder mode</string>
     <string name="mode_alertdisconnect">Lost alarm mode</string>
+
+    <string name="wt_tracking_stopped">WayToday tracking stopped</string>
+    <string name="gps_permissions_off">Unable to get the current position due to lack of location permissions</string>
+    <string name="gps_permission_request">Permission required to determine current location in case of connection loss</string>
 </resources>

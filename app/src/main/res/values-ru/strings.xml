@@ -92,4 +92,7 @@
 
     <string name="mode_keyfinder">Только поиск брелка</string>
     <string name="mode_alertdisconnect">Сигнализировать при утере брелка</string>
+    <string name="wt_tracking_stopped">Отслеживание WayToday остановлено</string>
+    <string name="gps_permissions_off">Невозможно получить текущее положение из-за отсутствия разрешений на местоположение</string>
+    <string name="gps_permission_request">Требуется разрешение для определения текущего местоположения в случае потери связи</string>
 </resources>

@@ -1,4 +1,8 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+    id 'com.google.firebase.crashlytics'
+    id 'com.google.gms.google-services'
+}
 
 Properties properties = new Properties()
 if (project.rootProject.file('local.properties').exists()) {
@@ -16,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId "s4y.itag"
-        minSdkVersion 23 // due to mad-location-manager
+        minSdkVersion 23
         targetSdkVersion 34
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "WAYTODAY_SECRET", "\"${System.getenv('WAYTODAY_SECRET') ?: properties.getProperty('waytoday.secret')}\""
@@ -58,7 +62,13 @@ dependencies {
     implementation project(':itagble')
     implementation "androidx.preference:preference:1.2.1"
     implementation "com.github.s4ysolutions:rasat-android:1.0.5"
-    implementation "com.github.s4ysolutions:WayTodaySDK-Android:1.0.36"
+
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-analytics")
+
+    // implementation "solutions.s4y.gps:gps-sdk-android:1.0.0-dev.7"
+    implementation 'com.github.s4ysolutions:WayTodaySDK-Android:3.0.0-alpha1'
 
 /*
     testImplementation 'androidx.test.ext:junit:1.1.5'

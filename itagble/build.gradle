@@ -1,4 +1,6 @@
-apply plugin: 'com.android.library'
+plugins {
+    id 'com.android.library'
+}
 
 android {
     namespace = 's4y.itag.ble'
@@ -8,8 +10,6 @@ android {
     defaultConfig {
         minSdkVersion 23 // due to mad-location-manager
         targetSdkVersion 34
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -37,5 +37,10 @@ dependencies {
     // implementation 'androidx.appcompat:appcompat:1.2.0'
     // implementation 'solutions.s4y.rasat:rasat-android:1.0.3'
     implementation "com.github.s4ysolutions:rasat-android:1.0.5"
-    implementation 'androidx.annotation:annotation:1.7.0'
+    implementation 'androidx.annotation:annotation:1.8.0'
+    implementation 'org.apache.commons:commons-math3:3.6.1'
+
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-analytics")
 }

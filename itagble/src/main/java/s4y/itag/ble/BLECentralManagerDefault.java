@@ -1,11 +1,9 @@
 package s4y.itag.ble;
 
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
@@ -17,6 +15,8 @@ import java.util.Map;
 
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
+
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 class BLECentralManagerDefault implements BLECentralManagerInterface, AutoCloseable {
     private static final String L = BLECentralManagerDefault.class.getName();
@@ -93,7 +93,12 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         if (adapter == null) {
             return BLEError.noAdapter;
         }
-        adapter.enable();
+        try {
+            adapter.enable();
+        } catch (SecurityException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+            return BLEError.noPermission;
+        }
         return BLEError.ok;
     }
 
@@ -116,8 +121,12 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         }
         if (adapter != null) {
             if (!isScanning(adapter)) {
-                adapter.startLeScan(leScanCallback);
-                isScanning = true;
+                try {
+                    adapter.startLeScan(leScanCallback);
+                    isScanning = true;
+                }catch (SecurityException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
+                }
             }
         }
     }
@@ -131,6 +140,8 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         if (isScanning(adapter)) {
             try {
                 adapter.stopLeScan(leScanCallback);
+            } catch (SecurityException exception) {
+                FirebaseCrashlytics.getInstance().recordException(exception);
             }catch (NullPointerException ignored) {
 
             }
@@ -148,9 +159,15 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         BluetoothManager bluetoothManager = getManager();
         if (bluetoothManager == null)
             return false;
-        int state = bluetoothManager.getConnectionState(device, GATT);
-        return state == STATE_CONNECTED;
-        // List<BluetoothDevice> devices = bluetoothManager.getConnectedDevices(BluetoothProfile.STATE_CONNECTED);
+        try {
+
+            int state = bluetoothManager.getConnectionState(device, GATT);
+            return state == STATE_CONNECTED;
+            // List<BluetoothDevice> devices = bluetoothManager.getConnectedDevices(BluetoothProfile.STATE_CONNECTED);
+        } catch (SecurityException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+            return false;
+        }
     }
 
     @Override

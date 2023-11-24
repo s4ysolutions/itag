@@ -127,7 +127,7 @@ public class ITagsService extends Service {
         return START_NOT_STICKY;
     }
 
-    public void putInForeground() {
+    private void putInForeground() {
         if (inForeground) {
             return;
         }

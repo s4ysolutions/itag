@@ -1,0 +1,256 @@
+<!--
+  ~                                  Apache License
+  ~                            Version 2.0, January 2004
+  ~                         http://www.apache.org/licenses/
+  ~
+  ~    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+  ~
+  ~    1. Definitions.
+  ~
+  ~       "License" shall mean the terms and conditions for use, reproduction,
+  ~       and distribution as defined by Sections 1 through 9 of this document.
+  ~
+  ~       "Licensor" shall mean the copyright owner or entity authorized by
+  ~       the copyright owner that is granting the License.
+  ~
+  ~       "Legal Entity" shall mean the union of the acting entity and all
+  ~       other entities that control, are controlled by, or are under common
+  ~       control with that entity. For the purposes of this definition,
+  ~       "control" means (i) the power, direct or indirect, to cause the
+  ~       direction or management of such entity, whether by contract or
+  ~       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+  ~       outstanding shares, or (iii) beneficial ownership of such entity.
+  ~
+  ~       "You" (or "Your") shall mean an individual or Legal Entity
+  ~       exercising permissions granted by this License.
+  ~
+  ~       "Source" form shall mean the preferred form for making modifications,
+  ~       including but not limited to software source code, documentation
+  ~       source, and configuration files.
+  ~
+  ~       "Object" form shall mean any form resulting from mechanical
+  ~       transformation or translation of a Source form, including but
+  ~       not limited to compiled object code, generated documentation,
+  ~       and conversions to other media types.
+  ~
+  ~       "Work" shall mean the work of authorship, whether in Source or
+  ~       Object form, made available under the License, as indicated by a
+  ~       copyright notice that is included in or attached to the work
+  ~       (an example is provided in the Appendix below).
+  ~
+  ~       "Derivative Works" shall mean any work, whether in Source or Object
+  ~       form, that is based on (or derived from) the Work and for which the
+  ~       editorial revisions, annotations, elaborations, or other modifications
+  ~       represent, as a whole, an original work of authorship. For the purposes
+  ~       of this License, Derivative Works shall not include works that remain
+  ~       separable from, or merely link (or bind by name) to the interfaces of,
+  ~       the Work and Derivative Works thereof.
+  ~
+  ~       "Contribution" shall mean any work of authorship, including
+  ~       the original version of the Work and any modifications or additions
+  ~       to that Work or Derivative Works thereof, that is intentionally
+  ~       submitted to Licensor for inclusion in the Work by the copyright owner
+  ~       or by an individual or Legal Entity authorized to submit on behalf of
+  ~       the copyright owner. For the purposes of this definition, "submitted"
+  ~       means any form of electronic, verbal, or written communication sent
+  ~       to the Licensor or its representatives, including but not limited to
+  ~       communication on electronic mailing lists, source code control systems,
+  ~       and issue tracking systems that are managed by, or on behalf of, the
+  ~       Licensor for the purpose of discussing and improving the Work, but
+  ~       excluding communication that is conspicuously marked or otherwise
+  ~       designated in writing by the copyright owner as "Not a Contribution."
+  ~
+  ~       "Contributor" shall mean Licensor and any individual or Legal Entity
+  ~       on behalf of whom a Contribution has been received by Licensor and
+  ~       subsequently incorporated within the Work.
+  ~
+  ~    2. Grant of Copyright License. Subject to the terms and conditions of
+  ~       this License, each Contributor hereby grants to You a perpetual,
+  ~       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+  ~       copyright license to reproduce, prepare Derivative Works of,
+  ~       publicly display, publicly perform, sublicense, and distribute the
+  ~       Work and such Derivative Works in Source or Object form.
+  ~
+  ~    3. Grant of Patent License. Subject to the terms and conditions of
+  ~       this License, each Contributor hereby grants to You a perpetual,
+  ~       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+  ~       (except as stated in this section) patent license to make, have made,
+  ~       use, offer to sell, sell, import, and otherwise transfer the Work,
+  ~       where such license applies only to those patent claims licensable
+  ~       by such Contributor that are necessarily infringed by their
+  ~       Contribution(s) alone or by combination of their Contribution(s)
+  ~       with the Work to which such Contribution(s) was submitted. If You
+  ~       institute patent litigation against any entity (including a
+  ~       cross-claim or counterclaim in a lawsuit) alleging that the Work
+  ~       or a Contribution incorporated within the Work constitutes direct
+  ~       or contributory patent infringement, then any patent licenses
+  ~       granted to You under this License for that Work shall terminate
+  ~       as of the date such litigation is filed.
+  ~
+  ~    4. Redistribution. You may reproduce and distribute copies of the
+  ~       Work or Derivative Works thereof in any medium, with or without
+  ~       modifications, and in Source or Object form, provided that You
+  ~       meet the following conditions:
+  ~
+  ~       (a) You must give any other recipients of the Work or
+  ~           Derivative Works a copy of this License; and
+  ~
+  ~       (b) You must cause any modified files to carry prominent notices
+  ~           stating that You changed the files; and
+  ~
+  ~       (c) You must retain, in the Source form of any Derivative Works
+  ~           that You distribute, all copyright, patent, trademark, and
+  ~           attribution notices from the Source form of the Work,
+  ~           excluding those notices that do not pertain to any part of
+  ~           the Derivative Works; and
+  ~
+  ~       (d) If the Work includes a "NOTICE" text file as part of its
+  ~           distribution, then any Derivative Works that You distribute must
+  ~           include a readable copy of the attribution notices contained
+  ~           within such NOTICE file, excluding those notices that do not
+  ~           pertain to any part of the Derivative Works, in at least one
+  ~           of the following places: within a NOTICE text file distributed
+  ~           as part of the Derivative Works; within the Source form or
+  ~           documentation, if provided along with the Derivative Works; or,
+  ~           within a display generated by the Derivative Works, if and
+  ~           wherever such third-party notices normally appear. The contents
+  ~           of the NOTICE file are for informational purposes only and
+  ~           do not modify the License. You may add Your own attribution
+  ~           notices within Derivative Works that You distribute, alongside
+  ~           or as an addendum to the NOTICE text from the Work, provided
+  ~           that such additional attribution notices cannot be construed
+  ~           as modifying the License.
+  ~
+  ~       You may add Your own copyright statement to Your modifications and
+  ~       may provide additional or different license terms and conditions
+  ~       for use, reproduction, or distribution of Your modifications, or
+  ~       for any such Derivative Works as a whole, provided Your use,
+  ~       reproduction, and distribution of the Work otherwise complies with
+  ~       the conditions stated in this License.
+  ~
+  ~    5. Submission of Contributions. Unless You explicitly state otherwise,
+  ~       any Contribution intentionally submitted for inclusion in the Work
+  ~       by You to the Licensor shall be under the terms and conditions of
+  ~       this License, without any additional terms or conditions.
+  ~       Notwithstanding the above, nothing herein shall supersede or modify
+  ~       the terms of any separate license agreement you may have executed
+  ~       with Licensor regarding such Contributions.
+  ~
+  ~    6. Trademarks. This License does not grant permission to use the trade
+  ~       names, trademarks, service marks, or product names of the Licensor,
+  ~       except as required for reasonable and customary use in describing the
+  ~       origin of the Work and reproducing the content of the NOTICE file.
+  ~
+  ~    7. Disclaimer of Warranty. Unless required by applicable law or
+  ~       agreed to in writing, Licensor provides the Work (and each
+  ~       Contributor provides its Contributions) on an "AS IS" BASIS,
+  ~       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+  ~       implied, including, without limitation, any warranties or conditions
+  ~       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+  ~       PARTICULAR PURPOSE. You are solely responsible for determining the
+  ~       appropriateness of using or redistributing the Work and assume any
+  ~       risks associated with Your exercise of permissions under this License.
+  ~
+  ~    8. Limitation of Liability. In no event and under no legal theory,
+  ~       whether in tort (including negligence), contract, or otherwise,
+  ~       unless required by applicable law (such as deliberate and grossly
+  ~       negligent acts) or agreed to in writing, shall any Contributor be
+  ~       liable to You for damages, including any direct, indirect, special,
+  ~       incidental, or consequential damages of any character arising as a
+  ~       result of this License or out of the use or inability to use the
+  ~       Work (including but not limited to damages for loss of goodwill,
+  ~       work stoppage, computer failure or malfunction, or any and all
+  ~       other commercial damages or losses), even if such Contributor
+  ~       has been advised of the possibility of such damages.
+  ~
+  ~    9. Accepting Warranty or Additional Liability. While redistributing
+  ~       the Work or Derivative Works thereof, You may choose to offer,
+  ~       and charge a fee for, acceptance of support, warranty, indemnity,
+  ~       or other liability obligations and/or rights consistent with this
+  ~       License. However, in accepting such obligations, You may act only
+  ~       on Your own behalf and on Your sole responsibility, not on behalf
+  ~       of any other Contributor, and only if You agree to indemnify,
+  ~       defend, and hold each Contributor harmless for any liability
+  ~       incurred by, or claims asserted against, such Contributor by reason
+  ~       of your accepting any such warranty or additional liability.
+  ~
+  ~    END OF TERMS AND CONDITIONS
+  ~
+  ~    APPENDIX: How to apply the Apache License to your work.
+  ~
+  ~       To apply the Apache License to your work, attach the following
+  ~       boilerplate notice, with the fields enclosed by brackets "[]"
+  ~       replaced with your own identifying information. (Don't include
+  ~       the brackets!)  The text should be enclosed in the appropriate
+  ~       comment syntax for the file format. We also recommend that a
+  ~       file or class name and description of purpose be included on the
+  ~       same "printed page" as the copyright notice for easier
+  ~       identification within third-party archives.
+  ~
+  ~    Copyright 2020 S4Y.Solutions
+  ~
+  ~    Licensed under the Apache License, Version 2.0 (the "License");
+  ~    you may not use this file except in compliance with the License.
+  ~    You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~    Unless required by applicable law or agreed to in writing, software
+  ~    distributed under the License is distributed on an "AS IS" BASIS,
+  ~    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~    See the License for the specific language governing permissions and
+  ~    limitations under the License.
+  ~
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:fillColor="#db524d"
+        android:fillType="evenOdd"
+        android:pathData="M288.761,289.793C367.684,289.793 432.542,224.948 432.542,146.043 432.542,66.676 367.684,1.831 288.761,1.831 209.401,1.831 144.542,66.676 144.542,146.042c0,78.906 64.859,143.751 144.219,143.751l0,0z" />
+    <path
+        android:fillColor="#ee706c"
+        android:fillType="evenOdd"
+        android:pathData="m352.714,110.671c17.234,0 31.751,-14.514 31.751,-32.199 0,-17.685 -14.517,-31.747 -31.751,-31.747 -17.688,0 -32.203,14.062 -32.203,31.747 0,17.685 14.515,32.199 32.203,32.199l0,0z" />
+    <path
+        android:fillColor="#2f4a59"
+        android:fillType="evenOdd"
+        android:pathData="m304.636,497.958 l0,-208.165c0,-0.453 0,-0.453 0,-0.906 -5.438,0.453 -10.874,0.906 -15.875,0.906 -5.438,0 -10.875,-0.453 -16.32,-0.906 0,0.453 0,0.453 0,0.906l0,208.165c0,8.608 7.258,15.873 16.32,15.873 8.625,0 15.875,-7.265 15.875,-15.873l0,0z" />
+    <path
+        android:fillColor="#0f2635"
+        android:fillType="evenOdd"
+        android:pathData="m272.44,289.793 l0,31.293 32.195,-32.199c-5.438,0.453 -10.874,0.906 -15.875,0.906 -5.438,0 -10.875,-0.453 -16.32,-0.906 0,0.453 0,0.453 0,0.906l0,0z" />
+    <path
+        android:fillColor="#be3530"
+        android:fillType="evenOdd"
+        android:pathData="m306.464,253.977c-69.398,0 -125.641,-56.689 -125.641,-126.073 0,-66.665 51.703,-121.088 117.016,-125.62C294.668,1.831 291.948,1.831 288.761,1.831 208.948,1.831 144.542,66.223 144.542,146.042c0,79.359 64.406,143.75 144.219,143.75 79.376,0 143.781,-64.392 143.781,-143.75 0,-3.179 0,-6.351 -0.453,-9.522 -4.078,65.75 -58.954,117.457 -125.625,117.457l0,0z" />
+    <path
+        android:fillAlpha="0.56417913"
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="M217.691,412.661C281.719,392.746 313.836,349.692 288.892,317.217 263.801,284.551 190.684,274.228 126.656,294.143 62.274,314.168 30.156,357.223 55.247,389.888c24.945,32.476 98.063,42.798 162.445,22.773l0,0z" />
+    <path
+        android:fillAlpha="0.56417913"
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="m212.947,322.802c13.981,-4.349 21.17,-13.985 15.579,-21.264 -5.591,-7.279 -21.814,-9.403 -35.795,-5.054 -14.35,4.463 -21.68,13.913 -16.089,21.192 5.591,7.279 21.955,9.59 36.304,5.126l0,0z" />
+    <path
+        android:fillAlpha="0.56417913"
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="m296.379,494.331 l-65.808,-85.676c-0.143,-0.186 -0.143,-0.186 -0.286,-0.373 -4.268,1.559 -8.535,3.117 -12.592,4.379 -4.412,1.372 -8.966,2.558 -13.526,3.745 0.143,0.186 0.143,0.186 0.286,0.373l65.808,85.676c2.721,3.543 10.906,4.702 18.258,2.415 6.997,-2.176 10.582,-6.996 7.861,-10.539l0,0z" />
+    <path
+        android:fillAlpha="0.56417913"
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="m204.451,416.78 l9.893,12.879 15.939,-21.376c-4.268,1.559 -8.535,3.117 -12.592,4.379 -4.412,1.372 -8.966,2.558 -13.526,3.745 0.143,0.186 0.143,0.186 0.286,0.373l0,0z" />
+    <path
+        android:fillAlpha="0.56417913"
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="m220.73,393.453c-56.3,17.511 -119.85,8.371 -141.784,-20.185 -21.075,-27.438 3.665,-62.883 55.218,-81.229C131.448,292.653 129.242,293.339 126.656,294.143 61.907,314.283 30.013,357.036 55.247,389.888c25.088,32.662 97.695,42.912 162.444,22.773 64.395,-20.029 96.288,-62.783 71.2,-95.444 -1.005,-1.308 -2.008,-2.614 -3.378,-3.805 17.478,28.09 -10.695,63.218 -64.783,80.042l0,0z" />
+</vector>

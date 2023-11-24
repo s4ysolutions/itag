@@ -49,18 +49,23 @@ public class RssiView extends LinearLayout {
     static private final float BG_OFF=0.1f;
 
     public void setRssi(int level) {
+        // -999 indicates no signal
+        // theoretical min level -115
+        // highly likely disconnection -90
         l1.setAlpha(level > -115 ? BG_ON : BG_OFF);
-        l2.setAlpha(level > -109 ? BG_ON : BG_OFF);
-        l3.setAlpha(level > -103 ? BG_ON : BG_OFF);
-        l4.setAlpha(level > -97 ? BG_ON : BG_OFF);
-        l5.setAlpha(level > -93 ? BG_ON : BG_OFF);
-        l6.setAlpha(level > -89 ? BG_ON : BG_OFF);
+        l2.setAlpha(level > -92 ? BG_ON : BG_OFF);
+        l3.setAlpha(level > -90 ? BG_ON : BG_OFF);
+        l4.setAlpha(level > -89 ? BG_ON : BG_OFF);
+        l5.setAlpha(level > -87 ? BG_ON : BG_OFF);
+        l6.setAlpha(level > -86 ? BG_ON : BG_OFF);
         l7.setAlpha(level > -85 ? BG_ON : BG_OFF);
-        l8.setAlpha(level > -81 ? BG_ON : BG_OFF);
-        l9.setAlpha(level > -77 ? BG_ON : BG_OFF);
-        l10.setAlpha(level > -73 ? BG_ON : BG_OFF);
-        l11.setAlpha(level > -69 ? BG_ON : BG_OFF);
-        l12.setAlpha(level > -65 ? BG_ON : BG_OFF);
+        l8.setAlpha(level > -84 ? BG_ON : BG_OFF);
+        l9.setAlpha(level > -83? BG_ON : BG_OFF);
+        l10.setAlpha(level > -81 ? BG_ON : BG_OFF);
+        l11.setAlpha(level > -78 ? BG_ON : BG_OFF);
+        l12.setAlpha(level > -74 ? BG_ON : BG_OFF); // disconnection is highly likely
+        // real life nearest signal level -70
+        // theoretical max level -65
     }
 
     private void setup() {

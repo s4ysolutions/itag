@@ -1,7 +1,6 @@
 package s4y.itag;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
@@ -28,20 +27,12 @@ import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.preference.WayTodayDisabled0Preference;
 import s4y.itag.preference.VolumePreference;
-import s4y.itag.waytoday.Waytoday;
+import s4y.itag.waytoday.WayToday;
 import solutions.s4y.rasat.DisposableBag;
-import solutions.s4y.waytoday.sdk.id.ITrackIDChangeListener;
-import solutions.s4y.waytoday.sdk.id.TrackIDJobService;
-import solutions.s4y.waytoday.sdk.tracker.ITrackingStateListener;
-import solutions.s4y.waytoday.sdk.tracker.TrackerState;
 
 import static s4y.itag.itag.ITag.ble;
 
-public class ITagsFragment extends Fragment
-        implements
-        HistoryRecord.HistoryRecordListener,
-        ITrackingStateListener,
-        ITrackIDChangeListener {
+public class ITagsFragment extends Fragment implements HistoryRecord.HistoryRecordListener {
     private static final String LT = ITagsFragment.class.getName();
     private Animation mLocationAnimation;
     private Animation mITagAnimation;
@@ -109,7 +100,8 @@ public class ITagsFragment extends Fragment
                 updateName(rootView, itag.name());
                 updateAlertButton(rootView, itag.isAlertDisconnected(), connection.isConnected());
             }
-            updateRSSI(rootView, connection.rssi());
+            int rssi = connection.state() == BLEConnectionState.connected ? connection.rssi() : -999;
+            updateRSSI(rootView, rssi);
             updateState(rootView, id, connection.state());
             updateLocationImage(rootView, id);
         }
@@ -154,10 +146,10 @@ public class ITagsFragment extends Fragment
             Log.e(LT, "no waytoday imageview", new Exception("no waytoday imagegview"));
             return;
         }
-        if (Waytoday.tracker.isUpdating && TrackIDJobService.hasTid(getActivity())) {
-            String trackID = TrackIDJobService.getTid(getActivity());
+        if (WayToday.getInstance().isTrackingOn() && WayToday.getInstance().wtClient.hasTrackerId()) {
+            String trackID = WayToday.getInstance().wtClient.getCurrentTrackerId();
             if (BuildConfig.DEBUG)
-                Log.d(LT, "updateWayToday, updating=" + Waytoday.tracker.isUpdating + " trackID=" + trackID);
+                Log.d(LT, "updateWayToday, updating=" + WayToday.getInstance().isTrackingOn() + " trackID=" + trackID);
             waytoday.setVisibility(View.VISIBLE);
             TextView wtid = waytoday.findViewById(R.id.text_wt_id);
             wtid.setText(trackID);
@@ -241,8 +233,7 @@ public class ITagsFragment extends Fragment
                         statusDrawableId = R.drawable.bt_setup;
                         if (state == BLEConnectionState.connecting)
                             statusTextId = R.string.bt_connecting;
-                        else
-                            statusTextId = R.string.bt_disconnecting;
+                        else statusTextId = R.string.bt_disconnecting;
                     }
                     break;
                 case writting:
@@ -330,15 +321,9 @@ public class ITagsFragment extends Fragment
         Animation animShake = null;
 
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "updateITagImageAnimation isFindMe:" + connection.isFindMe() +
-                    " isAlerting:" + connection.isAlerting() +
-                    " isAlertDisconnected:" + itag.isAlertDisconnected() +
-                    " not connected:" + !connection.isConnected()
-            );
+            Log.d(LT, "updateITagImageAnimation isFindMe:" + connection.isFindMe() + " isAlerting:" + connection.isAlerting() + " isAlertDisconnected:" + itag.isAlertDisconnected() + " not connected:" + !connection.isConnected());
         }
-        if (connection.isAlerting() ||
-                connection.isFindMe() ||
-                itag.isAlertDisconnected() && !connection.isConnected()) {
+        if (connection.isAlerting() || connection.isFindMe() || itag.isAlertDisconnected() && !connection.isConnected()) {
             animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
         }
         final ImageView imageITag = rootView.findViewById(R.id.image_itag);
@@ -408,25 +393,18 @@ public class ITagsFragment extends Fragment
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
 
         mLocationAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shadow_location);
         mITagAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
-        Context context = getContext();
 
         final VolumePreference mute = new VolumePreference(getContext());
         View root = inflater.inflate(R.layout.fragment_itags, container, false);
         if (root != null) {
             final ImageView imgMute = root.findViewById(R.id.btn_mute);
             int m = mute.get();
-            imgMute.setImageResource(
-                    m == VolumePreference.MUTE
-                            ? R.drawable.mute
-                            : m == VolumePreference.LOUD
-                            ? R.drawable.nomute
-                            : R.drawable.vibration);
+            imgMute.setImageResource(m == VolumePreference.MUTE ? R.drawable.mute : m == VolumePreference.LOUD ? R.drawable.nomute : R.drawable.vibration);
             imgMute.setOnClickListener(v -> {
                 int volume = mute.get();
                 volume++;
@@ -434,18 +412,9 @@ public class ITagsFragment extends Fragment
                     volume = 0;
                 }
                 mute.set(volume);
-                imgMute.setImageResource(
-                        volume == VolumePreference.MUTE
-                                ? R.drawable.mute
-                                : volume == VolumePreference.LOUD
-                                ? R.drawable.nomute
-                                : R.drawable.vibration);
+                imgMute.setImageResource(volume == VolumePreference.MUTE ? R.drawable.mute : volume == VolumePreference.LOUD ? R.drawable.nomute : R.drawable.vibration);
 
-                int toastId = volume == VolumePreference.MUTE
-                        ? R.string.soundmode_off
-                        : volume == VolumePreference.LOUD
-                        ? R.string.soundmode_on
-                        : R.string.soundmode_vibration;
+                int toastId = volume == VolumePreference.MUTE ? R.string.soundmode_off : volume == VolumePreference.LOUD ? R.string.soundmode_on : R.string.soundmode_vibration;
                 Toast.makeText(getContext(), toastId, Toast.LENGTH_SHORT).show();
             });
         }
@@ -493,8 +462,7 @@ public class ITagsFragment extends Fragment
             Log.d(LT, "onResume");
         }
         Activity activity = getActivity();
-        if (activity == null)
-            return;
+        if (activity == null) return;
         ITagApplication.faITagsView(ITag.store.count());
         final ViewGroup root = (ViewGroup) requireView();
         setupTags(root);
@@ -533,8 +501,13 @@ public class ITagsFragment extends Fragment
         if (wt_disabled0) {
             root.findViewById(R.id.btn_waytoday).setVisibility(View.GONE);
         } else {
-            Waytoday.tracker.addOnTrackingStateListener(this);
-            TrackIDJobService.addOnTrackIDChangeListener(this);
+            disposableBag.add(
+                    WayToday.getTrackIdObservable()
+                            .subscribe(trackID -> activity.runOnUiThread(this::updateWayToday)));
+            disposableBag.add(
+                    WayToday
+                            .getGpsStatusObservable()
+                            .subscribe(status -> getActivity().runOnUiThread(this::updateWayToday)));
         }
         startRssi();
     }
@@ -547,40 +520,14 @@ public class ITagsFragment extends Fragment
         stopRssi();
         HistoryRecord.removeListener(this);
         disposableBag.dispose();
-        Waytoday.tracker.removeOnTrackingStateListener(this);
-        TrackIDJobService.removeOnTrackIDChangeListener(this);
         super.onPause();
     }
 
     @Override
     public void onHistoryRecordChange() {
         Activity activity = getActivity();
-        if (activity == null)
-            return;
+        if (activity == null) return;
         Log.d(LT, "onHistoryRecordChange");
         activity.runOnUiThread(this::updateLocationImages);
-    }
-
-    // ITrackingStateListener
-    @Override
-    public void onStateChange(@NonNull TrackerState state) {
-        final View view = getView();
-        if (view != null) {
-            Activity activity = getActivity();
-            if (activity == null)
-                return;
-
-            activity.runOnUiThread(this::updateWayToday);
-        }
-    }
-
-    //  ITrackIDChangeListener
-    @Override
-    public void onTrackID(@NonNull String trackID) {
-        if (BuildConfig.DEBUG) Log.d(LT, "onTrackID: " + trackID);
-        Activity activity = getActivity();
-        if (activity == null)
-            return;
-        activity.runOnUiThread(this::updateWayToday);
     }
 }
