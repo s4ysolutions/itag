@@ -3,6 +3,8 @@ package s4y.itag;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
@@ -108,8 +110,8 @@ public class ITagsFragment extends Fragment
                 setupButtons(rootView, itag);
                 updateITagImage(rootView, itag);
                 updateITagImageAnimation(rootView, itag, connection);
-                updateName(rootView, itag.name());
-                updateAlertButton(rootView, itag.isAlertDisconnected(), connection.isConnected());
+                updateName(rootView, itag);
+                updateAlertButton(rootView, itag.isAlertOnDisconnectEnabled(), connection.isConnected());
             }
             updateRSSI(rootView, connection.rssi());
             updateState(rootView, id, connection.state());
@@ -207,10 +209,13 @@ public class ITagsFragment extends Fragment
         Activity activity = getActivity();
         if (activity == null) return; //
         RssiView rssiView = rootView.findViewById(R.id.rssi);
-        if (rssiView == null) {
-            return;
+        TextView rssiTextView = rootView.findViewById(R.id.text_rssi);
+        if (rssiView != null) {
+            rssiView.setRssi(rssi);
         }
-        rssiView.setRssi(rssi);
+        if (rssiTextView != null) {
+            rssiTextView.setText(String.format(getString(R.string.rssi), rssi));
+        }
     }
 
     private void updateRSSI(@NonNull String id, int rssi) {
@@ -225,21 +230,25 @@ public class ITagsFragment extends Fragment
         Activity activity = getActivity();
         if (activity == null) return; //
         int statusDrawableId;
+        int statusDrawableTint = Color.BLACK;
         int statusTextId;
         if (ble.state() == BLEState.OK) {
             switch (state) {
                 case connected:
                     statusDrawableId = R.drawable.bt;
+                    statusDrawableTint = Color.GREEN;
                     statusTextId = R.string.bt;
                     break;
                 case connecting:
                 case disconnecting:
                     ITagInterface itag = ITag.store.byId(id);
-                    if (itag != null && itag.isAlertDisconnected()) {
+                    if (itag != null && itag.isAlertOnDisconnectEnabled()) {
                         statusDrawableId = R.drawable.bt_connecting;
+                        statusDrawableTint = Color.RED;
                         statusTextId = R.string.bt_lost;
                     } else {
                         statusDrawableId = R.drawable.bt_setup;
+                        statusDrawableTint = Color.parseColor("#FFA500");
                         if (state == BLEConnectionState.connecting)
                             statusTextId = R.string.bt_connecting;
                         else
@@ -254,15 +263,20 @@ public class ITagsFragment extends Fragment
                 case disconnected:
                 default:
                     statusDrawableId = R.drawable.bt_disabled;
+                    statusDrawableTint = Color.LTGRAY;
                     statusTextId = R.string.bt_disabled;
             }
         } else {
             statusDrawableId = R.drawable.bt_disabled;
+            statusDrawableTint = Color.LTGRAY;
             statusTextId = R.string.bt_disabled;
         }
 
         final ImageView imgStatus = rootView.findViewById(R.id.bt_status);
         imgStatus.setImageResource(statusDrawableId);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            imgStatus.getDrawable().setTint(statusDrawableTint);
+        }
         final TextView textStatus = rootView.findViewById(R.id.text_status);
         textStatus.setText(statusTextId);
     }
@@ -275,11 +289,13 @@ public class ITagsFragment extends Fragment
         updateState(view, id, state);
     }
 
-    private void updateName(@NonNull ViewGroup rootView, String name) {
+    private void updateName(@NonNull ViewGroup rootView, ITagInterface itag) {
         Activity activity = getActivity();
         if (activity == null) return; //
         final TextView textName = rootView.findViewById(R.id.text_name);
-        textName.setText(name);
+        final TextView textId = rootView.findViewById(R.id.text_id);
+        textName.setText(itag.name());
+        textId.setText(itag.id());
     }
 
     private void updateAlertButton(@NonNull ViewGroup rootView, boolean isAlertDisconnected, boolean isConnected) {
@@ -314,7 +330,7 @@ public class ITagsFragment extends Fragment
         }
         BLEConnectionInterface connection = ble.connectionById(id);
         boolean isConnected = connection.isConnected();
-        boolean isAlertDisconnected = itag.isAlertDisconnected();
+        boolean isAlertDisconnected = itag.isAlertOnDisconnectEnabled();
         if (BuildConfig.DEBUG) {
             Log.d(LT, "id = " + id + " updateAlertButton2 isAlertDisconnected=" + isAlertDisconnected + " isConnected=" + isConnected);
         }
@@ -333,13 +349,13 @@ public class ITagsFragment extends Fragment
         if (BuildConfig.DEBUG) {
             Log.d(LT, "updateITagImageAnimation isFindMe:" + connection.isFindMe() +
                     " isAlerting:" + connection.isAlerting() +
-                    " isAlertDisconnected:" + itag.isAlertDisconnected() +
+                    " isAlertDisconnected:" + itag.isAlertOnDisconnectEnabled() +
                     " not connected:" + !connection.isConnected()
             );
         }
         if (connection.isAlerting() ||
                 connection.isFindMe() ||
-                itag.isAlertDisconnected() && !connection.isConnected()) {
+                itag.isAlertOnDisconnectEnabled() && !connection.isConnected()) {
             animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
         }
         final ImageView imageITag = rootView.findViewById(R.id.image_itag);

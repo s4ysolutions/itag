@@ -72,7 +72,7 @@
     <string name="not_connected">Not connected</string>
     <string name="status133">The device seems to have a problem. Anti lost feature may fail.</string>
 
-    <string name="no_geo_activity">It looks like your device does not have any Map location</string>
+    <string name="no_geo_activity">It looks like your device does not have any Map location viewer</string>
     <string name="can_not_get_gps_location">iTag One could not get exact location because GPS disabled for this application</string>
 
     <string name="uint_sec" translatable="false"> sec </string>

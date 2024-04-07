@@ -20,7 +20,7 @@ public class BootReceiver extends BroadcastReceiver {
                         "android.intent.action.QUICKBOOT_POWERON".equals(intent.getAction())
         ) {
             ITagsStoreInterface store = new ITagsStoreDefault(ITagApplication.context);
-            if (store.isDisconnectAlert() || Waytoday.tracker.isOn(context)) {
+            if (store.isDisconnectAlertOn() || Waytoday.tracker.isOn(context)) {
                 ITagsService.start(context); // expected to create application and thus start waytooday
             }
         }

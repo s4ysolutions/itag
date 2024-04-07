@@ -161,7 +161,7 @@ public class MainActivity extends FragmentActivity {
         }
         disposableBag.dispose();
         sIsShown = false;
-        if (ITag.store.isDisconnectAlert() || Waytoday.tracker.isUpdating) {
+        if (ITag.store.isDisconnectAlertOn() || Waytoday.tracker.isUpdating) {
             ITagsService.start(this);
         } else {
             ITagsService.stop(this);
@@ -209,15 +209,14 @@ public class MainActivity extends FragmentActivity {
         if (s4y.itag.ble.BuildConfig.DEBUG) {
             Log.d(LT, "setupContent isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
         }
+        setupProgressBar();
         if (ITag.ble.scanner().isScanning()) {
-            setupProgressBar();
             mEnableAttempts = 0;
             if (mSelectedFragment != FragmentType.SCANNER) {
                 fragment = new ScanFragment();
                 mSelectedFragment = FragmentType.SCANNER;
             }
         } else {
-            setupProgressBar();
             if (ITag.ble.state() == BLEState.NO_ADAPTER) {
                 fragment = new NoBLEFragment();
                 mSelectedFragment = FragmentType.OTHER;
@@ -346,25 +345,23 @@ public class MainActivity extends FragmentActivity {
             connection.resetFindeMe();
         } else if (connection.isConnected()) {
             new Thread(() -> {
-                if (connection.isAlerting()) {
-                    connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
-                } else {
-                    connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
-                }
+                toggleAlertOnITag(connection);
             }).start();
         } else {
-            if (!itag.isAlertDisconnected()) {
-                // there's no sense to communicate if the connection
-                // in the connecting state
+            if (!itag.isAlertOnDisconnectEnabled()) {
+                // there's no sense to communicate if the connection is in the connecting state
                 ITag.connectAsync(connection, false, () -> {
-                    if (connection.isAlerting()) {
-                        connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
-                    } else {
-                        connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
-                    }
-
+                    toggleAlertOnITag(connection);
                 });
             }
+        }
+    }
+
+    private static void toggleAlertOnITag(BLEConnectionInterface connection) {
+        if (connection.isAlerting()) {
+            connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
+        } else {
+            connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
         }
     }
 
@@ -552,14 +549,14 @@ public class MainActivity extends FragmentActivity {
         popupMenu.show();
     }
 
-    public void onDisconnectAlert(@NonNull View sender) {
+    public void changeDisconnectMode(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
         if (itag == null) {
             ITagApplication.handleError(new Exception("No itag"));
             return;
         }
         BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-        if (itag.isAlertDisconnected()) {
+        if (itag.isAlertOnDisconnectEnabled()) {
             ITag.store.setAlert(itag.id(), false);
             new Thread(connection::disconnect).start();
         } else {
@@ -570,7 +567,7 @@ public class MainActivity extends FragmentActivity {
                 ITag.connectAsync(connection);
             }
         }
-        if (itag.isAlertDisconnected()) {
+        if (itag.isAlertOnDisconnectEnabled()) {
             Toast.makeText(this, R.string.mode_alertdisconnect, Toast.LENGTH_SHORT).show();
             ITagApplication.faUnmuteTag();
         } else {

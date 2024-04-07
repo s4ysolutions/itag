@@ -14,19 +14,33 @@
         android:orientation="horizontal"
         tools:ignore="UseCompoundDrawables">
 
-        <Space
-            android:layout_width="40sp"
-            android:layout_height="wrap_content" />
 
-        <TextView
-            android:id="@+id/text_name"
-            style="@android:style/TextAppearance.DialogWindowTitle"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="@string/empty"
-            android:textAlignment="center" />
+            android:orientation="vertical"
+            android:layout_marginLeft="8dp">
+            <TextView
+                android:id="@+id/text_name"
+                style="@android:style/TextAppearance.DialogWindowTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:text="@string/empty"
+                tools:text="iTAG"
+                android:textAlignment="center" />
+            <TextView
+                android:id="@+id/text_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:text="@string/empty"
+                tools:text="FF:FF:FF:FF:FF:FF"
+                android:textAlignment="center"
+                android:textColor="@color/cardview_dark_background"/>
+        </LinearLayout>
+
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -36,8 +50,8 @@
 
             <ImageView
                 android:id="@+id/bt_status"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="4dp"
                 android:contentDescription="@string/empty"
@@ -47,9 +61,8 @@
                 android:id="@+id/text_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:minWidth="40sp"
                 android:text="@string/empty"
-                android:textAlignment="center"
+                android:layout_gravity="center"
                 android:textSize="14sp" />
         </LinearLayout>
 
@@ -63,14 +76,16 @@
 
     <s4y.itag.ITagImageView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
         android:id="@+id/image_itag"
         android:contentDescription="@string/itag"
         android:longClickable="true"
         android:onClick="onITagClick"
         android:padding="8dp"
         android:scaleType="fitCenter"
-        android:src="@drawable/itag_white" />
+        android:src="@drawable/itag_white"
+        android:layout_gravity="center"/>
 
         <s4y.itag.WaytodayView
             android:id="@+id/wt"
@@ -92,15 +107,27 @@
             android:src="@drawable/location"
             tools:ignore="RtlHardcoded" />
 
-        <s4y.itag.RssiView
-            android:id="@+id/rssi"
-            android:layout_width="8dp"
-            android:layout_height="64dp"
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:layout_gravity="bottom|right"
             android:layout_marginTop="8dp"
             android:layout_marginRight="8dp"
-            android:layout_marginBottom="8dp"
-            tools:ignore="RtlHardcoded" />
+            android:layout_marginBottom="8dp">
+            <TextView
+                android:id="@+id/text_rssi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Signal strength: -36"
+                android:layout_gravity="bottom"
+                android:layout_marginRight="4dp"/>
+            <s4y.itag.RssiView
+                android:id="@+id/rssi"
+                android:layout_width="16dp"
+                android:layout_height="64dp"
+                tools:ignore="RtlHardcoded" />
+        </LinearLayout>
 
     </FrameLayout>
 
@@ -123,7 +150,7 @@
             android:layout_width="@android:dimen/app_icon_size"
             android:layout_height="@android:dimen/app_icon_size"
             android:contentDescription="@string/manage_alert"
-            android:onClick="onDisconnectAlert"
+            android:onClick="changeDisconnectMode"
             android:src="@drawable/keyfinder" />
 
         <Space
@@ -137,7 +164,7 @@
             android:layout_height="@android:dimen/app_icon_size"
             android:contentDescription="@string/change_name"
             android:onClick="onSetName"
-            android:src="@drawable/rename" />
+            android:src="@drawable/settings" />
 
         <Space
             android:layout_width="wrap_content"
@@ -150,7 +177,7 @@
             android:layout_height="@android:dimen/app_icon_size"
             android:contentDescription="@string/color"
             android:onClick="onChangeColor"
-            android:src="@drawable/color" />
+            android:src="@drawable/colorwheel2" />
 
         <Space
             android:layout_width="wrap_content"

@@ -67,13 +67,13 @@ private static final long serialVersionUID = 1575220516;
     }
 
     @Override
-    public boolean isAlertDisconnected() {
+    public boolean isAlertOnDisconnectEnabled() {
         return alert;
     }
 
     @Override
-    public void setAlertDisconnected(boolean alerting) {
-        this.alert = alerting;
+    public void setAlertOnDisconnect(boolean alert) {
+        this.alert = alert;
     }
 
     @Override
@@ -89,7 +89,7 @@ private static final long serialVersionUID = 1575220516;
     @Override
     public void copyFromTag(@NonNull ITagInterface tag) {
         name = tag.name();
-        alert = tag.isAlertDisconnected();
+        alert = tag.isAlertOnDisconnectEnabled();
         color = tag.color();
     }
 

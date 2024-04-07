@@ -62,10 +62,10 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    synchronized public boolean isDisconnectAlert() {
+    synchronized public boolean isDisconnectAlertOn() {
         for (String id : ids) {
             ITagInterface itag = tags.get(id);
-            if (itag != null && itag.isAlertDisconnected()) {
+            if (itag != null && itag.isAlertOnDisconnectEnabled()) {
                 return true;
             }
         }
@@ -178,7 +178,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
         if (tag == null) {
             return;
         }
-        tag.setAlertDisconnected(alert);
+        tag.setAlertOnDisconnect(alert);
         new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
     }

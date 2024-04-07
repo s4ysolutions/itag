@@ -44,18 +44,15 @@ public class ITag {
         store = new ITagsStoreDefault(ITagApplication.context);
         for (int i = 0; i < store.count(); i++) {
             ITagInterface itag = store.byPos(i);
-            if (itag != null) {
-                if (itag.isAlertDisconnected()) {
-                    BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-                    connectAsync(connection);
-                    enableReconnect(itag.id());
-                }
-            }
+            if (itag == null || !itag.isAlertOnDisconnectEnabled()) continue;
+            BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
+            connectAsync(connection);
+            enableReconnect(itag.id());
         }
         subscribeDisconnections();
         disposables.add(store.observable().subscribe(event -> {
             ITagInterface itag = event.tag;
-            boolean reconnect = store.remembered(itag.id()) && itag.isAlertDisconnected();
+            boolean reconnect = store.remembered(itag.id()) && itag.isAlertOnDisconnectEnabled();
             BLEConnectionInterface connection = ble.connectionById(itag.id());
             if (reconnect) {
                 enableReconnect(itag.id());
@@ -109,11 +106,11 @@ public class ITag {
             final ITagInterface itag = store.byPos(i);
             if (itag != null) {
                 BLEConnectionInterface connection = ble.connectionById(itag.id());
-                if (itag.isAlertDisconnected()){
+                if (itag.isAlertOnDisconnectEnabled()){
                     disposablesConnections.add(connection.observableState().subscribe(event -> {
                                 if (BuildConfig.DEBUG)
                                     Log.d(LT, "connection " + connection.id() + " state " + connection.state());
-                                if (itag.isAlertDisconnected() && BLEConnectionState.disconnected.equals(connection.state())) {
+                                if (itag.isAlertOnDisconnectEnabled() && BLEConnectionState.disconnected.equals(connection.state())) {
                                     if (itag.alertDelay() == 0) {
                                         if (BuildConfig.DEBUG)
                                             Log.d(LT, "connection " + connection.id() + " lost");
@@ -129,7 +126,7 @@ public class ITag {
                                             if (BuildConfig.DEBUG) Log.d(LT, "connection " +
                                                     connection.id() + " lost posted, state=" +
                                                     connection.state());
-                                            if (itag.isAlertDisconnected() && !connection.isConnected()) {
+                                            if (itag.isAlertOnDisconnectEnabled() && !connection.isConnected()) {
                                                 if (BuildConfig.DEBUG)
                                                     Log.d(LT, "connection " + connection.id() + " lost");
                                                 alertUser(itag);
@@ -139,6 +136,7 @@ public class ITag {
                                 } else if (BLEConnectionState.connected.equals(connection.state())) {
                                     if (BuildConfig.DEBUG)
                                         Log.d(LT, "connection " + connection.id() + " restored");
+                                    // TODO: play sound if connection restore alert is enabled
                                     MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
                                     cancelDisconnectNotification(ITagApplication.context);
                                     HistoryRecord.clear(ITagApplication.context, itag.id());
@@ -224,7 +222,7 @@ public class ITag {
                         Log.d(LT, "BLE Connect thread connect " + connection.id() + "/" + itag.name() + " " + Thread.currentThread().getName());
                     }
                     connection.connect(infinity);
-                } while (!isInterrupted() && itag.isAlertDisconnected() && infinity && !connection.isConnected());
+                } while (!isInterrupted() && itag.isAlertOnDisconnectEnabled() && infinity && !connection.isConnected());
                 // stop sound on connection in any case
                 MediaPlayerUtils.getInstance().stopSound(ITagApplication.context);
                 if (!isInterrupted()) {

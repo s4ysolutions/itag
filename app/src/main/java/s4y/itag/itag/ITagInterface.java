@@ -11,8 +11,8 @@ public interface ITagInterface {
     void setName(String name);
     TagColor color();
     void setColor(TagColor color);
-    boolean isAlertDisconnected();
-    void setAlertDisconnected(boolean alerting);
+    boolean isAlertOnDisconnectEnabled();
+    void setAlertOnDisconnect(boolean alert);
     int alertDelay();
     void setAlertDelay(int alarmDelay);
     void copyFromTag(ITagInterface tag);
