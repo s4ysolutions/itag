@@ -117,6 +117,7 @@ public class ITag {
                                     if (itag.alertDelay() == 0) {
                                         if (BuildConfig.DEBUG)
                                             Log.d(LT, "connection " + connection.id() + " lost");
+                                        alertUser(itag);
                                         MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
                                         sendDisconnectNotification(ITagApplication.context, itag.name());
                                         HistoryRecord.add(ITagApplication.context, itag.id());
@@ -131,16 +132,9 @@ public class ITag {
                                             if (itag.isAlertDisconnected() && !connection.isConnected()) {
                                                 if (BuildConfig.DEBUG)
                                                     Log.d(LT, "connection " + connection.id() + " lost");
-                                                int volume = new VolumePreference(ITagApplication.context).get();
-                                                if (volume == VolumePreference.LOUD) {
-                                                    MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
-                                                } else if (volume == VolumePreference.VIBRATION) {
-                                                    MediaPlayerUtils.getInstance().startVibrate();
-                                                }
-                                                sendDisconnectNotification(ITagApplication.context, itag.name());
-                                                HistoryRecord.add(ITagApplication.context, itag.id());
+                                                alertUser(itag);
                                             }
-                                        }, itag.alertDelay() * 1000);
+                                        }, itag.alertDelay() * 1000L);
                                     }
                                 } else if (BLEConnectionState.connected.equals(connection.state())) {
                                     if (BuildConfig.DEBUG)
@@ -167,6 +161,17 @@ public class ITag {
                 }));
             }
         }
+    }
+
+    private static void alertUser(ITagInterface itag) {
+        int volume = new VolumePreference(ITagApplication.context).get();
+        if (volume == VolumePreference.LOUD) {
+            MediaPlayerUtils.getInstance().startSoundDisconnected(ITagApplication.context);
+        } else if (volume == VolumePreference.VIBRATION) {
+            MediaPlayerUtils.getInstance().startVibrate();
+        }
+        sendDisconnectNotification(ITagApplication.context, itag.name());
+        HistoryRecord.add(ITagApplication.context, itag.id());
     }
 
     private static int connectThreadsCount = 0;
