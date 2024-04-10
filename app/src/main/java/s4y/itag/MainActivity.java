@@ -62,6 +62,8 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.d("ingo", "onCreate");
+        setupContent();
         /*
         // ATTENTION: This was auto-generated to handle app linksI
         Intent appLinkIntent = getIntent();
@@ -91,6 +93,8 @@ public class MainActivity extends FragmentActivity {
     private FragmentType mSelectedFragment;
     private int mEnableAttempts = 0;
 
+    Fragment fragment2 = null;
+
     static class ITagServiceConnection implements ServiceConnection {
 
         @Override
@@ -118,11 +122,15 @@ public class MainActivity extends FragmentActivity {
         super.onResume();
         ErrorsObservable.addErrorListener(mErrorListener);
         sIsShown = true;
-        setupContent();
         Waytoday.gpsLocationUpdater.addOnPermissionListener(gpsPermissionListener);
-        disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
+        Log.d("ingo", "onresume");
+        disposableBag.add(ITag.ble.observableState().subscribe(event -> {
+            Log.d("ingo", "disposableBag.add(ITag.ble.observableState().subscribe");
+            //setupContent();
+        }));
         disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
                 event -> {
+                    Log.d("ingo", "disposableBag.add(ITag.ble.scanner().observableActive().subscribe(");
                     if (s4y.itag.ble.BuildConfig.DEBUG) {
                         Log.d(LT, "ble.scanner activeEvent=" + event + " isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
                     }
@@ -203,29 +211,30 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void setupContent() {
-        final FragmentManager fragmentManager = getSupportFragmentManager();
-        final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        Fragment fragment = null;
         if (s4y.itag.ble.BuildConfig.DEBUG) {
             Log.d(LT, "setupContent isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
         }
+        Fragment newFragment = null;
         setupProgressBar();
+        Log.d("ingo", "setupContent");
         if (ITag.ble.scanner().isScanning()) {
+            Log.d("ingo", "scanner");
             mEnableAttempts = 0;
             if (mSelectedFragment != FragmentType.SCANNER) {
-                fragment = new ScanFragment();
+                Log.d("ingo", "scanner yes");
+                newFragment = new ScanFragment();
                 mSelectedFragment = FragmentType.SCANNER;
             }
         } else {
             if (ITag.ble.state() == BLEState.NO_ADAPTER) {
-                fragment = new NoBLEFragment();
+                newFragment = new NoBLEFragment();
                 mSelectedFragment = FragmentType.OTHER;
             } else {
                 if (ITag.ble.state() == BLEState.OK) {
                     setNotFirstLaunch();
                     mEnableAttempts = 0;
                     if (mSelectedFragment != FragmentType.ITAGS) {
-                        fragment = new ITagsFragment();
+                        newFragment = new ITagsFragment();
                         mSelectedFragment = FragmentType.ITAGS;
                     }
                 } else {
@@ -249,16 +258,20 @@ public class MainActivity extends FragmentActivity {
                         if (BuildConfig.DEBUG) {
                             Log.d(LT, "setupContent BT disabled, auto enable failed");
                         }
-                        fragment = new DisabledBLEFragment();
+                        newFragment = new DisabledBLEFragment();
                         mSelectedFragment = FragmentType.OTHER;
                     }
                 }
             }
         }
-        if (fragment != null) {
-            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            fragmentTransaction.replace(R.id.content, fragment);
+        if (newFragment != null) {
+            final FragmentManager fragmentManager = getSupportFragmentManager();
+            final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            Log.d("ingo", "fragment je " + newFragment.getClass().getSimpleName() + ", mSelectedFragment je " + mSelectedFragment);
+            //fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            fragmentTransaction.replace(R.id.content, newFragment, null);
             fragmentTransaction.commitAllowingStateLoss();
+            fragment2 = newFragment;
         }
     }
 
@@ -333,22 +346,39 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    public boolean isItagsFragmentShown(){
+        return fragment2 != null && fragment2.getClass().getSimpleName().equals("ITagsFragment");
+    }
+
     public void onITagClick(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
+        Log.d("ingo", "onITagClick");
         if (itag == null) {
             return;
         }
-        MediaPlayerUtils.getInstance().stopSound(this);
         final BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-        Notifications.cancelDisconnectNotification(this);
-        if (connection.isFindMe()) {
-            connection.resetFindeMe();
+
+        if (connection.isFindMe()) { // iTag contacting phone
+            connection.resetFindMe();
+        } else if(itag.shakingOnConnectDisconnect()) {
+            ITag.store.setShakingOnConnectDisconnect(itag.id(), false);
+            Log.d("ingo", "did it");
+            // TODO: check if fragments needs updating
+            if(isItagsFragmentShown()) {
+                Log.d("ingo", "isItagsFragmentShown true");
+                ((ITagsFragment) fragment2).updateITagImageAnimation(itag, connection);
+            }
+            Notifications.cancelDisconnectNotification(this);
+            Notifications.cancelConnectNotification(this);
+            MediaPlayerUtils.getInstance().stopSound(this);
         } else if (connection.isConnected()) {
+            Log.d("ingo", "connected");
             new Thread(() -> {
                 toggleAlertOnITag(connection);
             }).start();
         } else {
-            if (!itag.isAlertOnDisconnectEnabled()) {
+            // TODO: change depending on modes
+            if (!itag.isAlertEnabled()) {
                 // there's no sense to communicate if the connection is in the connecting state
                 ITag.connectAsync(connection, false, () -> {
                     toggleAlertOnITag(connection);
@@ -381,15 +411,15 @@ public class MainActivity extends FragmentActivity {
                                 .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
                                 .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
                                 .show();
-                        return;
                     } else {
                         // isScanRequestAbortedBecauseOfPermission=true;
                         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
-                        return;
                     }
+                    return;
                 }
             }
             ITag.ble.scanner().start(ITag.SCAN_TIMEOUT, new String[]{});
+            Log.d("ingo", "scanner started");
         }
     }
 
@@ -400,7 +430,7 @@ public class MainActivity extends FragmentActivity {
             //noinspection SwitchStatementWithTooFewBranches
             switch (item.getItemId()) {
                 case R.id.exit:
-                    ITag.close();
+                    ITag.closeApplication();
                     Waytoday.stop(this);
                     ITagsService.stop(this);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -549,31 +579,37 @@ public class MainActivity extends FragmentActivity {
         popupMenu.show();
     }
 
-    public void changeDisconnectMode(@NonNull View sender) {
+    public void disconnectItag(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
         if (itag == null) {
             ITagApplication.handleError(new Exception("No itag"));
             return;
         }
         BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-        if (itag.isAlertOnDisconnectEnabled()) {
+        if (itag.isAlertEnabled()) {
+            Log.d("ingo", "disconnectItag yes");
             ITag.store.setAlert(itag.id(), false);
+            ITag.disableReconnect(itag.id());
             new Thread(connection::disconnect).start();
         } else {
-            if (connection.isConnected()) {
-                new Thread(connection::disconnect).start();
-            } else {
-                ITag.store.setAlert(itag.id(), true);
-                ITag.connectAsync(connection);
-            }
+            Log.d("ingo", "disconnectItag no");
+            ITag.store.setAlert(itag.id(), true);
+            ITag.enableReconnect(itag.id());
+            ITag.connectAsync(connection);
         }
-        if (itag.isAlertOnDisconnectEnabled()) {
-            Toast.makeText(this, R.string.mode_alertdisconnect, Toast.LENGTH_SHORT).show();
+        /*if (itag.isAlertEnabled()) {
+            //Toast.makeText(this, R.string.mode_alertdisconnect, Toast.LENGTH_SHORT).show();
+            if(isItagsFragmentShown()) {
+                ((ITagsFragment) fragment2).updateModeTextView(itag.id(), "Alert enabled");
+            }
             ITagApplication.faUnmuteTag();
         } else {
-            Toast.makeText(this, R.string.mode_keyfinder, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, R.string.mode_keyfinder, Toast.LENGTH_SHORT).show();
+            if(isItagsFragmentShown()) {
+                ((ITagsFragment) fragment2).updateModeTextView(itag.id(), "Alert disabled");
+            }
             ITagApplication.faMuteTag();
-        }
+        }*/
     }
 
     public void onSetName(@NonNull View sender) {

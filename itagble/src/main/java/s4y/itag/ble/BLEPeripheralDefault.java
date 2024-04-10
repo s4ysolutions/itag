@@ -62,7 +62,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
                 Log.d(LT, "RSSI runnable id=" + identifier() + " isConnected=" + isConnected());
             }
             if (gatt() != null && isConnected()) {
-                Log.v(LT, "request RSSI id=" + identifier());
+                //Log.v(LT, "request RSSI id=" + identifier());
                 gatt().readRemoteRssi();
             }
             manager.postOperation(this, RSSI_INTERVAL_MS);
@@ -227,7 +227,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
                 observables.channelRSSI.broadcast(new BLEPeripheralObservablesInterface.RSSIEvent(rssi, status));
             } else {
                 if (BuildConfig.DEBUG) {
-                    Log.v(LT, "onReadRemoteRssi skipped id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
+                    //Log.v(LT, "onReadRemoteRssi skipped id=" + identifier() + " rssiEnabled=" + rssi + " status=" + status);
                 }
             }
         }
@@ -439,7 +439,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
     public boolean isConnected() {
         boolean connected = manager.connected(device);
         if (BuildConfig.DEBUG) {
-            Log.w(LT, "isConnected, device=" + device.getAddress() + " manager.connected=" + connected);
+            //Log.w(LT, "isConnected, device=" + device.getAddress() + " manager.connected=" + connected);
         }
         BluetoothGatt g = gatt();
         if (g == null && connected) {
@@ -467,7 +467,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             ret = gatt[0];
         }
         if (BuildConfig.DEBUG) {
-            Log.v(LT, "getGatt null:" + (ret == null ? "yes" : "no") + " id=" + identifier());
+            //Log.v(LT, "getGatt null:" + (ret == null ? "yes" : "no") + " id=" + identifier());
         }
         return ret;
     }

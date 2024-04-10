@@ -8,7 +8,7 @@
     <string name="confirm_disconnect">Acenando com o dedo, você solicitou que o iTag fosse desconectado.\n\n</string>
     <string name="change_name">Configurações de iTag</string>
     <string name="itag_name">Nome do iTag</string>
-    <string name="itag_alarm_delay">Atraso de alarme</string>
+    <string name="itag_disconnect_alarm_delay">Atraso de alarme</string>
     <string name="itag_alarm_delay_0">Sem demora</string>
     <string name="itag_alarm_delay_3">3 sec</string>
     <string name="itag_alarm_delay_5">5 sec</string>
@@ -87,7 +87,7 @@
     <string name="soundmode_on">Alarme quando a iTag perder</string>
     <string name="soundmode_vibration">Vibração quando a iTag perdeu</string>
     <string name="soundmode_off">Nenhum alarme quando a iTag perdeu</string>
-    <string name="mode_keyfinder">Modo localizador de chave</string>
-    <string name="mode_alertdisconnect">Modo de alarme perdido</string>
+    <string name="mode_dont_connect">Modo localizador de chave</string>
+    <string name="mode_alert">Modo de alarme perdido</string>
     <string name="app_name">iTag One</string>
 </resources>

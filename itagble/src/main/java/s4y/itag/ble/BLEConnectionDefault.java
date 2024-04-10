@@ -38,6 +38,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private final Channel<Integer> clickChannel = new Channel<>(0);
     private final ChannelDistinct<BLEConnectionState> stateChannel = new ChannelDistinct<>(BLEConnectionState.disconnected);
     private final ChannelDistinct<Integer> rssiChannel = new ChannelDistinct<>(-999);
+    BLEConnectionState oldState = null;
 
     @Override
     public boolean isConnected() {
@@ -606,6 +607,16 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
+    public BLEConnectionState oldState() {
+        return oldState;
+    }
+
+    @Override
+    public void setOldState(BLEConnectionState oldState){
+        this.oldState = oldState;
+    }
+
+    @Override
     public boolean isAlerting() {
         return alertChannel.observable.value() != AlertVolume.NO_ALERT;
     }
@@ -616,7 +627,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
-    public void resetFindeMe() {
+    public void resetFindMe() {
        clickChannel.broadcast(0);
     }
 

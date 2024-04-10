@@ -8,7 +8,7 @@
     <string name="confirm_forget">L\'appareil sera oublié, êtes-vous sûr? Vous pourrez cependant reconnecter cet appareil et vous en souvenir à tout moment.\n\nOubliez?</string>
     <string name="change_name">Paramètres d\'iTag</string>
     <string name="confirm_disconnect">En lançant votre doigt, vous avez demandé que iTag soit déconnecté. Ce n\'est pas dangereux, l\'iTag ne sera pas oublié et vous pourrez le reconnecter avec le même fling côte à côte.\n\nVoulez-vous vraiment déconnecter l\'iTag?</string>
-    <string name="itag_alarm_delay">Délai d\'alarme</string>
+    <string name="itag_disconnect_alarm_delay">Délai d\'alarme</string>
     <string name="itag_name">Nom de iTag</string>
     <string name="itag_alarm_delay_0">Sans délais</string>
     <string name="itag_alarm_delay_3">3 sec</string>
@@ -88,6 +88,6 @@
     <string name="soundmode_on">Alarme quand iTag a perdu</string>
     <string name="soundmode_vibration">Vibration lorsque iTag a perdu</string>
     <string name="soundmode_off">Pas d\'alarme quand iTag a perdu</string>
-    <string name="mode_keyfinder">Mode de recherche de clé</string>
-    <string name="mode_alertdisconnect">Mode d\'alarme perdu</string>
+    <string name="mode_dont_connect">Mode de recherche de clé</string>
+    <string name="mode_alert">Mode d\'alarme perdu</string>
 </resources>

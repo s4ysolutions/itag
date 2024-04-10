@@ -8,7 +8,7 @@
     <string name="confirm_disconnect">Этот жест отключит брелок и удалит его из списка. При повторном подключении текущие настройки будут восстановлены.  Продолжить отключение?</string>
     <string name="change_name">Настроить брелок</string>
     <string name="itag_name">Название брелка</string>
-    <string name="itag_alarm_delay">Задержка тревоги</string>
+    <string name="itag_disconnect_alarm_delay">Задержка тревоги</string>
     <string name="itag_alarm_delay_0">Отсутсвует</string>
     <string name="itag_alarm_delay_3">3 секунды</string>
     <string name="itag_alarm_delay_5">5 секунд</string>
@@ -90,6 +90,6 @@
     <string name="soundmode_vibration">Вибрация при потере брелка</string>
     <string name="soundmode_off">Нет сигнала при потере брелка</string>
 
-    <string name="mode_keyfinder">Только поиск брелка</string>
-    <string name="mode_alertdisconnect">Сигнализировать при утере брелка</string>
+    <string name="mode_dont_connect">Только поиск брелка</string>
+    <string name="mode_alert">Сигнализировать при утере брелка</string>
 </resources>

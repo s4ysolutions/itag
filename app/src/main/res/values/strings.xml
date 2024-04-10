@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">iTag One</string>
+    <string name="channel_disconnect">Disconnections</string>
+    <string name="channel_connect">Connections</string>
     <string name="empty" translatable="false" />
 
     <string name="hello_no_ble_fragment">Your device has no Bluetooth adapter</string>
@@ -11,12 +13,36 @@
     <string name="confirm_disconnect">Flinging with your finger you requested iTag to be disconnected.\nThis is not dangerous, the iTag will not be forgotten and you will be able to connect it back with the same side-to-side fling.\n\nDo you really want disconnect iTag?</string>
     <string name="change_name">iTag\'s settings</string>
     <string name="itag_name">iTag\'s Name</string>
-    <string name="itag_alarm_delay">Alarm delay</string>
+    <string name="itag_disconnect_alarm_delay">Disconnect alarm delay</string>
+    <string name="itag_connection_mode">Connection mode</string>
+
+    <string name="itag_alarm_mode">Alarm mode</string>
+
+    <string-array name="itag_connection_modes">
+        <item>Active mode</item>
+        <item>Passive mode</item>
+    </string-array>
+
+    <string-array name="itag_alarm_delays">
+        <item>No delay</item>
+        <item>3 sec</item>
+        <item>5 sec</item>
+        <item>10 sec</item>
+    </string-array>
+
+    <string-array name="itag_alarm_modes">
+        <item>No alarm</item>
+        <item>Alarm when out of range</item>
+        <item>Alarm when in range</item>
+        <item>Alarm on both</item>
+    </string-array>
+
     <string name="itag_alarm_delay_0">No delay</string>
     <string name="itag_alarm_delay_3">3 sec</string>
     <string name="itag_alarm_delay_5">5 sec</string>
     <string name="itag_alarm_delay_10">10 sec</string>
     <string name="itag_alarm_delay_description">The alarm delay will prevent itag from buzzing on very short disconnection.</string>
+    <string name="itag_connection_mode_description">Active mode will connect to your iTag device when it is in range, while passive mode will only *listen* for iTag\'s broadcasts.</string>
     <string name="manage_alert">Enable/disable Alert on disconnect</string>
 
     <string name="scanning">Scanning for iTags&#8230;</string>
@@ -49,6 +75,7 @@
     <string name="service_description">Click iTag\'s image to make the tag to ring.</string>
 
     <string name="notify_disconnect">%s disconnected</string>
+    <string name="notify_connect">%s connected</string>
     <string name="click_to_silent">Click to stop alarm</string>
 
     <string name="help_longpress">Long Press to Find the iTag</string>
@@ -111,6 +138,6 @@
     <string name="soundmode_vibration">Vibration when iTag lost</string>
     <string name="soundmode_off">No alarm when iTag lost</string>
 
-    <string name="mode_keyfinder">Key finder mode</string>
-    <string name="mode_alertdisconnect">Lost alarm mode</string>
+    <string name="mode_dont_connect">Mode: Don\'t connect</string>
+    <string name="mode_alert">Mode: Connect</string>
 </resources>

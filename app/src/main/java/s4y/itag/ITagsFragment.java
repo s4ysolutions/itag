@@ -57,6 +57,28 @@ public class ITagsFragment extends Fragment
 
     private final Map<String, ViewGroup> tagViews = new HashMap<>();
 
+    public void updateTags(boolean firstTime){
+        Log.d("ingo", "firstTime " + firstTime);
+        for (Map.Entry<String, ViewGroup> entry : tagViews.entrySet()) {
+            String id = entry.getKey();
+            ViewGroup rootView = entry.getValue();
+            ITagInterface itag = ITag.store.byId(id);
+            BLEConnectionInterface connection = ble.connectionById(id);
+            if (itag != null) {
+                setupButtons(rootView, itag);
+                updateITagImage(rootView, itag);
+                updateITagImageAnimation(rootView, itag, connection);
+                updateName(rootView, itag);
+                updateAlertButton(rootView, itag.isAlertEnabled(), connection.isConnected());
+            }
+            updateRSSI(rootView, connection.rssi());
+            updateState(rootView, id, connection.state());
+            updateLocationImage(rootView, id);
+        }
+
+        updateWayToday();
+    }
+
     private void setupTags(@NonNull ViewGroup root) {
         Activity activity = getActivity();
         if (activity == null) return; //
@@ -68,57 +90,21 @@ public class ITagsFragment extends Fragment
             index = root.indexOfChild(tagsLayout);
         }
         final int s = ITag.store.count();
+        Log.d("ingo", "s je " + s);
         final int rid = s == 0 ? R.layout.itag_0 : s == 1 ? R.layout.itag_1 : s == 2 ? R.layout.itag_2 : s == 3 ? R.layout.itag_3 : R.layout.itag_4;
         tagsLayout = activity.getLayoutInflater().inflate(rid, root, false);
         root.addView(tagsLayout, index);
         tagViews.clear();
 
-        if (s > 0) {
-            ITagInterface itag = ITag.store.byPos(0);
+        int[] tag_ids = new int[]{R.id.tag_1, R.id.tag_2, R.id.tag_3, R.id.tag_4};
+        for(int i = 0; i <= s; i++){
+            ITagInterface itag = ITag.store.byPos(i);
             if (itag != null) {
-                tagViews.put(itag.id(), root.findViewById(R.id.tag_1).findViewById(R.id.layout_itag));
+                tagViews.put(itag.id(), root.findViewById(tag_ids[i]).findViewById(R.id.layout_itag));
             }
         }
 
-        if (s > 1) {
-            ITagInterface itag = ITag.store.byPos(1);
-            if (itag != null) {
-                tagViews.put(itag.id(), root.findViewById(R.id.tag_2).findViewById(R.id.layout_itag));
-            }
-        }
-
-        if (s > 2) {
-            ITagInterface itag = ITag.store.byPos(2);
-            if (itag != null) {
-                tagViews.put(itag.id(), root.findViewById(R.id.tag_3).findViewById(R.id.layout_itag));
-            }
-        }
-
-        if (s > 3) {
-            ITagInterface itag = ITag.store.byPos(3);
-            if (itag != null) {
-                tagViews.put(itag.id(), root.findViewById(R.id.tag_4).findViewById(R.id.layout_itag));
-            }
-        }
-
-        for (Map.Entry<String, ViewGroup> entry : tagViews.entrySet()) {
-            String id = entry.getKey();
-            ViewGroup rootView = entry.getValue();
-            ITagInterface itag = ITag.store.byId(id);
-            BLEConnectionInterface connection = ble.connectionById(id);
-            if (itag != null) {
-                setupButtons(rootView, itag);
-                updateITagImage(rootView, itag);
-                updateITagImageAnimation(rootView, itag, connection);
-                updateName(rootView, itag);
-                updateAlertButton(rootView, itag.isAlertOnDisconnectEnabled(), connection.isConnected());
-            }
-            updateRSSI(rootView, connection.rssi());
-            updateState(rootView, id, connection.state());
-            updateLocationImage(rootView, id);
-        }
-
-        updateWayToday();
+        updateTags(true);
     }
 
     private void setupButtons(@NonNull ViewGroup rootView, @NonNull final ITagInterface itag) {
@@ -214,7 +200,9 @@ public class ITagsFragment extends Fragment
             rssiView.setRssi(rssi);
         }
         if (rssiTextView != null) {
-            rssiTextView.setText(String.format(getString(R.string.rssi), rssi));
+            getActivity().runOnUiThread(() -> {
+                rssiTextView.setText(String.format(getString(R.string.rssi), rssi));
+            });
         }
     }
 
@@ -242,7 +230,7 @@ public class ITagsFragment extends Fragment
                 case connecting:
                 case disconnecting:
                     ITagInterface itag = ITag.store.byId(id);
-                    if (itag != null && itag.isAlertOnDisconnectEnabled()) {
+                    if (itag != null && itag.isAlertEnabled()) {
                         statusDrawableId = R.drawable.bt_connecting;
                         statusDrawableTint = Color.RED;
                         statusTextId = R.string.bt_lost;
@@ -298,14 +286,16 @@ public class ITagsFragment extends Fragment
         textId.setText(itag.id());
     }
 
-    private void updateAlertButton(@NonNull ViewGroup rootView, boolean isAlertDisconnected, boolean isConnected) {
+    private void updateAlertButton(@NonNull ViewGroup rootView, boolean isAlertEnabled, boolean isConnected) {
         Activity activity = getActivity();
         if (activity == null) return; //
         final ImageView btnAlert = rootView.findViewById(R.id.btn_alert);
+        final TextView modeTextView = rootView.findViewById(R.id.text_mode);
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "updateAlertButton2 isAlertDisconnected=" + isAlertDisconnected + " isConnected=" + isConnected);
+            Log.d(LT, "updateAlertButton2 isAlertEnabled=" + isAlertEnabled + " isConnected=" + isConnected);
         }
-        btnAlert.setImageResource(isAlertDisconnected || isConnected ? R.drawable.linked : R.drawable.keyfinder);
+        btnAlert.setImageResource(isAlertEnabled || isConnected ? R.drawable.linked : R.drawable.keyfinder);
+        modeTextView.setText(getString(isAlertEnabled || isConnected ? R.string.mode_alert : R.string.mode_dont_connect));
     }
 
     private void updateAlertButton(@NonNull String id) {
@@ -330,7 +320,7 @@ public class ITagsFragment extends Fragment
         }
         BLEConnectionInterface connection = ble.connectionById(id);
         boolean isConnected = connection.isConnected();
-        boolean isAlertDisconnected = itag.isAlertOnDisconnectEnabled();
+        boolean isAlertDisconnected = itag.isAlertEnabled();
         if (BuildConfig.DEBUG) {
             Log.d(LT, "id = " + id + " updateAlertButton2 isAlertDisconnected=" + isAlertDisconnected + " isConnected=" + isConnected);
         }
@@ -349,14 +339,17 @@ public class ITagsFragment extends Fragment
         if (BuildConfig.DEBUG) {
             Log.d(LT, "updateITagImageAnimation isFindMe:" + connection.isFindMe() +
                     " isAlerting:" + connection.isAlerting() +
-                    " isAlertDisconnected:" + itag.isAlertOnDisconnectEnabled() +
+                    " isAlertDisconnected:" + itag.isAlertEnabled() +
                     " not connected:" + !connection.isConnected()
             );
         }
         if (connection.isAlerting() ||
-                connection.isFindMe() ||
-                itag.isAlertOnDisconnectEnabled() && !connection.isConnected()) {
-            animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
+                itag.shakingOnConnectDisconnect() ||
+                connection.isFindMe()) {
+            Log.d("ingo", "updateITagImageAnimation " + connection.isAlerting() + " " +
+                    itag.shakingOnConnectDisconnect() + " " +
+                    connection.isFindMe());
+                animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
         }
         final ImageView imageITag = rootView.findViewById(R.id.image_itag);
         if (animShake == null) {
@@ -383,7 +376,7 @@ public class ITagsFragment extends Fragment
         }
     }
 
-    private void updateITagImageAnimation(@NonNull ITagInterface itag, @NonNull BLEConnectionInterface connection) {
+    void updateITagImageAnimation(@NonNull ITagInterface itag, @NonNull BLEConnectionInterface connection) {
         Activity activity = getActivity();
         if (activity == null) return; //
         ViewGroup view = tagViews.get(itag.id());
@@ -440,6 +433,8 @@ public class ITagsFragment extends Fragment
         final VolumePreference mute = new VolumePreference(getContext());
         View root = inflater.inflate(R.layout.fragment_itags, container, false);
         if (root != null) {
+            ViewGroup realRoot = root.findViewById(R.id.root);
+            setupTags(realRoot);
             final ImageView imgMute = root.findViewById(R.id.btn_mute);
             int m = mute.get();
             imgMute.setImageResource(
@@ -470,7 +465,6 @@ public class ITagsFragment extends Fragment
                 Toast.makeText(getContext(), toastId, Toast.LENGTH_SHORT).show();
             });
         }
-
 
         return root;
     }
@@ -517,9 +511,12 @@ public class ITagsFragment extends Fragment
         if (activity == null)
             return;
         ITagApplication.faITagsView(ITag.store.count());
-        final ViewGroup root = (ViewGroup) requireView();
-        setupTags(root);
-        disposableBag.add(ITag.store.observable().subscribe(event -> setupTags(root)));
+
+        disposableBag.add(ITag.store.observable().subscribe(event -> {
+            Log.d("ingo", "setupTags");
+            updateTags(false);
+            //setupTags(root);
+        }));
         for (int i = 0; i < ITag.store.count(); i++) {
             final ITagInterface itag = ITag.store.byPos(i);
             if (itag == null) {
@@ -553,6 +550,7 @@ public class ITagsFragment extends Fragment
         final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean wt_disabled = sp.getBoolean("wt_disabled0", false);
         if (wt_disabled) {
+            ViewGroup root = (ViewGroup) requireView();
             root.findViewById(R.id.btn_waytoday).setVisibility(View.GONE);
         } else {
             Waytoday.tracker.addOnTrackingStateListener(this);

@@ -26,7 +26,9 @@ public interface BLEConnectionInterface extends AutoCloseable {
     int rssi();
     int getLastStatus();
     BLEConnectionState state();
+    void setOldState(BLEConnectionState oldState);
+    BLEConnectionState oldState();
     boolean isAlerting();
     boolean isFindMe();
-    void resetFindeMe();
+    void resetFindMe();
 }

@@ -92,7 +92,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
             if (v == null) {
                 return;
             }
-// Vibrate for 500 milliseconds
+            // Vibrate for 500 milliseconds
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
             } else {
@@ -107,7 +107,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
         return mPlayer.isPlaying();
     }
 
-    public void startSoundDisconnected(Context context) {
+    public void startSoundConnectedDisconnected(Context context, Boolean disconnected) {
         stopSound(context);
         AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);
 
@@ -120,11 +120,11 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
 
         AssetFileDescriptor afd = null;
         try {
-            afd = context.getAssets().openFd("lost.mp3");
-
+            afd = context.getAssets().openFd("lost.mp3"); // TODO: different sound on connect and disconnect
+            MediaPlayerUtils.getInstance().stop();
             mVolumeLevel = am.getStreamVolume(AudioManager.STREAM_ALARM);
             am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
-
+            // TODO: make duration of alarm configurable
             mPlayer.stop();
             mPlayer.reset();
             mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
@@ -133,7 +133,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
             mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
             mPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
             mPlayer.prepareAsync();
-            //           mPlayer.start();
+            // mPlayer.start();
         } catch (IOException e) {
             ITagApplication.handleError(e, true);
         } finally {

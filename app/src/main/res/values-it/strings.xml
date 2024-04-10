@@ -9,7 +9,7 @@
     <string name="confirm_disconnect">Lanciando con il dito hai richiesto la disconnessione di iTag.\nQuesto non è pericoloso, l\'iTag non verrà dimenticato e sarai in grado di ricollegarlo con la stessa avventura da lato a lato.\n\nVuoi davvero disconnettere iTag?</string>
     <string name="change_name">Impostazioni di iTag</string>
     <string name="itag_name">Nome di iTag</string>
-    <string name="itag_alarm_delay">Ritardo allarme</string>
+    <string name="itag_disconnect_alarm_delay">Ritardo allarme</string>
     <string name="itag_alarm_delay_0">Nessun ritardo</string>
     <string name="itag_alarm_delay_3">3 sec</string>
     <string name="itag_alarm_delay_5">5 sec</string>
@@ -88,6 +88,6 @@
     <string name="soundmode_on">Allarme quando iTag ha perso</string>
     <string name="soundmode_vibration">Vibrazioni quando iTag ha perso</string>
     <string name="soundmode_off">Nessun allarme quando iTag ha perso</string>
-    <string name="mode_keyfinder">Modalità ricerca chiavi</string>
-    <string name="mode_alertdisconnect">Modalità di allarme perso</string>
+    <string name="mode_dont_connect">Modalità ricerca chiavi</string>
+    <string name="mode_alert">Modalità di allarme perso</string>
 </resources>

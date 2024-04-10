@@ -65,7 +65,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     synchronized public boolean isDisconnectAlertOn() {
         for (String id : ids) {
             ITagInterface itag = tags.get(id);
-            if (itag != null && itag.isAlertOnDisconnectEnabled()) {
+            if (itag != null && itag.isAlertEnabled()) {
                 return true;
             }
         }
@@ -173,12 +173,45 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
+    synchronized public void setAlertMode(@NonNull String id, TagAlertMode alertMode) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setAlertMode(alertMode);
+        new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
+    synchronized public void setShakingOnConnectDisconnect(@NonNull String id, Boolean shaking) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setShakingOnConnectDisconnect(shaking);
+        //new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
+    synchronized public void setConnectionMode(@NonNull String id, TagConnectionMode connectionMode) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setConnectionMode(connectionMode);
+        new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
     synchronized public void setAlert(@NonNull String id, boolean alert) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
         }
-        tag.setAlertOnDisconnect(alert);
+        tag.setAlert(alert);
         new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
     }

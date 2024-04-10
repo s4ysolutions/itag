@@ -14,7 +14,6 @@
         android:orientation="horizontal"
         tools:ignore="UseCompoundDrawables">
 
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -41,7 +40,6 @@
                 android:textColor="@color/cardview_dark_background"/>
         </LinearLayout>
 
-
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -56,14 +54,6 @@
                 android:layout_marginTop="4dp"
                 android:contentDescription="@string/empty"
                 android:src="@drawable/bt" />
-
-            <TextView
-                android:id="@+id/text_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/empty"
-                android:layout_gravity="center"
-                android:textSize="14sp" />
         </LinearLayout>
 
     </LinearLayout>
@@ -71,10 +61,19 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_gravity="center_horizontal"
-        android:layout_weight="1"
-        >
+        android:layout_weight="1">
 
-    <s4y.itag.ITagImageView
+        <TextView
+            android:id="@+id/text_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/empty"
+            tools:text="disconnecting"
+            android:layout_gravity="top|right"
+            android:layout_marginRight="8dp"
+            android:textSize="14sp" />
+
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
@@ -107,6 +106,13 @@
             android:src="@drawable/location"
             tools:ignore="RtlHardcoded" />
 
+        <TextView
+            android:id="@+id/text_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Keyfinder mode"
+            android:layout_gravity="left|bottom"
+            android:layout_margin="8dp"/>
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -119,7 +125,7 @@
                 android:id="@+id/text_rssi"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Signal strength: -36"
+                tools:text="-36"
                 android:layout_gravity="bottom"
                 android:layout_marginRight="4dp"/>
             <s4y.itag.RssiView
@@ -150,7 +156,7 @@
             android:layout_width="@android:dimen/app_icon_size"
             android:layout_height="@android:dimen/app_icon_size"
             android:contentDescription="@string/manage_alert"
-            android:onClick="changeDisconnectMode"
+            android:onClick="disconnectItag"
             android:src="@drawable/keyfinder" />
 
         <Space
