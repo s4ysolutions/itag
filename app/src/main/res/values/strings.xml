@@ -42,7 +42,7 @@
     <string name="itag_alarm_delay_5">5 sec</string>
     <string name="itag_alarm_delay_10">10 sec</string>
     <string name="itag_alarm_delay_description">The alarm delay will prevent itag from buzzing on very short disconnection.</string>
-    <string name="itag_connection_mode_description">Active mode will connect to your iTag device when it is in range, while passive mode will only *listen* for iTag\'s broadcasts.</string>
+    <!--<string name="itag_connection_mode_description">Active mode will connect to your iTag device when it is in range, while passive mode will only *listen* for iTag\'s broadcasts.</string>-->
     <string name="manage_alert">Enable/disable Alert on disconnect</string>
 
     <string name="scanning">Scanning for iTags&#8230;</string>
@@ -106,7 +106,7 @@
     <string name="uint_min" translatable="false"> min </string>
     <string name="uint_hour" translatable="false"> hr </string>
 
-    <string name="menu_app_exit">Stop tracking</string>
+    <string name="menu_app_exit">Shut down</string>
 
     <string name="freq_hour_1">1 hour</string>
     <string name="freq_min_30">Half an hour</string>

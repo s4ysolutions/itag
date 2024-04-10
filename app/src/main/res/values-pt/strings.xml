@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="channel_disconnect">Desconexões</string>
+    <string name="channel_connect">Conexões</string>
     <string name="hello_no_ble_fragment">Seu dispositivo não tem adaptador Bluetooth</string>
     <string name="request_permission_title">Permissão necessária</string>
     <string name="request_location_permission">A partir do Android 6.0 Marshmallow, o sistema requer permissão de localização para fazer a varredura do dispositivo Bluetooth LE.\n\nNVocê terá que reiniciar o processo de varredura após conceder o acesso.</string>
@@ -9,6 +11,8 @@
     <string name="change_name">Configurações de iTag</string>
     <string name="itag_name">Nome do iTag</string>
     <string name="itag_disconnect_alarm_delay">Atraso de alarme</string>
+    <string name="itag_connection_mode">Modo de conexão</string>
+    <string name="itag_alarm_mode">Modo de alarme</string>
     <string name="itag_alarm_delay_0">Sem demora</string>
     <string name="itag_alarm_delay_3">3 sec</string>
     <string name="itag_alarm_delay_5">5 sec</string>
@@ -35,6 +39,7 @@
     <string name="service_in_background">Clique duas vezes no botão da iTag para encontrar o telefone</string>
     <string name="service_description">Clique na imagem da iTag para fazer a tag tocar.</string>
     <string name="notify_disconnect">%s desconectado</string>
+    <string name="notify_connect">%s connected</string>
     <string name="click_to_silent">Clique para parar o alarme</string>
     <string name="help_longpress">Pressione e segure para encontrar o iTag</string>
     <string name="help_scan">Você ainda não tem nenhum dispositivo iTag conectado.\n\nClique no botão Scan acima para iniciar a busca.</string>

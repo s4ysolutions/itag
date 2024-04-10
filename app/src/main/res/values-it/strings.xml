@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">iTag One</string>
+    <string name="channel_disconnect">Disconnessioni</string>
+    <string name="channel_connect">Connessioni</string>
     <string name="hello_no_ble_fragment">Il tuo dispositivo non ha un adattatore Bluetooth</string>
     <string name="request_permission_title">Autorizzazione richiesta</string>
     <string name="request_location_permission">A partire da Android 6.0 Marshmallow il sistema richiede l\'autorizzazione alla localizzazione per cercare il dispositivo Bluetooth LE.\n\nDovrai riavviare il processo di scansione dopo aver concesso l\'accesso.</string>
@@ -10,6 +12,8 @@
     <string name="change_name">Impostazioni di iTag</string>
     <string name="itag_name">Nome di iTag</string>
     <string name="itag_disconnect_alarm_delay">Ritardo allarme</string>
+    <string name="itag_connection_mode">Modalità di connessione</string>
+    <string name="itag_alarm_mode">Modalità sveglia</string>
     <string name="itag_alarm_delay_0">Nessun ritardo</string>
     <string name="itag_alarm_delay_3">3 sec</string>
     <string name="itag_alarm_delay_5">5 sec</string>
@@ -40,6 +44,7 @@
     <string name="service_in_background">Fare doppio clic sul pulsante di iTag per trovare il telefono</string>
     <string name="service_description">Fare clic sull\'immagine di iTag per far squillare il tag.</string>
     <string name="notify_disconnect">%s disconnesso</string>
+    <string name="notify_connect">%s connesso</string>
     <string name="click_to_silent">Fare clic per interrompere l\'allarme</string>
     <string name="help_longpress">Premere a lungo per trovare l\'iTag</string>
     <string name="help_scan">Non hai ancora dispositivi iTag collegati.\n\nFai clic sul pulsante Scansione sopra per avviare la ricerca.</string>

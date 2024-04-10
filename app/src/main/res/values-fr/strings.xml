@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">iTag One</string>
+    <string name="channel_disconnect">Déconnexions</string>
+    <string name="channel_connect">Connexions</string>
     <string name="hello_no_ble_fragment">Votre appareil n\'a pas d\'adaptateur Bluetooth</string>
     <string name="request_permission_title">Autorisation requise</string>
     <string name="request_location_permission">À partir d\'Android 6.0 Marshmallow, le système nécessite une autorisation de localisation pour rechercher un périphérique Bluetooth LE.\nVous devrez redémarrer le processus de scan après avoir donné l\'accès.</string>
@@ -10,6 +12,8 @@
     <string name="confirm_disconnect">En lançant votre doigt, vous avez demandé que iTag soit déconnecté. Ce n\'est pas dangereux, l\'iTag ne sera pas oublié et vous pourrez le reconnecter avec le même fling côte à côte.\n\nVoulez-vous vraiment déconnecter l\'iTag?</string>
     <string name="itag_disconnect_alarm_delay">Délai d\'alarme</string>
     <string name="itag_name">Nom de iTag</string>
+    <string name="itag_connection_mode">Mode de connexion</string>
+    <string name="itag_alarm_mode">Mode alarme</string>
     <string name="itag_alarm_delay_0">Sans délais</string>
     <string name="itag_alarm_delay_3">3 sec</string>
     <string name="itag_alarm_delay_5">5 sec</string>
@@ -40,6 +44,7 @@
     <string name="service_in_background">Double-cliquez sur le bouton iTag pour trouver le téléphone</string>
     <string name="service_description">Cliquez sur l\'image d\'iTag pour faire sonner l\'étiquette.</string>
     <string name="notify_disconnect">%s déconnecté</string>
+    <string name="notify_connect">%s connecté</string>
     <string name="click_to_silent">Cliquez pour arrêter l\'alarme</string>
     <string name="help_longpress">Appuyez longuement pour trouver l\'iTag</string>
     <string name="help_scan">Vous n’avez pas encore d’appareil iTag connecté.\n\nCliquez sur le bouton Analyser ci-dessus pour lancer la recherche.</string>

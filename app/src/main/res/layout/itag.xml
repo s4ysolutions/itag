@@ -156,7 +156,7 @@
             android:layout_width="@android:dimen/app_icon_size"
             android:layout_height="@android:dimen/app_icon_size"
             android:contentDescription="@string/manage_alert"
-            android:onClick="disconnectItag"
+            android:onClick="connectivityButton"
             android:src="@drawable/keyfinder" />
 
         <Space

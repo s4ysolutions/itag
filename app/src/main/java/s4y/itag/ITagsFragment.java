@@ -171,7 +171,7 @@ public class ITagsFragment extends Fragment
             imageLocation.setVisibility(View.GONE);
         } else {
             Log.d(LT, "updateLocationImage on:" + id);
-            imageLocation.startAnimation(mLocationAnimation);
+            //imageLocation.startAnimation(mLocationAnimation);
             imageLocation.setVisibility(View.VISIBLE);
         }
     }
@@ -236,7 +236,7 @@ public class ITagsFragment extends Fragment
                         statusTextId = R.string.bt_lost;
                     } else {
                         statusDrawableId = R.drawable.bt_setup;
-                        statusDrawableTint = Color.parseColor("#FFA500");
+                        statusDrawableTint = Color.parseColor("#FFA500"); // orange
                         if (state == BLEConnectionState.connecting)
                             statusTextId = R.string.bt_connecting;
                         else
@@ -335,6 +335,7 @@ public class ITagsFragment extends Fragment
         }
 
         Animation animShake = null;
+        float alpha = 1.0f;
 
         if (BuildConfig.DEBUG) {
             Log.d(LT, "updateITagImageAnimation isFindMe:" + connection.isFindMe() +
@@ -351,7 +352,20 @@ public class ITagsFragment extends Fragment
                     connection.isFindMe());
                 animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
         }
+        if(connection.isConnected()){
+            alpha = 1.0f;
+        } else {
+            alpha = 0.7f;
+        }
         final ImageView imageITag = rootView.findViewById(R.id.image_itag);
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            imageITag.setAlpha(alpha);
+        } else {
+            float finalAlpha = alpha;
+            getActivity().runOnUiThread(() -> {
+                imageITag.setAlpha(finalAlpha);
+            });
+        }
         if (animShake == null) {
             if (BuildConfig.DEBUG) {
                 Log.d(LT, "updateITagImageAnimation: No animations appointed");
@@ -371,7 +385,10 @@ public class ITagsFragment extends Fragment
                 imageITag.startAnimation(animShake);
             } else {
                 final Animation anim = animShake;
-                getActivity().runOnUiThread(() -> imageITag.startAnimation(anim));
+                float finalAlpha = alpha;
+                getActivity().runOnUiThread(() -> {
+                    imageITag.startAnimation(anim);
+                });
             }
         }
     }

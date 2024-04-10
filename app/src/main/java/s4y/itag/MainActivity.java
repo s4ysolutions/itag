@@ -371,6 +371,8 @@ public class MainActivity extends FragmentActivity {
             Notifications.cancelDisconnectNotification(this);
             Notifications.cancelConnectNotification(this);
             MediaPlayerUtils.getInstance().stopSound(this);
+        } else if(!itag.isAlertEnabled()){
+            toggleTagConnectivity(itag);
         } else if (connection.isConnected()) {
             Log.d("ingo", "connected");
             new Thread(() -> {
@@ -579,12 +581,16 @@ public class MainActivity extends FragmentActivity {
         popupMenu.show();
     }
 
-    public void disconnectItag(@NonNull View sender) {
+    public void connectivityButton(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
         if (itag == null) {
             ITagApplication.handleError(new Exception("No itag"));
             return;
         }
+        toggleTagConnectivity(itag);
+    }
+
+    public void toggleTagConnectivity(@NonNull ITagInterface itag) {
         BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
         if (itag.isAlertEnabled()) {
             Log.d("ingo", "disconnectItag yes");
