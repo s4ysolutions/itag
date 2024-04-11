@@ -90,9 +90,9 @@
     <string name="bt_lost">perdido</string>
     <string name="bt_disconnecting">desconectando</string>
     <string name="mute">Mudo</string>
-    <string name="soundmode_on">Alarma cuando iTag perdió</string>
-    <string name="soundmode_vibration">Vibración cuando iTag perdió</string>
-    <string name="soundmode_off">Sin alarma cuando iTag perdió</string>
+    <string name="soundmode_on">Alarma de altavoz</string>
+    <string name="soundmode_vibration">Alarma de vibración</string>
+    <string name="soundmode_off">Ninguna alarma</string>
     <string name="mode_dont_connect">Modo buscador de claves</string>
     <string name="mode_alert">Modo de alarma perdido</string>
 </resources>

@@ -91,9 +91,9 @@
     <string name="bt_disconnecting">قطع</string>
     <string name="mute">كتم الصوت</string>
 
-    <string name="soundmode_on">إنذار عند فقد iTag</string>
-    <string name="soundmode_vibration">الاهتزاز عند فقد iTag</string>
-    <string name="soundmode_off">لا إنذار عند فقد iTag</string>
+    <string name="soundmode_on">إنذار مكبر الصوت</string>
+    <string name="soundmode_vibration">إنذار الاهتزاز</string>
+    <string name="soundmode_off">لا إنذار</string>
 
     <string name="mode_dont_connect">وضع الباحث عن المفاتيح</string>
     <string name="mode_alert">وضع التنبيه المفقود</string>

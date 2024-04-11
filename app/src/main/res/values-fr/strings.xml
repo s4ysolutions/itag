@@ -90,9 +90,9 @@
     <string name="disable_wt">Retirez-le</string>
     <string name="disable_wt_msg">Cette action supprimera et désactivera WayToday pour toujours.\n\nLa seule façon de restaurer le suivi est de supprimer et de réinstaller l\'application.</string>
     <string name="disable_wt_ok">Désactiver WayToday</string>
-    <string name="soundmode_on">Alarme quand iTag a perdu</string>
-    <string name="soundmode_vibration">Vibration lorsque iTag a perdu</string>
-    <string name="soundmode_off">Pas d\'alarme quand iTag a perdu</string>
+    <string name="soundmode_on">Alarme haut-parleur</string>
+    <string name="soundmode_vibration">Alarme vibrante</string>
+    <string name="soundmode_off">Pas d\'alarme</string>
     <string name="mode_dont_connect">Mode de recherche de clé</string>
     <string name="mode_alert">Mode d\'alarme perdu</string>
 </resources>

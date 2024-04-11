@@ -600,6 +600,7 @@ public class MainActivity extends FragmentActivity {
         } else {
             Log.d("ingo", "disconnectItag no");
             ITag.store.setAlert(itag.id(), true);
+            Log.d("ingo", "isAlertEnabled? it should be: " + itag.isAlertEnabled());
             ITag.enableReconnect(itag.id());
             ITag.connectAsync(connection);
         }

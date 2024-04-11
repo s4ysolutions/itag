@@ -91,9 +91,9 @@
     <string name="bt_disconnecting">отключение</string>
     <string name="mute">Бесшумный режим</string>
 
-    <string name="soundmode_on">Звуковой сигнал при потере брелка</string>
-    <string name="soundmode_vibration">Вибрация при потере брелка</string>
-    <string name="soundmode_off">Нет сигнала при потере брелка</string>
+    <string name="soundmode_on">Сигнализация динамика</string>
+    <string name="soundmode_vibration">Вибрационная сигнализация</string>
+    <string name="soundmode_off">Нет будильника</string>
 
     <string name="mode_dont_connect">Только поиск брелка</string>
     <string name="mode_alert">Сигнализировать при утере брелка</string>

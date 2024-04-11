@@ -89,9 +89,9 @@
     <string name="bt_lost">perdido</string>
     <string name="bt_disconnecting">desconectando</string>
     <string name="mute">Mudo</string>
-    <string name="soundmode_on">Alarme quando a iTag perder</string>
-    <string name="soundmode_vibration">Vibração quando a iTag perdeu</string>
-    <string name="soundmode_off">Nenhum alarme quando a iTag perdeu</string>
+    <string name="soundmode_on">Alarme de alto-falante</string>
+    <string name="soundmode_vibration">Alarme vibratório</string>
+    <string name="soundmode_off">Sem alarme</string>
     <string name="mode_dont_connect">Modo localizador de chave</string>
     <string name="mode_alert">Modo de alarme perdido</string>
     <string name="app_name">iTag One</string>

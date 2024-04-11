@@ -134,9 +134,9 @@
     <string name="disable_wt_msg">This action will remove and disable WayToday forever.\n\nThe only way to restore the tracking is removing and re-installing the application.</string>
     <string name="disable_wt_ok">Disable WayToday</string>
 
-    <string name="soundmode_on">Alarm when iTag lost</string>
-    <string name="soundmode_vibration">Vibration when iTag lost</string>
-    <string name="soundmode_off">No alarm when iTag lost</string>
+    <string name="soundmode_on">Speaker alarm</string>
+    <string name="soundmode_vibration">Vibration alarm</string>
+    <string name="soundmode_off">No alarm</string>
 
     <string name="mode_dont_connect">Mode: Don\'t connect</string>
     <string name="mode_alert">Mode: Connect</string>
