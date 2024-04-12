@@ -99,7 +99,7 @@ private static final long serialVersionUID = 1575220516;
     }
 
     @Override
-    public boolean isAlertEnabled() {
+    public boolean isConnectModeEnabled() {
         return alert;
     }
 
@@ -131,7 +131,7 @@ private static final long serialVersionUID = 1575220516;
     @Override
     public void copyFromTag(@NonNull ITagInterface tag) {
         name = tag.name();
-        alert = tag.isAlertEnabled();
+        alert = tag.isConnectModeEnabled();
         color = tag.color();
     }
 

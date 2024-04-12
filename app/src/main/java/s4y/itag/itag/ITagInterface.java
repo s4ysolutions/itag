@@ -17,7 +17,7 @@ public interface ITagInterface {
     void setConnectionMode(TagConnectionMode connectionMode);
     TagConnectionMode connectionMode();
     TagAlertMode alertMode();
-    boolean isAlertEnabled();
+    boolean isConnectModeEnabled();
     void setAlert(boolean alert);
     int alertDelay();
     void setAlertDelay(int alarmDelay);

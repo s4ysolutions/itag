@@ -69,7 +69,7 @@ public class ITagsFragment extends Fragment
                 updateITagImage(rootView, itag);
                 updateITagImageAnimation(rootView, itag, connection);
                 updateName(rootView, itag);
-                updateAlertButton(rootView, itag.isAlertEnabled(), connection.isConnected());
+                updateAlertButton(rootView, itag.isConnectModeEnabled(), connection.isConnected());
             }
             updateRSSI(rootView, connection.rssi());
             updateState(rootView, id, connection.state());
@@ -230,17 +230,22 @@ public class ITagsFragment extends Fragment
                 case connecting:
                 case disconnecting:
                     ITagInterface itag = ITag.store.byId(id);
-                    if (itag != null && itag.isAlertEnabled()) {
+                    if (itag != null && itag.isConnectModeEnabled()) {
                         statusDrawableId = R.drawable.bt_connecting;
                         statusDrawableTint = Color.RED;
                         statusTextId = R.string.bt_lost;
+                        Log.d("ingo", "it's connecting");
                     } else {
                         statusDrawableId = R.drawable.bt_setup;
                         statusDrawableTint = Color.parseColor("#FFA500"); // orange
-                        if (state == BLEConnectionState.connecting)
+                        if (state == BLEConnectionState.connecting) {
+                            Log.d("ingo", "it's connecting2");
                             statusTextId = R.string.bt_connecting;
-                        else
+                        }
+                        else {
+                            Log.d("ingo", "it's disconnecting");
                             statusTextId = R.string.bt_disconnecting;
+                        }
                     }
                     break;
                 case writting:
@@ -320,7 +325,7 @@ public class ITagsFragment extends Fragment
         }
         BLEConnectionInterface connection = ble.connectionById(id);
         boolean isConnected = connection.isConnected();
-        boolean isAlertDisconnected = itag.isAlertEnabled();
+        boolean isAlertDisconnected = itag.isConnectModeEnabled();
         if (BuildConfig.DEBUG) {
             Log.d(LT, "id = " + id + " updateAlertButton2 isAlertDisconnected=" + isAlertDisconnected + " isConnected=" + isConnected);
         }
@@ -340,10 +345,11 @@ public class ITagsFragment extends Fragment
         if (BuildConfig.DEBUG) {
             Log.d(LT, "updateITagImageAnimation isFindMe:" + connection.isFindMe() +
                     " isAlerting:" + connection.isAlerting() +
-                    " isAlertDisconnected:" + itag.isAlertEnabled() +
+                    " isAlertDisconnected:" + itag.isConnectModeEnabled() +
                     " not connected:" + !connection.isConnected()
             );
         }
+        Log.d("ingo", "pa trebalo bi");
         if (connection.isAlerting() ||
                 itag.shakingOnConnectDisconnect() ||
                 connection.isFindMe()) {
@@ -355,7 +361,7 @@ public class ITagsFragment extends Fragment
         if(connection.isConnected()){
             alpha = 1.0f;
         } else {
-            alpha = 0.7f;
+            alpha = 0.3f;
         }
         final ImageView imageITag = rootView.findViewById(R.id.image_itag);
         if (Looper.myLooper() == Looper.getMainLooper()) {

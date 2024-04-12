@@ -138,6 +138,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
                     waitForClose();
                 }
             } else {
+                // if status isn't GATT_SUCCESS, it means that connect/disconnect operation failed, possibly due to network problems.
                 gatt.disconnect();
                 waitForClose();
             }
@@ -156,7 +157,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
             }
             services = new BLEService[serviceList.size()];
             serviceList.toArray(services);
-            setState(BLEPeripheralState.discovered);
+            setState(BLEPeripheralState.services_discovered);
             observables.channelDiscoveredServices.broadcast(new BLEPeripheralObservablesInterface.DiscoveredServicesEvent(services, status));
         }
 

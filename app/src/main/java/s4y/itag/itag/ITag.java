@@ -45,7 +45,7 @@ public class ITag {
         for (int i = 0; i < store.count(); i++) {
             ITagInterface itag = store.byPos(i);
             // TODO: modify so that it doesn't connect in passive mode
-            if (itag == null || !itag.isAlertEnabled()) continue;
+            if (itag == null || !itag.isConnectModeEnabled()) continue;
             BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
             connectAsync(connection);
             enableReconnect(itag.id());
@@ -108,7 +108,7 @@ public class ITag {
             final ITagInterface itag = store.byPos(i);
             if (itag == null) continue;
             BLEConnectionInterface connection = ble.connectionById(itag.id());
-            if (itag.isAlertEnabled()){
+            if (itag.isConnectModeEnabled()){
                 disposablesConnections.add(connection.observableState().subscribe(event -> {
                             if (BuildConfig.DEBUG)
                                 Log.d(LT, "connection " + connection.id() + " state " + connection.state());
@@ -138,7 +138,7 @@ public class ITag {
                                         if (BuildConfig.DEBUG) Log.d(LT, "connection " +
                                                 connection.id() + " lost posted, state=" +
                                                 connection.state());
-                                        if (itag.isAlertEnabled() && !connection.isConnected()) {
+                                        if (itag.isConnectModeEnabled() && !connection.isConnected()) {
                                             if (BuildConfig.DEBUG)
                                                 Log.d(LT, "connection " + connection.id() + " lost");
                                             alertUser(itag, true);
@@ -249,7 +249,7 @@ public class ITag {
                         Log.d(LT, "BLE Connect thread connect " + connection.id() + "/" + itag.name() + " " + Thread.currentThread().getName());
                     }
                     connection.connect(infinity);
-                } while (!isInterrupted() && itag.isAlertEnabled() && infinity && !connection.isConnected());
+                } while (!isInterrupted() && itag.isConnectModeEnabled() && infinity && !connection.isConnected());
                 // stop sound on connection in any case
                 stopSound();
                 if (!isInterrupted()) {

@@ -87,7 +87,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         if (adapter == null) {
             return BLEError.noAdapter;
         }
-        adapter.enable();
+        adapter.enable(); // TODO: deprecated
         return BLEError.ok;
     }
 
@@ -110,6 +110,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         }
         if (adapter != null) {
             if (!isScanning(adapter)) {
+                // TODO: replace with startScan method because startLeScan is deprecated in API 21. startScan also only scans LE devices.https://developer.android.com/reference/android/bluetooth/le/BluetoothLeScanner#startScan(java.util.List%3Candroid.bluetooth.le.ScanFilter%3E,%20android.bluetooth.le.ScanSettings,%20android.bluetooth.le.ScanCallback)
                 adapter.startLeScan(leScanCallback);
                 isScanning = true;
             }

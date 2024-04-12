@@ -10,7 +10,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -43,7 +45,16 @@ public class ScanFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
 
         adapter = new Adapter();
+
+        DividerItemDecoration divider = new DividerItemDecoration(
+                requireContext(), DividerItemDecoration.VERTICAL
+        );
+        divider.setDrawable(
+                ContextCompat.getDrawable(requireContext(), R.drawable.line_divider)
+        );
+
         recyclerView.setAdapter(adapter);
+        recyclerView.addItemDecoration(divider);
         return view;
     }
 
@@ -186,11 +197,6 @@ public class ScanFragment extends Fragment {
             holder.btnRemember.setOnClickListener(onClickListener);
             holder.btnRemember2.setOnClickListener(onClickListener);
 
-            if (position % 2 == 1) {
-                holder.itemView.setBackgroundColor(0xffe0e0e0);
-            } else {
-                holder.itemView.setBackgroundColor(Color.TRANSPARENT);
-            }
             holder.rssiView.setRssi(scanResult.rssi);
             if (getActivity() != null && isAdded()) {
                 // issue #38 Fragment not attached to Activity

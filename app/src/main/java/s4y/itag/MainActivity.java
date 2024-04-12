@@ -63,6 +63,7 @@ public class MainActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d("ingo", "onCreate");
+        checkForPermissions();
         setupContent();
         /*
         // ATTENTION: This was auto-generated to handle app linksI
@@ -126,7 +127,7 @@ public class MainActivity extends FragmentActivity {
         Log.d("ingo", "onresume");
         disposableBag.add(ITag.ble.observableState().subscribe(event -> {
             Log.d("ingo", "disposableBag.add(ITag.ble.observableState().subscribe");
-            //setupContent();
+            setupContent();
         }));
         disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
                 event -> {
@@ -135,6 +136,7 @@ public class MainActivity extends FragmentActivity {
                         Log.d(LT, "ble.scanner activeEvent=" + event + " isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
                     }
                     setupContent();
+                    Log.d("ingo", "sad setupamo content jer je skener postao aktivan");
                     setupProgressBar();
                 }
         ));
@@ -167,6 +169,7 @@ public class MainActivity extends FragmentActivity {
         } catch (IllegalArgumentException e) {
             // ignore
         }
+        Log.d("ingo", "disposeamo bag");
         disposableBag.dispose();
         sIsShown = false;
         if (ITag.store.isDisconnectAlertOn() || Waytoday.tracker.isUpdating) {
@@ -198,18 +201,6 @@ public class MainActivity extends FragmentActivity {
         //No call for super(). Bug on API Level > 11. issue #54
     }
 
-    private boolean isFirstLaunch() {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        return sharedPref.getBoolean("first", true);
-    }
-
-    private void setNotFirstLaunch() {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor ed = sharedPref.edit();
-        ed.putBoolean("first", false);
-        ed.apply();
-    }
-
     private void setupContent() {
         if (s4y.itag.ble.BuildConfig.DEBUG) {
             Log.d(LT, "setupContent isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
@@ -218,10 +209,10 @@ public class MainActivity extends FragmentActivity {
         setupProgressBar();
         Log.d("ingo", "setupContent");
         if (ITag.ble.scanner().isScanning()) {
-            Log.d("ingo", "scanner");
+            Log.d("ingo", "scanner is scanning");
             mEnableAttempts = 0;
             if (mSelectedFragment != FragmentType.SCANNER) {
-                Log.d("ingo", "scanner yes");
+                Log.d("ingo", "switch to scanner");
                 newFragment = new ScanFragment();
                 mSelectedFragment = FragmentType.SCANNER;
             }
@@ -231,14 +222,13 @@ public class MainActivity extends FragmentActivity {
                 mSelectedFragment = FragmentType.OTHER;
             } else {
                 if (ITag.ble.state() == BLEState.OK) {
-                    setNotFirstLaunch();
                     mEnableAttempts = 0;
                     if (mSelectedFragment != FragmentType.ITAGS) {
                         newFragment = new ITagsFragment();
                         mSelectedFragment = FragmentType.ITAGS;
                     }
                 } else {
-                    if (mEnableAttempts < 60 && isFirstLaunch()) {
+                    if (mSelectedFragment == FragmentType.OTHER && mEnableAttempts < 10) { // already showing "turn on bluetooth"
                         mEnableAttempts++;
                         if (BuildConfig.DEBUG) {
                             Log.d(LT, "setupContent BT disabled, enable attempt=" + mEnableAttempts);
@@ -246,7 +236,7 @@ public class MainActivity extends FragmentActivity {
                         if (mEnableAttempts == 1) {
                             Toast.makeText(this, R.string.try_enable_bt, Toast.LENGTH_LONG).show();
                         }
-                        ITag.ble.enable();
+                        //ITag.ble.enable(); deprecated and should't do anything because bluetooth should be turned on by user action - click on "turn on bluetooth" button in fragment_ble_disabled
                         try {
                             // A bit against rules but ok in this situation
                             Thread.sleep(500);
@@ -371,7 +361,7 @@ public class MainActivity extends FragmentActivity {
             Notifications.cancelDisconnectNotification(this);
             Notifications.cancelConnectNotification(this);
             MediaPlayerUtils.getInstance().stopSound(this);
-        } else if(!itag.isAlertEnabled()){
+        } else if(!itag.isConnectModeEnabled()){
             toggleTagConnectivity(itag);
         } else if (connection.isConnected()) {
             Log.d("ingo", "connected");
@@ -380,7 +370,7 @@ public class MainActivity extends FragmentActivity {
             }).start();
         } else {
             // TODO: change depending on modes
-            if (!itag.isAlertEnabled()) {
+            if (!itag.isConnectModeEnabled()) {
                 // there's no sense to communicate if the connection is in the connecting state
                 ITag.connectAsync(connection, false, () -> {
                     toggleAlertOnITag(connection);
@@ -404,24 +394,28 @@ public class MainActivity extends FragmentActivity {
         if (ITag.ble.scanner().isScanning()) {
             ITag.ble.scanner().stop();
         } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setMessage(R.string.request_location_permission)
-                                .setTitle(R.string.request_permission_title)
-                                .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
-                                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
-                                .show();
-                    } else {
-                        // isScanRequestAbortedBecauseOfPermission=true;
-                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
-                    }
-                    return;
-                }
-            }
+            checkForPermissions();
             ITag.ble.scanner().start(ITag.SCAN_TIMEOUT, new String[]{});
             Log.d("ingo", "scanner started");
+        }
+    }
+
+    void checkForPermissions(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setMessage(R.string.request_location_permission)
+                            .setTitle(R.string.request_permission_title)
+                            .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
+                            .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
+                            .show();
+                } else {
+                    // isScanRequestAbortedBecauseOfPermission=true;
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
+                }
+                return;
+            }
         }
     }
 
@@ -592,15 +586,15 @@ public class MainActivity extends FragmentActivity {
 
     public void toggleTagConnectivity(@NonNull ITagInterface itag) {
         BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-        if (itag.isAlertEnabled()) {
+        if (itag.isConnectModeEnabled()) {
             Log.d("ingo", "disconnectItag yes");
-            ITag.store.setAlert(itag.id(), false);
+            ITag.store.setConnectMode(itag.id(), false);
             ITag.disableReconnect(itag.id());
             new Thread(connection::disconnect).start();
         } else {
             Log.d("ingo", "disconnectItag no");
-            ITag.store.setAlert(itag.id(), true);
-            Log.d("ingo", "isAlertEnabled? it should be: " + itag.isAlertEnabled());
+            ITag.store.setConnectMode(itag.id(), true);
+            Log.d("ingo", "isAlertEnabled? it should be: " + itag.isConnectModeEnabled());
             ITag.enableReconnect(itag.id());
             ITag.connectAsync(connection);
         }
@@ -638,6 +632,7 @@ public class MainActivity extends FragmentActivity {
             switch (requestCode) {
                 case REQUEST_ENABLE_BT:
                     setupContent();
+                    Log.d("ingo", "bluetooth enabled");
                     break;
             }
         }
@@ -648,10 +643,13 @@ public class MainActivity extends FragmentActivity {
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             switch (requestCode) {
                 case REQUEST_ENABLE_BT:
+                    Log.d("ingo", "onRequestPermissionsResult REQUEST_ENABLE_BT");
                     setupContent();
                     break;
                 case REQUEST_ENABLE_LOCATION:
-                    onStartStopScan(null);
+                    Log.d("ingo", "onRequestPermissionsResult REQUEST_ENABLE_LOCATION");
+                    //onStartStopScan(null);
+                    setupContent();
                     break;
             }
         }
@@ -660,6 +658,6 @@ public class MainActivity extends FragmentActivity {
 
     public void onOpenBTSettings(View ignored) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivity(enableBtIntent);
+        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
     }
 }

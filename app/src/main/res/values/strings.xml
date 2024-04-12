@@ -90,7 +90,7 @@
     <string name="bt_connecting">connecting</string>
     <string name="bt_disconnecting">disconnecting</string>
     <string name="bt_setup">lost</string>
-    <string name="bt_call">yelling</string>
+    <string name="bt_call">reading/writing</string>
     <string name="bt">linked</string>
     <string name="bt_unk">faint</string>
     <string name="bt_lost">lost</string>

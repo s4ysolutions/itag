@@ -482,6 +482,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             );
             monitorDisconnect.waitFor(() -> peripheral().disconnect(), timeoutSec);
             if (monitorDisconnect.isTimedOut()) {
+                Log.d("ingo", "ble disconnect timeout");
                return BLEError.timeout;
             }
             lastStatus = monitorDisconnect.payload();

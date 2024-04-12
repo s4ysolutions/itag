@@ -36,8 +36,7 @@
                 android:gravity="center_vertical"
                 android:text="@string/empty"
                 tools:text="FF:FF:FF:FF:FF:FF"
-                android:textAlignment="center"
-                android:textColor="@color/cardview_dark_background"/>
+                android:textAlignment="center"/>
         </LinearLayout>
 
         <LinearLayout

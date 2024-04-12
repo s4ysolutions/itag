@@ -65,7 +65,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     synchronized public boolean isDisconnectAlertOn() {
         for (String id : ids) {
             ITagInterface itag = tags.get(id);
-            if (itag != null && itag.isAlertEnabled()) {
+            if (itag != null && itag.isConnectModeEnabled()) {
                 return true;
             }
         }
@@ -206,7 +206,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    synchronized public void setAlert(@NonNull String id, boolean alert) {
+    synchronized public void setConnectMode(@NonNull String id, boolean alert) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
