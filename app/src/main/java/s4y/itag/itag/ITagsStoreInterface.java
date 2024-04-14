@@ -3,6 +3,8 @@ package s4y.itag.itag;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.List;
+
 import solutions.s4y.rasat.Observable;
 
 public interface ITagsStoreInterface {
@@ -24,7 +26,8 @@ public interface ITagsStoreInterface {
     void setAlertMode(@NonNull String id, TagAlertMode alertMode);
     void setShakingOnConnectDisconnect(@NonNull String id, Boolean shaking);
     void setConnectionMode(@NonNull String id, TagConnectionMode connectionMode);
-    void setConnectMode(@NonNull String id, boolean alert);
+    void setConnectMode(@NonNull String id, TagConnectionMode connectionMode);
     void setColor(@NonNull String id,@NonNull TagColor color);
     void setName(@NonNull String id,String name);
+    List<String> getIds();
 }

@@ -1,6 +1,7 @@
 package s4y.itag.itag;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -40,33 +41,22 @@ public class ITag {
     private static final Map<String, DisposableBag> connectionBags = new HashMap<>();
 
     public static void initITag(Context context) {
-        ble = BLEDefault.shared(context);
         store = new ITagsStoreDefault(ITagApplication.context);
+        ble = BLEDefault.shared(context, store.getIds());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.d("ingo", "dadarata");
+        }
         for (int i = 0; i < store.count(); i++) {
             ITagInterface itag = store.byPos(i);
             // TODO: modify so that it doesn't connect in passive mode
             if (itag == null || !itag.isConnectModeEnabled()) continue;
             BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-            connectAsync(connection);
-            enableReconnect(itag.id());
+            connection.connect();
+            //enableReconnect(itag.id());
         }
         subscribeDisconnectionsAndConnections();
         disposables.add(store.observable().subscribe(event -> {
             Log.d("ingo", "disposables.add(store.observable().subscribe(event -> { " + event.op);
-            /*ITagInterface itag = event.tag;
-            boolean reconnect = store.remembered(itag.id()) && itag.isAlertOnDisconnectEnabled();
-            BLEConnectionInterface connection = ble.connectionById(itag.id());
-            if (reconnect) {
-                enableReconnect(itag.id());
-                if (!connection.isConnected()) {
-                    connectAsync(connection);
-                }
-            } else {
-                disableReconnect(itag.id());
-                if (connection.isConnected()) {
-                    new Thread(() -> connection.disconnect(BLE_TIMEOUT)).start();
-                }
-            }*/
             subscribeDisconnectionsAndConnections();
         }));
 
@@ -150,9 +140,7 @@ public class ITag {
                                     Log.d(LT, "connection " + connection.id() + " restored");
                                 // TODO: play sound if connection restore alert is enabled
                                 if((itag.alertMode() == TagAlertMode.alertOnConnect || itag.alertMode() == TagAlertMode.alertOnBoth)){
-                                    //if(MediaPlayerUtils.getInstance().isSound()){
-                                        alertUser(itag, false);
-                                    //}
+                                    alertUser(itag, false);
                                 }/* else {
                                     stopSound();
                                     cancelDisconnectNotification(ITagApplication.context);
@@ -163,9 +151,12 @@ public class ITag {
                 ));
             }
             disposablesConnections.add(connection.observableClick().subscribe(click -> {
+                Log.d("ingo", "Clicks: " + click);
                 if (click != 0 && connection.isAlerting()) {
+                    Log.d("ingo", "click first case");
                     new Thread(() -> connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT)).start();
                 } else {
+                    Log.d("ingo", "click second case");
                     if (connection.isFindMe() && !MediaPlayerUtils.getInstance().isSound()) {
                         MediaPlayerUtils.getInstance().startFindPhone(ITagApplication.context);
                     } else {
@@ -184,7 +175,7 @@ public class ITag {
 
     private static void alertUser(ITagInterface itag, Boolean disconnected) {
         Log.d("ingo", "setShakingOnConnectDisconnect(true)");
-        itag.setShakingOnConnectDisconnect(true);
+        itag.setShaking(true);
         int volume = new VolumePreference(ITagApplication.context).get();
         if (volume == VolumePreference.LOUD) {
             MediaPlayerUtils.getInstance().startSoundConnectedDisconnected(ITagApplication.context, disconnected);
@@ -217,6 +208,7 @@ public class ITag {
 
     @SuppressWarnings("SameParameterValue")
     public static void connectAsync(final BLEConnectionInterface connection, boolean infinity, Runnable onComplete) {
+        // TODO: this should be completely removed since we want to use bluetooth scanner to scan the device and then connect to it
         synchronized (asyncConnections) {
             if (asyncConnections.containsKey(connection.id())) {
                 return;
@@ -248,7 +240,7 @@ public class ITag {
                     if (BuildConfig.DEBUG) {
                         Log.d(LT, "BLE Connect thread connect " + connection.id() + "/" + itag.name() + " " + Thread.currentThread().getName());
                     }
-                    connection.connect(infinity);
+                    connection.connect();
                 } while (!isInterrupted() && itag.isConnectModeEnabled() && infinity && !connection.isConnected());
                 // stop sound on connection in any case
                 stopSound();
@@ -279,7 +271,7 @@ public class ITag {
             reconnectListeners.put(id, connection.observableState()
                     .subscribe(state -> {
                         if (BLEConnectionState.disconnected.equals(state)) {
-                            connectAsync(connection);
+                            //connectAsync(connection);
                         }
                     }));
         }

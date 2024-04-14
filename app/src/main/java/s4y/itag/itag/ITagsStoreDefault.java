@@ -189,7 +189,7 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
         if (tag == null) {
             return;
         }
-        tag.setShakingOnConnectDisconnect(shaking);
+        tag.setShaking(shaking);
         //new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
     }
@@ -206,12 +206,12 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    synchronized public void setConnectMode(@NonNull String id, boolean alert) {
+    synchronized public void setConnectMode(@NonNull String id, TagConnectionMode connectionMode) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
         }
-        tag.setAlert(alert);
+        tag.setConnectionMode(connectionMode);
         new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
     }
@@ -236,5 +236,10 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
         tag.setName(name);
         new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
+    synchronized public List<String> getIds() {
+        return this.ids;
     }
 }

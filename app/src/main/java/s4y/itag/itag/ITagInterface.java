@@ -9,16 +9,15 @@ public interface ITagInterface {
     String id();
     String name();
     void setName(String name);
-    Boolean shakingOnConnectDisconnect();
+    Boolean isShaking();
     TagColor color();
     void setColor(TagColor color);
-    void setShakingOnConnectDisconnect(Boolean currentlyShaking);
+    void setShaking(Boolean currentlyShaking);
     void setAlertMode(TagAlertMode alertMode);
     void setConnectionMode(TagConnectionMode connectionMode);
     TagConnectionMode connectionMode();
     TagAlertMode alertMode();
     boolean isConnectModeEnabled();
-    void setAlert(boolean alert);
     int alertDelay();
     void setAlertDelay(int alarmDelay);
     void copyFromTag(ITagInterface tag);

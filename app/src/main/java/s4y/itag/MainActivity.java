@@ -6,7 +6,6 @@ import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -41,6 +40,7 @@ import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
+import s4y.itag.itag.TagConnectionMode;
 import s4y.itag.waytoday.Waytoday;
 import solutions.s4y.rasat.DisposableBag;
 import solutions.s4y.waytoday.sdk.errors.ErrorsObservable;
@@ -350,10 +350,10 @@ public class MainActivity extends FragmentActivity {
 
         if (connection.isFindMe()) { // iTag contacting phone
             connection.resetFindMe();
-        } else if(itag.shakingOnConnectDisconnect()) {
+        } else if(itag.isShaking()) {
             ITag.store.setShakingOnConnectDisconnect(itag.id(), false);
             Log.d("ingo", "did it");
-            // TODO: check if fragments needs updating
+            // TODO: check if fragment needs updating
             if(isItagsFragmentShown()) {
                 Log.d("ingo", "isItagsFragmentShown true");
                 ((ITagsFragment) fragment2).updateITagImageAnimation(itag, connection);
@@ -369,13 +369,9 @@ public class MainActivity extends FragmentActivity {
                 toggleAlertOnITag(connection);
             }).start();
         } else {
-            // TODO: change depending on modes
-            if (!itag.isConnectModeEnabled()) {
-                // there's no sense to communicate if the connection is in the connecting state
-                ITag.connectAsync(connection, false, () -> {
-                    toggleAlertOnITag(connection);
-                });
-            }
+            Log.e("ingo", "device NOT connected and connectivity is enabled");
+            // nothing here is needed since scanner will connect to the device once the device is discovered
+            connection.connect(); // TODO: remove this
         }
     }
 
@@ -588,29 +584,17 @@ public class MainActivity extends FragmentActivity {
         BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
         if (itag.isConnectModeEnabled()) {
             Log.d("ingo", "disconnectItag yes");
-            ITag.store.setConnectMode(itag.id(), false);
+            ITag.store.setConnectMode(itag.id(), TagConnectionMode.dontConnect);
             ITag.disableReconnect(itag.id());
             new Thread(connection::disconnect).start();
         } else {
             Log.d("ingo", "disconnectItag no");
-            ITag.store.setConnectMode(itag.id(), true);
+            ITag.store.setConnectMode(itag.id(), TagConnectionMode.connect);
             Log.d("ingo", "isAlertEnabled? it should be: " + itag.isConnectModeEnabled());
             ITag.enableReconnect(itag.id());
-            ITag.connectAsync(connection);
+            connection.connect();
+            //ITag.connectAsync(connection);
         }
-        /*if (itag.isAlertEnabled()) {
-            //Toast.makeText(this, R.string.mode_alertdisconnect, Toast.LENGTH_SHORT).show();
-            if(isItagsFragmentShown()) {
-                ((ITagsFragment) fragment2).updateModeTextView(itag.id(), "Alert enabled");
-            }
-            ITagApplication.faUnmuteTag();
-        } else {
-            //Toast.makeText(this, R.string.mode_keyfinder, Toast.LENGTH_SHORT).show();
-            if(isItagsFragmentShown()) {
-                ((ITagsFragment) fragment2).updateModeTextView(itag.id(), "Alert disabled");
-            }
-            ITagApplication.faMuteTag();
-        }*/
     }
 
     public void onSetName(@NonNull View sender) {

@@ -89,7 +89,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
 
 
     @Override
-    public void connect(boolean auto) {
+    public void connect() {
         if (BuildConfig.DEBUG) {
             Log.d(LT, "connect id=" + identifier());
         }
@@ -103,9 +103,9 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         setState(BLEPeripheralState.connecting);
         BluetoothGatt g;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            g = device.connectGatt(context, auto, callback, TRANSPORT_LE);
+            g = device.connectGatt(context, false, callback, TRANSPORT_LE);
         } else {
-            g = device.connectGatt(context, auto, callback);
+            g = device.connectGatt(context, false, callback);
         }
         if (BuildConfig.DEBUG) {
             Log.d(LT, "init gatt id=" + identifier() + " gatt is null: " + (g == null ? "yes" : "no") + " id=" + identifier());

@@ -75,7 +75,7 @@ class BLEScannerDefault implements BLEScannerInterface {
                         event -> channelScan.broadcast(new BLEScanResult(event.peripheral.address(), event.peripheral.name(), event.rssi))
                 ));
         setScanning(true);
-        manager.startScan();
+        manager.startScan(true);
         channelTimer.broadcast(timeout);
         channelActive.broadcast(true);
         handlerTimer.postDelayed(runnableTimer, 1000);

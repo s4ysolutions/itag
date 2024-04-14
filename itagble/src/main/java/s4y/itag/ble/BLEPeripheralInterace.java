@@ -10,7 +10,7 @@ interface BLEPeripheralInterace extends AutoCloseable {
 
     BLEPeripheralObservablesInterface observables();
 
-    void connect(boolean auto);
+    void connect();
     void disconnect();
     void discoveryServices();
     BLEError writeInt8(BLECharacteristic characteristic, int value);

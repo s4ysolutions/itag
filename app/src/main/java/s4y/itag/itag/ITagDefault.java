@@ -21,7 +21,6 @@ private static final long serialVersionUID = 1575220516;
     private String name;
     @NonNull
     private TagColor color;
-    private boolean alert;
     private TagAlertMode alertMode;
     private TagConnectionMode connectionMode;
     private int alertDelay;
@@ -34,7 +33,6 @@ private static final long serialVersionUID = 1575220516;
         this.alertMode = alertMode == null ? TagAlertMode.alertOnDisconnect : alertMode;
         this.connectionMode = connectionMode == null ? TagConnectionMode.connect : connectionMode;
         Log.d("ingo", "we set mode to " + alertMode);
-        this.alert = alert == null ? false : alert;
         this.alertDelay = alertDelay == null ? 5: alertDelay;
     }
 
@@ -78,7 +76,7 @@ private static final long serialVersionUID = 1575220516;
 
     @NonNull
     @Override
-    public Boolean shakingOnConnectDisconnect() {
+    public Boolean isShaking() {
         return shakingOnConnectDisconnect;
     }
 
@@ -94,18 +92,13 @@ private static final long serialVersionUID = 1575220516;
     }
 
     @Override
-    public void setShakingOnConnectDisconnect(@NonNull Boolean shaking) {
+    public void setShaking(@NonNull Boolean shaking) {
         this.shakingOnConnectDisconnect = shaking;
     }
 
     @Override
     public boolean isConnectModeEnabled() {
-        return alert;
-    }
-
-    @Override
-    public void setAlert(boolean alert) {
-        this.alert = alert;
+        return connectionMode == TagConnectionMode.connect;
     }
 
     @Override
@@ -131,7 +124,7 @@ private static final long serialVersionUID = 1575220516;
     @Override
     public void copyFromTag(@NonNull ITagInterface tag) {
         name = tag.name();
-        alert = tag.isConnectModeEnabled();
+        connectionMode = tag.connectionMode();
         color = tag.color();
     }
 
@@ -142,7 +135,7 @@ private static final long serialVersionUID = 1575220516;
             put("id", id);
             put("name", name);
             put("color", color);
-            put("alert", alert);
+            put("connectionMode", connectionMode);
         }};
     }
 }

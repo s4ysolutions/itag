@@ -3,30 +3,48 @@ package s4y.itag.ble;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
+import static android.bluetooth.le.ScanSettings.MATCH_MODE_AGGRESSIVE;
+import static android.bluetooth.le.ScanSettings.SCAN_MODE_BALANCED;
+import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
 
 class BLECentralManagerDefault implements BLECentralManagerInterface, AutoCloseable {
     private static final String L = BLECentralManagerDefault.class.getName();
     private final Context context;
+    private final List<String> devices_ids;
     private final HandlerThread operationsThread = new HandlerThread("BLE Central Manager operations");
     private final Handler operationsHandler;
     private final Map<String, BLEPeripheralInterace> scanned = new HashMap<>();
 
     private final BLECentralManagerObservables observables = new BLECentralManagerObservables();
-    private final BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
+
+    private final ScanCallback scanCallback = new ScanCallback() {
         @Override
-        public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] data) {
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            BluetoothDevice bluetoothDevice = result.getDevice();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Log.d("ingo", "result.isLegacy() " + result.getDevice().getName() + ": " + result.isLegacy());
+            }
+            int rssi = result.getRssi();
             if (BuildConfig.DEBUG) {
                 Log.d(L,"onLeScan address="+bluetoothDevice.getAddress()+" rsss="+ rssi + " thread="+Thread.currentThread().getName());
             }
@@ -42,14 +60,24 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
                     .observablePeripheralDiscovered
                     .broadcast(new BLEDiscoveryResult(
                             peripheral,
-                            rssi,
-                            data
+                            rssi
                     ));
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
         }
     };
 
-    BLECentralManagerDefault(Context context) {
+    BLECentralManagerDefault(Context context, List<String> devices_ids) {
         this.context = context;
+        this.devices_ids = devices_ids;
         operationsThread.start();
         operationsHandler = new Handler(operationsThread.getLooper());
     }
@@ -102,16 +130,39 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         return  adapter != null && isScanning;
     }
 
-    public void startScan() {
+    public void startScanForNewDevices(){
+        startScan(true);
+    }
+
+    public void startScan(boolean newDevices) {
+        // TODO: For apps targeting Build.VERSION_CODES#S or or higher, this requires the Manifest.permission#BLUETOOTH_SCAN permission which can be gained with Activity.requestPermissions(String[], int).
         scanned.clear();
         BluetoothAdapter adapter = getAdapter();
         if (BuildConfig.DEBUG) {
             Log.d(L,"startLeScan, thread="+Thread.currentThread().getName()+", adapter="+(adapter==null?"null":"not null"));
         }
-        if (adapter != null) {
+        if (adapter != null && adapter.getBluetoothLeScanner() != null) {
             if (!isScanning(adapter)) {
-                // TODO: replace with startScan method because startLeScan is deprecated in API 21. startScan also only scans LE devices.https://developer.android.com/reference/android/bluetooth/le/BluetoothLeScanner#startScan(java.util.List%3Candroid.bluetooth.le.ScanFilter%3E,%20android.bluetooth.le.ScanSettings,%20android.bluetooth.le.ScanCallback)
-                adapter.startLeScan(leScanCallback);
+                // replaced with startScan method because startLeScan is deprecated in API 21. startScan also only scans LE devices. https://developer.android.com/reference/android/bluetooth/le/BluetoothLeScanner#startScan(java.util.List%3Candroid.bluetooth.le.ScanFilter%3E,%20android.bluetooth.le.ScanSettings,%20android.bluetooth.le.ScanCallback)
+                if(!newDevices) {
+                    List<ScanFilter> scanFilters = new ArrayList<>();
+                    for(String device_id : devices_ids){
+                        ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(device_id).build();
+                        scanFilters.add(scanFilter);
+                    }
+                    ScanSettings.Builder scanSettings = new ScanSettings.Builder();
+                    scanSettings.setScanMode(SCAN_MODE_BALANCED); // or SCAN_MODE_LOW_POWER to consume less power
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        scanSettings.setMatchMode(MATCH_MODE_AGGRESSIVE); // In Aggressive mode, hw will determine a match sooner even with feeble signal strength and few number of sightings/match in a duration.
+                    }
+                    adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), scanCallback);
+                } else {
+                    ScanSettings.Builder scanSettings = new ScanSettings.Builder();
+                    scanSettings.setScanMode(SCAN_MODE_LOW_LATENCY);
+                    scanSettings.setReportDelay(0);
+                    Log.d("ingo", "je adapter nula? " + String.valueOf(adapter.getBluetoothLeScanner() == null));
+                    adapter.getBluetoothLeScanner().startScan(new ArrayList<ScanFilter>(), scanSettings.build(), scanCallback);
+                }
                 isScanning = true;
             }
         }
@@ -125,7 +176,7 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         }
         if (isScanning(adapter)) {
             try {
-                adapter.stopLeScan(leScanCallback);
+                adapter.getBluetoothLeScanner().stopScan(scanCallback);
             }catch (NullPointerException ignored) {
 
             }

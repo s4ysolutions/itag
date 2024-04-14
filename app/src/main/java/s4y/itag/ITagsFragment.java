@@ -47,7 +47,8 @@ public class ITagsFragment extends Fragment
         ITrackIDChangeListener {
     private static final String LT = ITagsFragment.class.getName();
     private Animation mLocationAnimation;
-    private Animation mITagAnimation;
+    private Animation mITagAnimationShakeIndefinitely;
+    private Animation mITagAnimationShakeOnce;
     private String trackID = "";
     private final DisposableBag disposableBag = new DisposableBag();
 
@@ -332,15 +333,17 @@ public class ITagsFragment extends Fragment
         updateAlertButton(view, isAlertDisconnected, isConnected);
     }
 
+    // TODO: RSSI is very delayed, it takes 10 seconds to gradually come to right measure
+
     private void updateITagImageAnimation(@NonNull ViewGroup rootView, ITagInterface itag, BLEConnectionInterface connection) {
         Activity activity = getActivity();
         if (activity == null) return; //
-        if (mITagAnimation == null) {
+        if (mITagAnimationShakeIndefinitely == null) {
             return;
         }
 
         Animation animShake = null;
-        float alpha = 1.0f;
+        float alpha;
 
         if (BuildConfig.DEBUG) {
             Log.d(LT, "updateITagImageAnimation isFindMe:" + connection.isFindMe() +
@@ -351,12 +354,15 @@ public class ITagsFragment extends Fragment
         }
         Log.d("ingo", "pa trebalo bi");
         if (connection.isAlerting() ||
-                itag.shakingOnConnectDisconnect() ||
+                itag.isShaking() ||
                 connection.isFindMe()) {
             Log.d("ingo", "updateITagImageAnimation " + connection.isAlerting() + " " +
-                    itag.shakingOnConnectDisconnect() + " " +
+                    itag.isShaking() + " " +
                     connection.isFindMe());
-                animShake = mITagAnimation;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
+                animShake = mITagAnimationShakeIndefinitely;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
+        }
+        if(connection.observableClick().value() == 1){
+            animShake = mITagAnimationShakeOnce;
         }
         if(connection.isConnected()){
             alpha = 1.0f;
@@ -446,7 +452,8 @@ public class ITagsFragment extends Fragment
         // Inflate the layout for this fragment
 
         mLocationAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shadow_location);
-        mITagAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
+        mITagAnimationShakeIndefinitely = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag_indefinitely);
+        mITagAnimationShakeOnce = AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag_once);
         Context context = getContext();
         if (context != null) {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
