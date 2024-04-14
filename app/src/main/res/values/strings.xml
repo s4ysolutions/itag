@@ -86,15 +86,16 @@
     <string name="try_enable_bt_failed">You need to Enable Bluetooth manually in the Device Settings.</string>
     <string name="open_bt_settings">Turn on Bluetooth</string>
 
-    <string name="bt_disabled">off</string>
-    <string name="bt_connecting">connecting</string>
-    <string name="bt_disconnecting">disconnecting</string>
-    <string name="bt_setup">lost</string>
-    <string name="bt_call">reading/writing</string>
-    <string name="bt">linked</string>
-    <string name="bt_unk">faint</string>
-    <string name="bt_lost">lost</string>
-    <string name="bt_disconnected">disconnected</string>
+    <string name="bt_disabled">Off</string>
+    <string name="bt_connecting">Connecting</string>
+    <string name="bt_disconnecting">Disconnecting</string>
+    <string name="bt_setup">Lost</string>
+    <string name="bt_call">Reading/writing</string>
+    <string name="bt">Linked</string>
+    <string name="bt_unk">Faint</string>
+    <string name="bt_lost">Lost</string>
+    <string name="bt_disconnected">Disconnected</string>
+    <string name="bt_scanning">Scanning</string>
     <string name="last_seen">Last+seen+here+%d+%s+ago</string>
 
     <string name="not_connected">Not connected</string>

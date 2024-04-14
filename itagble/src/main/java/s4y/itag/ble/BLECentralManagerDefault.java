@@ -141,31 +141,29 @@ class BLECentralManagerDefault implements BLECentralManagerInterface, AutoClosea
         if (BuildConfig.DEBUG) {
             Log.d(L,"startLeScan, thread="+Thread.currentThread().getName()+", adapter="+(adapter==null?"null":"not null"));
         }
-        if (adapter != null && adapter.getBluetoothLeScanner() != null) {
-            if (!isScanning(adapter)) {
-                // replaced with startScan method because startLeScan is deprecated in API 21. startScan also only scans LE devices. https://developer.android.com/reference/android/bluetooth/le/BluetoothLeScanner#startScan(java.util.List%3Candroid.bluetooth.le.ScanFilter%3E,%20android.bluetooth.le.ScanSettings,%20android.bluetooth.le.ScanCallback)
-                if(!newDevices) {
-                    List<ScanFilter> scanFilters = new ArrayList<>();
-                    for(String device_id : devices_ids){
-                        ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(device_id).build();
-                        scanFilters.add(scanFilter);
-                    }
-                    ScanSettings.Builder scanSettings = new ScanSettings.Builder();
-                    scanSettings.setScanMode(SCAN_MODE_BALANCED); // or SCAN_MODE_LOW_POWER to consume less power
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        scanSettings.setMatchMode(MATCH_MODE_AGGRESSIVE); // In Aggressive mode, hw will determine a match sooner even with feeble signal strength and few number of sightings/match in a duration.
-                    }
-                    adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), scanCallback);
-                } else {
-                    ScanSettings.Builder scanSettings = new ScanSettings.Builder();
-                    scanSettings.setScanMode(SCAN_MODE_LOW_LATENCY);
-                    scanSettings.setReportDelay(0);
-                    Log.d("ingo", "je adapter nula? " + String.valueOf(adapter.getBluetoothLeScanner() == null));
-                    adapter.getBluetoothLeScanner().startScan(new ArrayList<ScanFilter>(), scanSettings.build(), scanCallback);
-                }
-                isScanning = true;
+        if (adapter == null || adapter.getBluetoothLeScanner() == null) return;
+        if (isScanning(adapter)) return;
+        // replaced with startScan method because startLeScan is deprecated in API 21. startScan also only scans LE devices. https://developer.android.com/reference/android/bluetooth/le/BluetoothLeScanner#startScan(java.util.List%3Candroid.bluetooth.le.ScanFilter%3E,%20android.bluetooth.le.ScanSettings,%20android.bluetooth.le.ScanCallback)
+        ScanSettings.Builder scanSettings = new ScanSettings.Builder();
+        if(!newDevices) {
+            List<ScanFilter> scanFilters = new ArrayList<>();
+            for(String device_id : devices_ids){
+                ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(device_id).build();
+                scanFilters.add(scanFilter);
             }
+            scanSettings.setScanMode(SCAN_MODE_BALANCED); // or SCAN_MODE_LOW_POWER to consume less power
+            scanSettings.setReportDelay(500);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                scanSettings.setMatchMode(MATCH_MODE_AGGRESSIVE); // In Aggressive mode, hw will determine a match sooner even with feeble signal strength and few number of sightings/match in a duration.
+            }
+            adapter.getBluetoothLeScanner().startScan(scanFilters, scanSettings.build(), scanCallback);
+        } else {
+            scanSettings.setScanMode(SCAN_MODE_LOW_LATENCY);
+            scanSettings.setReportDelay(0);
+            Log.d("ingo", "je adapter nula? " + (adapter.getBluetoothLeScanner() == null));
+            adapter.getBluetoothLeScanner().startScan(new ArrayList<>(), scanSettings.build(), scanCallback);
         }
+        isScanning = true;
     }
 
     public void stopScan() {

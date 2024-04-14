@@ -8,6 +8,6 @@ public interface BLEScannerInterface {
     Observable<BLEScanResult> observableScan();
     Observable<Boolean> observableActive();
 
-    void start(int timeout, String[] forceCancelIds);
+    void start(boolean newDevices, int timeout, String[] forceCancelIds);
     void stop();
 }

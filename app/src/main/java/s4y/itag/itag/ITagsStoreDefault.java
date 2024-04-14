@@ -195,6 +195,17 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
+    synchronized public void setPassivelyDisconnected(@NonNull String id, Boolean has_disconnected) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setPassivelyDisconnected(has_disconnected);
+        //new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
     synchronized public void setConnectionMode(@NonNull String id, TagConnectionMode connectionMode) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
@@ -241,5 +252,10 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     @Override
     synchronized public List<String> getIds() {
         return this.ids;
+    }
+
+    @Override
+    synchronized public Map<String, ITagInterface> getTagMap(){
+        return this.tags;
     }
 }

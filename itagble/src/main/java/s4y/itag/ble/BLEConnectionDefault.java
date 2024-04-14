@@ -142,7 +142,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         clickChannel.broadcast(0);
         alertChannel.broadcast(AlertVolume.NO_ALERT);
 
-        manager.stopScan();
+        //manager.stopScan();
         if (isConnected()) {
             if (peripheral() == null) {
                 Log.w("LT", "isConnected but peripheral is null");
@@ -384,7 +384,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                             .subscribe((event) -> {
                                 if (event.peripheral != null) {
                                     if (id.equals(event.peripheral.identifier())) {
-                                        manager.stopScan();
+                                        manager.stopScan(); // TODO: check if this is why the scanner stops unexpectedly
                                         monitorScan.setPayload(event.peripheral);
                                     }
                                 }
@@ -433,10 +433,6 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     public BLEError disconnect(int timeoutSec) {
         clickChannel.broadcast(0);
         alertChannel.broadcast(AlertVolume.NO_ALERT);
-
-        if (manager.isScanning()) {
-            manager.stopScan();
-        }
 
         if (BLEConnectionState.disconnected.equals(state())) {
             return BLEError.ok;
@@ -577,6 +573,11 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     @Override
     public Observable<Integer> observableRSSI() {
         return rssiChannel.observable;
+    }
+
+    @Override
+    public void broadcastRSSI(int rssi) {
+        rssiChannel.broadcast(rssi);
     }
 
     @Override

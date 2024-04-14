@@ -1,6 +1,5 @@
 package s4y.itag.itag;
 
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -20,7 +19,6 @@ import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
-import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.preference.VolumePreference;
 import solutions.s4y.rasat.DisposableBag;
@@ -37,10 +35,20 @@ public class ITag {
 
     private static final Map<String, AutoCloseable> reconnectListeners = new HashMap<>();
     private static final DisposableBag disposables = new DisposableBag();
+    private static final DisposableBag disposablePassiveScanner = new DisposableBag();
     private static final DisposableBag disposablesConnections = new DisposableBag();
 
     private static final Map<String, Thread> asyncConnections = new HashMap<>();
     private static final Map<String, DisposableBag> connectionBags = new HashMap<>();
+    private static final int PASSIVE_DISCONNECT_TIMEOUT = 2000;
+    private static final android.os.Handler passiveDisconnectTimeoutHandler = new Handler(Looper.getMainLooper());
+    private static final Map<String, Runnable> passiveDisconnectRunnables = new HashMap<>();
+    private static void iTagPassivelyDisconnected(ITagInterface itag) {
+        if(!itag.isShaking()) {
+            ITag.store.setPassivelyDisconnected(itag.id(), true);
+            alertUser(itag, true);
+        }
+    };
 
     public static void initITag(Context context) {
         store = new ITagsStoreDefault(ITagApplication.context);
@@ -48,22 +56,49 @@ public class ITag {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Log.d("ingo", "dadarata");
         }
-        /*if(ble.observableState().value() == BLEState.NOT_ENABLED || ble.observableState().value() == BLEState.NO_ADAPTER){
-            return;
-        }
-        for (int i = 0; i < store.count(); i++) {
-            ITagInterface itag = store.byPos(i);
-            // TODO: modify so that it doesn't connect in passive mode
-            if (itag == null || !itag.isConnectModeEnabled()) continue;
-            BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-            connection.connect();
-            //enableReconnect(itag.id());
-        }*/
         subscribeDisconnectionsAndConnections();
         disposables.add(store.observable().subscribe(event -> {
             Log.d("ingo", "disposables.add(store.observable().subscribe(event -> { " + event.op);
             subscribeDisconnectionsAndConnections();
         }));
+        subscribePassiveScanner();
+    }
+
+    public static void unsubscribePassiveScanner(){
+        disposablePassiveScanner.dispose();
+    }
+
+    public static void subscribePassiveScanner() {
+        // TODO: pass bluetooth manager only devices with passive mode ON.
+        disposablePassiveScanner.dispose();
+        disposablePassiveScanner.add(
+                ITag.ble.scanner().observableScan().subscribe((result) -> {
+                    ITagInterface itag = ITag.store.byId(result.id);
+                    if(itag != null) {
+                        BLEConnectionInterface connection = ITag.ble.connectionById(result.id);
+                        connection.broadcastRSSI(result.rssi);
+                        // to handle disconnects
+                        if(itag.alertMode() == TagAlertMode.alertOnDisconnect || itag.alertMode() == TagAlertMode.alertOnBoth) {
+                            Runnable runnable;
+                            if (passiveDisconnectRunnables.containsKey(itag.id())) {
+                                runnable = passiveDisconnectRunnables.get(itag.id());
+                            } else {
+                                runnable = () -> iTagPassivelyDisconnected(itag);
+                                passiveDisconnectRunnables.put(itag.id(), runnable);
+                            }
+                            passiveDisconnectTimeoutHandler.removeCallbacks(runnable);
+                            passiveDisconnectTimeoutHandler.postDelayed(runnable, PASSIVE_DISCONNECT_TIMEOUT);
+                        }
+                        // to handle connects
+                        if(itag.alertMode() == TagAlertMode.alertOnDisconnect || itag.alertMode() == TagAlertMode.alertOnBoth) {
+                            if(itag.hasPassivelyDisconnected()){
+                                alertUser(itag, false);
+                                ITag.store.setPassivelyDisconnected(itag.id(), false);
+                            }
+                        }
+                    }
+                })
+        );
     }
 
     public static void closeApplication() {

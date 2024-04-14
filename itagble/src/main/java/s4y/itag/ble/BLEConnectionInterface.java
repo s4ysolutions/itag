@@ -21,6 +21,7 @@ public interface BLEConnectionInterface extends AutoCloseable {
     BLEError writeImmediateAlert(AlertVolume volume);
     void enableRSSI();
     void disableRSSI();
+    void broadcastRSSI(int rssi);
     boolean rssiEnabled();
     int rssi();
     int getLastStatus();

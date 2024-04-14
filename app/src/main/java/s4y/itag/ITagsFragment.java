@@ -241,9 +241,9 @@ public class ITagsFragment extends Fragment
                         statusTextId = R.string.bt_disconnected;
                         Log.d("ingo", "disconnected");
                     } else {
-                        statusDrawableId = R.drawable.bt_disabled;
+                        statusDrawableId = R.drawable.bt_call;
                         statusDrawableTint = Color.LTGRAY;
-                        statusTextId = R.string.bt_disabled;
+                        statusTextId = R.string.bt_scanning;
                     }
                     break;
                 case disconnecting:
@@ -348,8 +348,6 @@ public class ITagsFragment extends Fragment
         updateAlertButton(view, isConnectModeEnabled, isConnected);
     }
 
-    // TODO: RSSI is very delayed, it takes 10 seconds to gradually come to right measure
-
     private void updateITagImageAnimation(@NonNull ViewGroup rootView, ITagInterface itag, BLEConnectionInterface connection) {
         Activity activity = getActivity();
         if (activity == null) return; //
@@ -367,13 +365,9 @@ public class ITagsFragment extends Fragment
                     " not connected:" + !connection.isConnected()
             );
         }
-        Log.d("ingo", "pa trebalo bi");
         if (connection.isAlerting() ||
                 itag.isShaking() ||
                 connection.isFindMe()) {
-            Log.d("ingo", "updateITagImageAnimation " + connection.isAlerting() + " " +
-                    itag.isShaking() + " " +
-                    connection.isFindMe());
                 animShake = mITagAnimationShakeIndefinitely;//AnimationUtils.loadAnimation(getActivity(), R.anim.shake_itag);
         }
         if(connection.observableClick().value() == 1){
@@ -389,7 +383,6 @@ public class ITagsFragment extends Fragment
             ((MainActivity) activity).onITagClick(itag);
         });
         imageITag.setOnLongClickListener(view -> {
-            Log.d("ingo", "setOnLongClickListener");
             if(connection.state() == BLEConnectionState.connected || connection.state() == BLEConnectionState.connecting) {
                 new Thread(connection::disconnect).start();
             } else if(connection.state() == BLEConnectionState.disconnected) {
@@ -571,7 +564,7 @@ public class ITagsFragment extends Fragment
 
         disposableBag.add(ITag.store.observable().subscribe(event -> {
             Log.d("ingo", "setupTags");
-            updateTags(false);
+            activity.runOnUiThread(() -> updateTags(false));
             //setupTags(root);
         }));
         for (int i = 0; i < ITag.store.count(); i++) {

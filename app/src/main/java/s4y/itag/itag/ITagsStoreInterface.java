@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 import solutions.s4y.rasat.Observable;
 
@@ -25,9 +26,11 @@ public interface ITagsStoreInterface {
     void setAlertDelay(@NonNull String id,int delay);
     void setAlertMode(@NonNull String id, TagAlertMode alertMode);
     void setShakingOnConnectDisconnect(@NonNull String id, Boolean shaking);
+    void setPassivelyDisconnected(@NonNull String id, Boolean has_disconnected);
     void setConnectionMode(@NonNull String id, TagConnectionMode connectionMode);
     void setConnectMode(@NonNull String id, TagConnectionMode connectionMode);
     void setColor(@NonNull String id,@NonNull TagColor color);
     void setName(@NonNull String id,String name);
     List<String> getIds();
+    Map<String, ITagInterface> getTagMap();
 }

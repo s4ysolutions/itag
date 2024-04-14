@@ -30,8 +30,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import s4y.itag.ble.AlertVolume;
 import s4y.itag.ble.BLEConnectionInterface;
@@ -66,6 +68,7 @@ public class MainActivity extends FragmentActivity {
         Log.d("ingo", "onCreate");
         checkForPermissions();
         setupContent();
+        checkIfPassiveScannerShouldTurnOn();
         /*
         // ATTENTION: This was auto-generated to handle app linksI
         Intent appLinkIntent = getIntent();
@@ -76,7 +79,7 @@ public class MainActivity extends FragmentActivity {
 
     private void setupProgressBar() {
         ProgressBar pb = findViewById(R.id.progress);
-        if (ITag.ble.scanner().isScanning()) {
+        if (mSelectedFragment == FragmentType.SCANNER && ITag.ble.scanner().isScanning()) {
             pb.setVisibility(View.VISIBLE);
             pb.setIndeterminate(false);
             pb.setMax(ITag.SCAN_TIMEOUT);
@@ -184,6 +187,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     private boolean mHasFocus = false;
+    private boolean newDevicesScanner = false;
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -209,7 +213,7 @@ public class MainActivity extends FragmentActivity {
         Fragment newFragment = null;
         setupProgressBar();
         Log.d("ingo", "setupContent");
-        if (ITag.ble.scanner().isScanning()) {
+        if (newDevicesScanner) {
             Log.d("ingo", "scanner is scanning");
             mEnableAttempts = 0;
             if (mSelectedFragment != FragmentType.SCANNER) {
@@ -268,7 +272,7 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     public void onBackPressed() {
-        if (ITag.ble.scanner().isScanning()) {
+        if (mSelectedFragment == FragmentType.SCANNER && newDevicesScanner) {
             ITag.ble.scanner().stop();
         } else {
             super.onBackPressed();// your code.
@@ -386,13 +390,14 @@ public class MainActivity extends FragmentActivity {
         if (s4y.itag.ble.BuildConfig.DEBUG) {
             Log.d(LT, "onStartStopScan isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
         }
-        if (ITag.ble.scanner().isScanning()) {
+        if (newDevicesScanner) {
             ITag.ble.scanner().stop();
         } else {
             checkForPermissions();
-            ITag.ble.scanner().start(ITag.SCAN_TIMEOUT, new String[]{});
+            ITag.ble.scanner().start(true, ITag.SCAN_TIMEOUT, new String[]{});
             Log.d("ingo", "scanner started");
         }
+        newDevicesScanner = !newDevicesScanner;
     }
 
     void checkForPermissions(){
@@ -583,14 +588,35 @@ public class MainActivity extends FragmentActivity {
         BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
         if (itag.isConnectModeEnabled()) {
             Log.d("ingo", "disconnectItag yes");
-            ITag.store.setConnectMode(itag.id(), TagConnectionMode.dontConnect);
+            ITag.store.setConnectMode(itag.id(), TagConnectionMode.passive);
             new Thread(connection::disconnect).start();
         } else {
             Log.d("ingo", "disconnectItag no");
-            ITag.store.setConnectMode(itag.id(), TagConnectionMode.connect);
+            ITag.store.setConnectMode(itag.id(), TagConnectionMode.active);
             Log.d("ingo", "isAlertEnabled? it should be: " + itag.isConnectModeEnabled());
             connection.connect();
             //ITag.connectAsync(connection);
+        }
+        checkIfPassiveScannerShouldTurnOn();
+    }
+
+    private void checkIfPassiveScannerShouldTurnOn() {
+        boolean shouldPassiveScannerBeOn = false;
+        for(Map.Entry<String, ITagInterface> tagEntry : ITag.store.getTagMap().entrySet()){
+            if(tagEntry.getValue().connectionMode() == TagConnectionMode.passive){
+                Log.d("ingo", "scanner, passive is " + tagEntry.getValue().name());
+                shouldPassiveScannerBeOn = true;
+                break;
+            }
+        }
+        Log.d("ingo", "ITag.ble.scanner().isScanning() " + ITag.ble.scanner().isScanning());
+        if(shouldPassiveScannerBeOn && !ITag.ble.scanner().isScanning()){
+            Log.d("ingo", "scanner on");
+            ITag.ble.scanner().start(false, 0, new String[]{});
+        } else if(!shouldPassiveScannerBeOn && ITag.ble.scanner().isScanning()){
+            Log.d("ingo", "scanner off");
+            ITag.ble.scanner().stop();
+            ITag.unsubscribePassiveScanner();
         }
     }
 

@@ -58,24 +58,6 @@ public class ScanFragment extends Fragment {
         return view;
     }
 
-    /*
-        private ListView listView() {
-            View root = getView();
-            if (root == null) return null;
-            return root.findViewById(R.id.results_list);
-        }
-
-        private Adapter adapter(ListView listView) {
-            if (listView == null) {
-                return null;
-            }
-            return ((Adapter) (listView.getAdapter()));
-        }
-
-        private Adapter adapter() {
-            return adapter(listView());
-        }
-    */
     private long lastUpdate = 0;
 
     @Override
@@ -84,6 +66,7 @@ public class ScanFragment extends Fragment {
         ITagApplication.faScanView(ITag.store.count() > 0);
         disposableBag.add(
                 ITag.ble.scanner().observableScan().subscribe((result) -> {
+                    // TODO: check if this is why device doesn't show up after being forgotten
                     if (ITag.store.remembered(result.id)) {
                         return;
                     }

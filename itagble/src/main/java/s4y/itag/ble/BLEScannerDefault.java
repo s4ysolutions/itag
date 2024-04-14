@@ -65,20 +65,21 @@ class BLEScannerDefault implements BLEScannerInterface {
     private final DisposableBag disposableBag = new DisposableBag();
 
     @Override
-    public void start(int timeout, String[] forceCancelIds) {
+    public void start(boolean newDevices, int timeout, String[] forceCancelIds) {
         stop();
         if (!manager.canScan())
             return;
-        //                        resultList.add(result);
         disposableBag.add(
                 manager.observables().observablePeripheralDiscovered().subscribe(
                         event -> channelScan.broadcast(new BLEScanResult(event.peripheral.address(), event.peripheral.name(), event.rssi))
                 ));
         setScanning(true);
         manager.startScan(true);
-        channelTimer.broadcast(timeout);
+        if(timeout != 0) {
+            channelTimer.broadcast(timeout);
+            handlerTimer.postDelayed(runnableTimer, 1000);
+        }
         channelActive.broadcast(true);
-        handlerTimer.postDelayed(runnableTimer, 1000);
     }
 
     @Override

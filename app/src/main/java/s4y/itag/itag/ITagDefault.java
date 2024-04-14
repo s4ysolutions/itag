@@ -25,13 +25,14 @@ private static final long serialVersionUID = 1575220516;
     private TagConnectionMode connectionMode;
     private int alertDelay;
     private boolean shakingOnConnectDisconnect = false;
+    private boolean hasPassivelyDisconnected = false;
 
     public ITagDefault(@NonNull String id, @Nullable String name, @Nullable TagColor color, @Nullable Boolean alert, @Nullable Integer alertDelay, @Nullable TagAlertMode alertMode, @Nullable TagConnectionMode connectionMode) {
         this.id = id;
         this.name = name == null ? ITagApplication.context.getString(R.string.unknown):name;
         this.color = color == null? TagColor.black : color;
         this.alertMode = alertMode == null ? TagAlertMode.alertOnDisconnect : alertMode;
-        this.connectionMode = connectionMode == null ? TagConnectionMode.connect : connectionMode;
+        this.connectionMode = connectionMode == null ? TagConnectionMode.active : connectionMode;
         Log.d("ingo", "we set mode to " + alertMode);
         this.alertDelay = alertDelay == null ? 5: alertDelay;
     }
@@ -82,6 +83,12 @@ private static final long serialVersionUID = 1575220516;
 
     @NonNull
     @Override
+    public Boolean hasPassivelyDisconnected() {
+        return hasPassivelyDisconnected;
+    }
+
+    @NonNull
+    @Override
     public TagConnectionMode connectionMode() {
         return connectionMode;
     }
@@ -97,8 +104,13 @@ private static final long serialVersionUID = 1575220516;
     }
 
     @Override
+    public void setPassivelyDisconnected(@NonNull Boolean has_disconnected) {
+        this.hasPassivelyDisconnected = has_disconnected;
+    }
+
+    @Override
     public boolean isConnectModeEnabled() {
-        return connectionMode == TagConnectionMode.connect;
+        return connectionMode == TagConnectionMode.active;
     }
 
     @Override
