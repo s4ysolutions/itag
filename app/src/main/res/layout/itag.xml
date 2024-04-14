@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layout_itag"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -72,18 +73,24 @@
             android:layout_marginRight="8dp"
             android:textSize="14sp" />
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:adjustViewBounds="true"
-        android:id="@+id/image_itag"
-        android:contentDescription="@string/itag"
-        android:longClickable="true"
-        android:onClick="onITagClick"
-        android:padding="8dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/itag_white"
-        android:layout_gravity="center"/>
+        <s4y.itag.ITagImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:id="@+id/image_itag"
+            android:contentDescription="@string/itag"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/itag_white"
+            android:layout_gravity="center"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"/><!--android:indeterminateDrawable="@drawable/circular_progress_bar"-->
 
         <s4y.itag.WaytodayView
             android:id="@+id/wt"

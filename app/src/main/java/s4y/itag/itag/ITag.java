@@ -1,5 +1,6 @@
 package s4y.itag.itag;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -19,6 +20,7 @@ import s4y.itag.ble.BLEConnectionInterface;
 import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEDefault;
 import s4y.itag.ble.BLEInterface;
+import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.preference.VolumePreference;
 import solutions.s4y.rasat.DisposableBag;
@@ -46,6 +48,9 @@ public class ITag {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Log.d("ingo", "dadarata");
         }
+        /*if(ble.observableState().value() == BLEState.NOT_ENABLED || ble.observableState().value() == BLEState.NO_ADAPTER){
+            return;
+        }
         for (int i = 0; i < store.count(); i++) {
             ITagInterface itag = store.byPos(i);
             // TODO: modify so that it doesn't connect in passive mode
@@ -53,13 +58,12 @@ public class ITag {
             BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
             connection.connect();
             //enableReconnect(itag.id());
-        }
+        }*/
         subscribeDisconnectionsAndConnections();
         disposables.add(store.observable().subscribe(event -> {
             Log.d("ingo", "disposables.add(store.observable().subscribe(event -> { " + event.op);
             subscribeDisconnectionsAndConnections();
         }));
-
     }
 
     public static void closeApplication() {
@@ -175,7 +179,8 @@ public class ITag {
 
     private static void alertUser(ITagInterface itag, Boolean disconnected) {
         Log.d("ingo", "setShakingOnConnectDisconnect(true)");
-        itag.setShaking(true);
+        //itag.setShaking(true);
+        ITag.store.setShakingOnConnectDisconnect(itag.id(), true);
         int volume = new VolumePreference(ITagApplication.context).get();
         if (volume == VolumePreference.LOUD) {
             MediaPlayerUtils.getInstance().startSoundConnectedDisconnected(ITagApplication.context, disconnected);

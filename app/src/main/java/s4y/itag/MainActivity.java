@@ -35,6 +35,7 @@ import java.util.Locale;
 
 import s4y.itag.ble.AlertVolume;
 import s4y.itag.ble.BLEConnectionInterface;
+import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
@@ -340,12 +341,8 @@ public class MainActivity extends FragmentActivity {
         return fragment2 != null && fragment2.getClass().getSimpleName().equals("ITagsFragment");
     }
 
-    public void onITagClick(@NonNull View sender) {
-        ITagInterface itag = (ITagInterface) sender.getTag();
+    public void onITagClick(@NonNull ITagInterface itag) {
         Log.d("ingo", "onITagClick");
-        if (itag == null) {
-            return;
-        }
         final BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
 
         if (connection.isFindMe()) { // iTag contacting phone
@@ -371,7 +368,9 @@ public class MainActivity extends FragmentActivity {
         } else {
             Log.e("ingo", "device NOT connected and connectivity is enabled");
             // nothing here is needed since scanner will connect to the device once the device is discovered
-            connection.connect(); // TODO: remove this
+            if(connection.state() != BLEConnectionState.connecting) {
+                connection.connect(); // TODO: remove this after scanner correctly implemented
+            }
         }
     }
 
@@ -585,13 +584,11 @@ public class MainActivity extends FragmentActivity {
         if (itag.isConnectModeEnabled()) {
             Log.d("ingo", "disconnectItag yes");
             ITag.store.setConnectMode(itag.id(), TagConnectionMode.dontConnect);
-            ITag.disableReconnect(itag.id());
             new Thread(connection::disconnect).start();
         } else {
             Log.d("ingo", "disconnectItag no");
             ITag.store.setConnectMode(itag.id(), TagConnectionMode.connect);
             Log.d("ingo", "isAlertEnabled? it should be: " + itag.isConnectModeEnabled());
-            ITag.enableReconnect(itag.id());
             connection.connect();
             //ITag.connectAsync(connection);
         }

@@ -1,5 +1,7 @@
 package s4y.itag;
 
+import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -9,11 +11,13 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -221,32 +225,39 @@ public class ITagsFragment extends Fragment
         int statusDrawableId;
         int statusDrawableTint = Color.BLACK;
         int statusTextId;
+        boolean progressBar = false;
         if (ble.state() == BLEState.OK) {
+            ITagInterface itag = ITag.store.byId(id);
             switch (state) {
                 case connected:
                     statusDrawableId = R.drawable.bt;
                     statusDrawableTint = Color.GREEN;
                     statusTextId = R.string.bt;
                     break;
-                case connecting:
-                case disconnecting:
-                    ITagInterface itag = ITag.store.byId(id);
+                case disconnected:
                     if (itag != null && itag.isConnectModeEnabled()) {
                         statusDrawableId = R.drawable.bt_connecting;
                         statusDrawableTint = Color.RED;
-                        statusTextId = R.string.bt_lost;
-                        Log.d("ingo", "it's connecting");
+                        statusTextId = R.string.bt_disconnected;
+                        Log.d("ingo", "disconnected");
                     } else {
-                        statusDrawableId = R.drawable.bt_setup;
-                        statusDrawableTint = Color.parseColor("#FFA500"); // orange
-                        if (state == BLEConnectionState.connecting) {
-                            Log.d("ingo", "it's connecting2");
-                            statusTextId = R.string.bt_connecting;
-                        }
-                        else {
-                            Log.d("ingo", "it's disconnecting");
-                            statusTextId = R.string.bt_disconnecting;
-                        }
+                        statusDrawableId = R.drawable.bt_disabled;
+                        statusDrawableTint = Color.LTGRAY;
+                        statusTextId = R.string.bt_disabled;
+                    }
+                    break;
+                case disconnecting:
+                case connecting:
+                    progressBar = true;
+                    statusDrawableId = R.drawable.bt_setup;
+                    statusDrawableTint = Color.parseColor("#FFA500"); // orange
+                    if (state == BLEConnectionState.connecting) {
+                        Log.d("ingo", "it's connecting2");
+                        statusTextId = R.string.bt_connecting;
+                    }
+                    else {
+                        Log.d("ingo", "it's disconnecting");
+                        statusTextId = R.string.bt_disconnecting;
                     }
                     break;
                 case writting:
@@ -254,18 +265,22 @@ public class ITagsFragment extends Fragment
                     statusDrawableId = R.drawable.bt_call;
                     statusTextId = R.string.bt_call;
                     break;
-                case disconnected:
                 default:
                     statusDrawableId = R.drawable.bt_disabled;
                     statusDrawableTint = Color.LTGRAY;
                     statusTextId = R.string.bt_disabled;
+            }
+            final ProgressBar progressBarView = rootView.findViewById(R.id.progressBar);
+            if(progressBar){
+                progressBarView.setVisibility(View.VISIBLE);
+            } else {
+                progressBarView.setVisibility(View.GONE);
             }
         } else {
             statusDrawableId = R.drawable.bt_disabled;
             statusDrawableTint = Color.LTGRAY;
             statusTextId = R.string.bt_disabled;
         }
-
         final ImageView imgStatus = rootView.findViewById(R.id.bt_status);
         imgStatus.setImageResource(statusDrawableId);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -292,16 +307,16 @@ public class ITagsFragment extends Fragment
         textId.setText(itag.id());
     }
 
-    private void updateAlertButton(@NonNull ViewGroup rootView, boolean isAlertEnabled, boolean isConnected) {
+    private void updateAlertButton(@NonNull ViewGroup rootView, boolean isConnectModeEnabled, boolean isConnected) {
         Activity activity = getActivity();
         if (activity == null) return; //
         final ImageView btnAlert = rootView.findViewById(R.id.btn_alert);
         final TextView modeTextView = rootView.findViewById(R.id.text_mode);
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "updateAlertButton2 isAlertEnabled=" + isAlertEnabled + " isConnected=" + isConnected);
+            Log.d(LT, "updateAlertButton2 isConnectModeEnabled=" + isConnectModeEnabled + " isConnected=" + isConnected);
         }
-        btnAlert.setImageResource(isAlertEnabled || isConnected ? R.drawable.linked : R.drawable.keyfinder);
-        modeTextView.setText(getString(isAlertEnabled || isConnected ? R.string.mode_alert : R.string.mode_dont_connect));
+        btnAlert.setImageResource(isConnectModeEnabled ? R.drawable.reconnect_on : R.drawable.reconnect_off);
+        modeTextView.setText(getString(isConnectModeEnabled || isConnected ? R.string.mode_alert : R.string.mode_dont_connect));
     }
 
     private void updateAlertButton(@NonNull String id) {
@@ -326,11 +341,11 @@ public class ITagsFragment extends Fragment
         }
         BLEConnectionInterface connection = ble.connectionById(id);
         boolean isConnected = connection.isConnected();
-        boolean isAlertDisconnected = itag.isConnectModeEnabled();
+        boolean isConnectModeEnabled = itag.isConnectModeEnabled();
         if (BuildConfig.DEBUG) {
-            Log.d(LT, "id = " + id + " updateAlertButton2 isAlertDisconnected=" + isAlertDisconnected + " isConnected=" + isConnected);
+            Log.d(LT, "id = " + id + " updateAlertButton2 isAlertDisconnected=" + isConnectModeEnabled + " isConnected=" + isConnected);
         }
-        updateAlertButton(view, isAlertDisconnected, isConnected);
+        updateAlertButton(view, isConnectModeEnabled, isConnected);
     }
 
     // TODO: RSSI is very delayed, it takes 10 seconds to gradually come to right measure
@@ -369,7 +384,20 @@ public class ITagsFragment extends Fragment
         } else {
             alpha = 0.3f;
         }
-        final ImageView imageITag = rootView.findViewById(R.id.image_itag);
+        final ITagImageView imageITag = rootView.findViewById(R.id.image_itag);
+        imageITag.setOnClickListener(view -> {
+            ((MainActivity) activity).onITagClick(itag);
+        });
+        imageITag.setOnLongClickListener(view -> {
+            Log.d("ingo", "setOnLongClickListener");
+            if(connection.state() == BLEConnectionState.connected || connection.state() == BLEConnectionState.connecting) {
+                new Thread(connection::disconnect).start();
+            } else if(connection.state() == BLEConnectionState.disconnected) {
+                ITag.store.setShakingOnConnectDisconnect(itag.id(), false);
+                connection.connect();
+            }
+            return true;
+        });
         if (Looper.myLooper() == Looper.getMainLooper()) {
             imageITag.setAlpha(alpha);
         } else {
@@ -440,8 +468,7 @@ public class ITagsFragment extends Fragment
                 break;
         }
 
-
-        final ImageView imageITag = rootView.findViewById(R.id.image_itag);
+        final ITagImageView imageITag = rootView.findViewById(R.id.image_itag);
         imageITag.setImageResource(imageId);
         imageITag.setTag(itag);
     }

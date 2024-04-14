@@ -132,7 +132,13 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
-    public BLEError connect() {
+    public void connect(){
+        new Thread(() -> {
+            connectOnMainThread();
+        }).start();
+    }
+
+    public BLEError connectOnMainThread() {
         clickChannel.broadcast(0);
         alertChannel.broadcast(AlertVolume.NO_ALERT);
 

@@ -94,6 +94,7 @@
     <string name="bt">linked</string>
     <string name="bt_unk">faint</string>
     <string name="bt_lost">lost</string>
+    <string name="bt_disconnected">disconnected</string>
     <string name="last_seen">Last+seen+here+%d+%s+ago</string>
 
     <string name="not_connected">Not connected</string>

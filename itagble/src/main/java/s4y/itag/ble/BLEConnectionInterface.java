@@ -14,7 +14,7 @@ public interface BLEConnectionInterface extends AutoCloseable {
     String id();
     boolean isConnected();
     boolean isDisconnected();
-    BLEError connect();
+    void connect();
     BLEError disconnect(int timeout);
     BLEError disconnect();
     BLEError writeImmediateAlert(AlertVolume volume, int timeout);

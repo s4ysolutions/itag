@@ -102,6 +102,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         }
         setState(BLEPeripheralState.connecting);
         BluetoothGatt g;
+        Log.e("ingo", "poveži");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             g = device.connectGatt(context, false, callback, TRANSPORT_LE);
         } else {
@@ -113,7 +114,7 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
         if (g == null) {
             Log.w(LT, "will init gatt to null, id=" + identifier());
         }
-        // TODO: it aready should be set in onConnectionStateChange but just in case
+        // TODO: it already should be set in onConnectionStateChange but just in case
         if (g != null) {
             setGatt(g);
         }
@@ -135,11 +136,13 @@ class BLEPeripheralDefault implements BLEPeripheralInterace {
                     setState(BLEPeripheralState.connected);
                     observables.channelConnected.broadcast(new BLEPeripheralObservablesInterface.ConnectedEvent());
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    Log.d("ingo", "first");
                     waitForClose();
                 }
             } else {
                 // if status isn't GATT_SUCCESS, it means that connect/disconnect operation failed, possibly due to network problems.
                 gatt.disconnect();
+                Log.d("ingo", "second");
                 waitForClose();
             }
         }
