@@ -79,7 +79,7 @@ public class MainActivity extends FragmentActivity {
 
     private void setupProgressBar() {
         ProgressBar pb = findViewById(R.id.progress);
-        if (mSelectedFragment == FragmentType.SCANNER && ITag.ble.scanner().isScanning()) {
+        if (mSelectedFragment == FragmentType.SCANNER) {
             pb.setVisibility(View.VISIBLE);
             pb.setIndeterminate(false);
             pb.setMax(ITag.SCAN_TIMEOUT);
@@ -146,7 +146,15 @@ public class MainActivity extends FragmentActivity {
                 }
         ));
         disposableBag.add(ITag.ble.scanner().observableTimer().subscribe(
-                event -> setupProgressBar()
+                event -> {
+                    if(ITag.ble.scanner().observableTimer().value() < 0){
+                        newDevicesScanner = false;
+                        Log.d("ingo", "gasimo scanner");
+                        setupContent();
+                    } else {
+                        setupProgressBar();
+                    }
+                }
         ));
         disposableBag.add(ITag.store.observable().subscribe(event -> {
             switch (event.op) {
@@ -395,13 +403,15 @@ public class MainActivity extends FragmentActivity {
             Log.d(LT, "onStartStopScan isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
         }
         if (newDevicesScanner) {
+            newDevicesScanner = false;
             ITag.ble.scanner().stop();
         } else {
+            newDevicesScanner = true;
             checkForPermissions();
             ITag.ble.scanner().start(true, ITag.SCAN_TIMEOUT, new String[]{});
             Log.d("ingo", "scanner started");
+            setupContent();
         }
-        newDevicesScanner = !newDevicesScanner;
     }
 
     void checkForPermissions(){
@@ -605,6 +615,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void checkIfPassiveScannerShouldTurnOn() {
+        if(newDevicesScanner) return;
         boolean shouldPassiveScannerBeOn = false;
         for(Map.Entry<String, ITagInterface> tagEntry : ITag.store.getTagMap().entrySet()){
             if(tagEntry.getValue().connectionMode() == TagConnectionMode.passive ||

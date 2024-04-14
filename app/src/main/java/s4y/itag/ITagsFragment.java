@@ -312,7 +312,7 @@ public class ITagsFragment extends Fragment
         if (BuildConfig.DEBUG) {
             Log.d(LT, "updateAlertButton2 isConnectModeEnabled=" + isConnectModeEnabled + " isConnected=" + isConnected);
         }
-        btnAlert.setImageResource(isConnectModeEnabled ? R.drawable.reconnect_on : R.drawable.reconnect_off);
+        btnAlert.setImageResource(isConnectModeEnabled ? R.drawable.linked : R.drawable.keyfinder);
         modeTextView.setText(getString(isConnectModeEnabled || isConnected ? R.string.mode_active : R.string.mode_passive));
     }
 
