@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -30,8 +31,11 @@ public class SetNameDialogFragment extends DialogFragment {
         @SuppressLint("InflateParams") final View view = inflater.inflate(R.layout.fragment_set_name, null);
         final TextView textName = view.findViewById(R.id.text_name);
         textName.setText(iTag.name());
-        final Spinner alarmDelaySpinner = view.findViewById(R.id.alarm_delay_spinner);
 
+        final CheckBox reconnect_checkbox = view.findViewById(R.id.reconnect_checkbox);
+        reconnect_checkbox.setChecked(iTag.reconnectMode());
+
+        final Spinner alarmDelaySpinner = view.findViewById(R.id.alarm_delay_spinner);
         ArrayAdapter<CharSequence> alarmDelayAdapter = ArrayAdapter.createFromResource(
                 requireContext(),
                 R.array.itag_alarm_delays,
@@ -109,6 +113,7 @@ public class SetNameDialogFragment extends DialogFragment {
                         ITag.store.setName(iTag.id(), textName.getText().toString());
                         ITagApplication.faNameITag();
                     }
+                    ITag.store.setReconnectMode(iTag.id(), reconnect_checkbox.isChecked());
                     switch (alarmDelaySpinner.getSelectedItemPosition()) {
                         case 0:
                             ITag.store.setAlertDelay(iTag.id(), 0);

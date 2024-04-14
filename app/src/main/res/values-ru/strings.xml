@@ -95,6 +95,6 @@
     <string name="soundmode_vibration">Вибрационная сигнализация</string>
     <string name="soundmode_off">Нет будильника</string>
 
-    <string name="mode_dont_connect">Только поиск брелка</string>
-    <string name="mode_alert">Сигнализировать при утере брелка</string>
+    <string name="mode_passive">Только поиск брелка</string>
+    <string name="mode_active">Сигнализировать при утере брелка</string>
 </resources>

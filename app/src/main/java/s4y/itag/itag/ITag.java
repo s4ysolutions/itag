@@ -44,7 +44,7 @@ public class ITag {
     private static final android.os.Handler passiveDisconnectTimeoutHandler = new Handler(Looper.getMainLooper());
     private static final Map<String, Runnable> passiveDisconnectRunnables = new HashMap<>();
     private static void iTagPassivelyDisconnected(ITagInterface itag) {
-        if(!itag.isShaking()) {
+        if(!itag.isShaking() && itag.connectionMode() == TagConnectionMode.passive) {
             ITag.store.setPassivelyDisconnected(itag.id(), true);
             alertUser(itag, true);
         }
@@ -74,7 +74,8 @@ public class ITag {
         disposablePassiveScanner.add(
                 ITag.ble.scanner().observableScan().subscribe((result) -> {
                     ITagInterface itag = ITag.store.byId(result.id);
-                    if(itag != null) {
+                    if(itag == null) return;
+                    if(itag.connectionMode() == TagConnectionMode.passive) {
                         BLEConnectionInterface connection = ITag.ble.connectionById(result.id);
                         connection.broadcastRSSI(result.rssi);
                         // to handle disconnects
@@ -96,6 +97,10 @@ public class ITag {
                                 ITag.store.setPassivelyDisconnected(itag.id(), false);
                             }
                         }
+                    }
+                    // handle reconnects for devices in active mode
+                    if(itag.connectionMode() == TagConnectionMode.active && itag.reconnectMode() && ITag.ble.connectionById(itag.id()).state() == BLEConnectionState.disconnected){
+                        ITag.ble.connectionById(itag.id()).connect();
                     }
                 })
         );
@@ -159,6 +164,7 @@ public class ITag {
                                     if (BuildConfig.DEBUG)
                                         Log.d(LT, "connection " + connection.id() + " lost");
                                     alertUser(itag, true);
+                                    connection.broadcastRSSI(-999);
                                 } else {
                                     if (BuildConfig.DEBUG) Log.d(LT, "connection " +
                                             connection.id() + " lost will be delayed by " +

@@ -92,7 +92,7 @@
     <string name="soundmode_on">Alarme de alto-falante</string>
     <string name="soundmode_vibration">Alarme vibratório</string>
     <string name="soundmode_off">Sem alarme</string>
-    <string name="mode_dont_connect">Modo localizador de chave</string>
-    <string name="mode_alert">Modo de alarme perdido</string>
+    <string name="mode_passive">Modo localizador de chave</string>
+    <string name="mode_active">Modo de alarme perdido</string>
     <string name="app_name">iTag One</string>
 </resources>

@@ -206,6 +206,17 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
+    synchronized public void setReconnectMode(@NonNull String id, Boolean reconnect) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setReconnectMode(reconnect);
+        //new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
     synchronized public void setConnectionMode(@NonNull String id, TagConnectionMode connectionMode) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {

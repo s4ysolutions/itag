@@ -95,6 +95,6 @@
     <string name="soundmode_vibration">إنذار الاهتزاز</string>
     <string name="soundmode_off">لا إنذار</string>
 
-    <string name="mode_dont_connect">وضع الباحث عن المفاتيح</string>
-    <string name="mode_alert">وضع التنبيه المفقود</string>
+    <string name="mode_passive">وضع الباحث عن المفاتيح</string>
+    <string name="mode_active">وضع التنبيه المفقود</string>
 </resources>

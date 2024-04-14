@@ -1,7 +1,5 @@
 package s4y.itag;
 
-import android.animation.ObjectAnimator;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -11,7 +9,6 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -316,7 +313,7 @@ public class ITagsFragment extends Fragment
             Log.d(LT, "updateAlertButton2 isConnectModeEnabled=" + isConnectModeEnabled + " isConnected=" + isConnected);
         }
         btnAlert.setImageResource(isConnectModeEnabled ? R.drawable.reconnect_on : R.drawable.reconnect_off);
-        modeTextView.setText(getString(isConnectModeEnabled || isConnected ? R.string.mode_alert : R.string.mode_dont_connect));
+        modeTextView.setText(getString(isConnectModeEnabled || isConnected ? R.string.mode_active : R.string.mode_passive));
     }
 
     private void updateAlertButton(@NonNull String id) {
@@ -384,6 +381,7 @@ public class ITagsFragment extends Fragment
         });
         imageITag.setOnLongClickListener(view -> {
             if(connection.state() == BLEConnectionState.connected || connection.state() == BLEConnectionState.connecting) {
+                ITag.store.setReconnectMode(itag.id(), false); // TODO: check if this is wanted behaviour - if we manually disconnect from device, it sets reconnect to OFF
                 new Thread(connection::disconnect).start();
             } else if(connection.state() == BLEConnectionState.disconnected) {
                 ITag.store.setShakingOnConnectDisconnect(itag.id(), false);

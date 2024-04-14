@@ -24,13 +24,18 @@ private static final long serialVersionUID = 1575220516;
     private TagAlertMode alertMode;
     private TagConnectionMode connectionMode;
     private int alertDelay;
+    // TODO: use these two variables below to stop alerting user when unnecessary
+    boolean ignoreNextConnect = false;
+    boolean ignoreNextDisonnect = false;
     private boolean shakingOnConnectDisconnect = false;
     private boolean hasPassivelyDisconnected = false;
+    private boolean reconnect = true;
 
-    public ITagDefault(@NonNull String id, @Nullable String name, @Nullable TagColor color, @Nullable Boolean alert, @Nullable Integer alertDelay, @Nullable TagAlertMode alertMode, @Nullable TagConnectionMode connectionMode) {
+    public ITagDefault(@NonNull String id, @Nullable String name, @Nullable TagColor color, @Nullable Boolean reconnect, @Nullable Integer alertDelay, @Nullable TagAlertMode alertMode, @Nullable TagConnectionMode connectionMode) {
         this.id = id;
         this.name = name == null ? ITagApplication.context.getString(R.string.unknown):name;
         this.color = color == null? TagColor.black : color;
+        this.reconnect = reconnect == null || reconnect;
         this.alertMode = alertMode == null ? TagAlertMode.alertOnDisconnect : alertMode;
         this.connectionMode = connectionMode == null ? TagConnectionMode.active : connectionMode;
         Log.d("ingo", "we set mode to " + alertMode);
@@ -42,7 +47,7 @@ private static final long serialVersionUID = 1575220516;
     }
 
     public ITagDefault(@NonNull String id, Map<String, Object> dict) {
-        this(id, (String)dict.get("name"), (TagColor)dict.get("color"), (Boolean)dict.get("alert"), (Integer)dict.get("alertDelay"), (TagAlertMode) dict.get("alertMode"), (TagConnectionMode) dict.get("connectionMode"));
+        this(id, (String)dict.get("name"), (TagColor)dict.get("color"), (Boolean)dict.get("reconnect"), (Integer)dict.get("alertDelay"), (TagAlertMode) dict.get("alertMode"), (TagConnectionMode) dict.get("connectionMode"));
         Log.d("ingo", "poziva se iz dicta");
     }
 
@@ -96,6 +101,16 @@ private static final long serialVersionUID = 1575220516;
     @Override
     public void setColor(@NonNull TagColor color) {
         this.color = color;
+    }
+
+    @Override
+    public void setReconnectMode(@NonNull Boolean reconnect) {
+        this.reconnect = reconnect;
+    }
+
+    @Override
+    public boolean reconnectMode() {
+        return this.reconnect;
     }
 
     @Override

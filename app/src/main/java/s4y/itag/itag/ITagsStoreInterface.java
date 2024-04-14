@@ -27,6 +27,7 @@ public interface ITagsStoreInterface {
     void setAlertMode(@NonNull String id, TagAlertMode alertMode);
     void setShakingOnConnectDisconnect(@NonNull String id, Boolean shaking);
     void setPassivelyDisconnected(@NonNull String id, Boolean has_disconnected);
+    void setReconnectMode(@NonNull String id, Boolean reconnect);
     void setConnectionMode(@NonNull String id, TagConnectionMode connectionMode);
     void setConnectMode(@NonNull String id, TagConnectionMode connectionMode);
     void setColor(@NonNull String id,@NonNull TagColor color);

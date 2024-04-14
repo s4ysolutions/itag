@@ -16,6 +16,9 @@ public interface ITagInterface {
     void setShaking(Boolean currentlyShaking);
     void setPassivelyDisconnected(Boolean has_disconnected);
     void setAlertMode(TagAlertMode alertMode);
+    void setReconnectMode(Boolean reconnect);
+    boolean reconnectMode();
+
     void setConnectionMode(TagConnectionMode connectionMode);
     TagConnectionMode connectionMode();
     TagAlertMode alertMode();

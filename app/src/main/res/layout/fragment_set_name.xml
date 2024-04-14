@@ -42,6 +42,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>-->
 
+    <CheckBox android:id="@+id/reconnect_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reconnect in active mode"
+        android:layout_marginTop="16dp" />
+
     <TextView
         android:id="@+id/textView6"
         android:layout_width="match_parent"

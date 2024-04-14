@@ -93,6 +93,6 @@
     <string name="soundmode_on">Alarme haut-parleur</string>
     <string name="soundmode_vibration">Alarme vibrante</string>
     <string name="soundmode_off">Pas d\'alarme</string>
-    <string name="mode_dont_connect">Mode de recherche de clé</string>
-    <string name="mode_alert">Mode d\'alarme perdu</string>
+    <string name="mode_passive">Mode de recherche de clé</string>
+    <string name="mode_active">Mode d\'alarme perdu</string>
 </resources>

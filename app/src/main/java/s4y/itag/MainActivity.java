@@ -132,6 +132,7 @@ public class MainActivity extends FragmentActivity {
         disposableBag.add(ITag.ble.observableState().subscribe(event -> {
             Log.d("ingo", "disposableBag.add(ITag.ble.observableState().subscribe");
             setupContent();
+            checkIfPassiveScannerShouldTurnOn();
         }));
         disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
                 event -> {
@@ -274,6 +275,9 @@ public class MainActivity extends FragmentActivity {
     public void onBackPressed() {
         if (mSelectedFragment == FragmentType.SCANNER && newDevicesScanner) {
             ITag.ble.scanner().stop();
+            newDevicesScanner = false;
+            setupContent();
+            checkIfPassiveScannerShouldTurnOn();
         } else {
             super.onBackPressed();// your code.
         }
@@ -373,7 +377,7 @@ public class MainActivity extends FragmentActivity {
             Log.e("ingo", "device NOT connected and connectivity is enabled");
             // nothing here is needed since scanner will connect to the device once the device is discovered
             if(connection.state() != BLEConnectionState.connecting) {
-                connection.connect(); // TODO: remove this after scanner correctly implemented
+                connection.connect(); // TODO: remove this after scanner and reconnect correctly implemented
             }
         }
     }
@@ -603,7 +607,9 @@ public class MainActivity extends FragmentActivity {
     private void checkIfPassiveScannerShouldTurnOn() {
         boolean shouldPassiveScannerBeOn = false;
         for(Map.Entry<String, ITagInterface> tagEntry : ITag.store.getTagMap().entrySet()){
-            if(tagEntry.getValue().connectionMode() == TagConnectionMode.passive){
+            if(tagEntry.getValue().connectionMode() == TagConnectionMode.passive ||
+                    (tagEntry.getValue().connectionMode() == TagConnectionMode.active && tagEntry.getValue().reconnectMode() && !ITag.ble.connectionById(tagEntry.getKey()).isConnected())
+            ){
                 Log.d("ingo", "scanner, passive is " + tagEntry.getValue().name());
                 shouldPassiveScannerBeOn = true;
                 break;
@@ -613,6 +619,7 @@ public class MainActivity extends FragmentActivity {
         if(shouldPassiveScannerBeOn && !ITag.ble.scanner().isScanning()){
             Log.d("ingo", "scanner on");
             ITag.ble.scanner().start(false, 0, new String[]{});
+            ITag.subscribePassiveScanner();
         } else if(!shouldPassiveScannerBeOn && ITag.ble.scanner().isScanning()){
             Log.d("ingo", "scanner off");
             ITag.ble.scanner().stop();

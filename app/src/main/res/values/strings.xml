@@ -140,6 +140,6 @@
     <string name="soundmode_vibration">Vibration alarm</string>
     <string name="soundmode_off">No alarm</string>
 
-    <string name="mode_dont_connect">Mode: Don\'t connect</string>
-    <string name="mode_alert">Mode: Connect</string>
+    <string name="mode_passive">Mode: Passive</string>
+    <string name="mode_active">Mode: Active</string>
 </resources>
