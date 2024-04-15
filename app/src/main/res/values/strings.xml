@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">iTag One</string>
+    <string name="channel_disconnect">Disconnections</string>
+    <string name="channel_connect">Connections</string>
     <string name="empty" translatable="false" />
 
     <string name="hello_no_ble_fragment">Your device has no Bluetooth adapter</string>
@@ -11,12 +13,36 @@
     <string name="confirm_disconnect">Flinging with your finger you requested iTag to be disconnected.\nThis is not dangerous, the iTag will not be forgotten and you will be able to connect it back with the same side-to-side fling.\n\nDo you really want disconnect iTag?</string>
     <string name="change_name">iTag\'s settings</string>
     <string name="itag_name">iTag\'s Name</string>
-    <string name="itag_alarm_delay">Alarm delay</string>
+    <string name="itag_disconnect_alarm_delay">Disconnect alarm delay</string>
+    <string name="itag_connection_mode">Connection mode</string>
+
+    <string name="itag_alarm_mode">Alarm mode</string>
+
+    <string-array name="itag_connection_modes">
+        <item>Active mode</item>
+        <item>Passive mode</item>
+    </string-array>
+
+    <string-array name="itag_alarm_delays">
+        <item>No delay</item>
+        <item>3 sec</item>
+        <item>5 sec</item>
+        <item>10 sec</item>
+    </string-array>
+
+    <string-array name="itag_alarm_modes">
+        <item>No alarm</item>
+        <item>Alarm when out of range</item>
+        <item>Alarm when in range</item>
+        <item>Alarm on both</item>
+    </string-array>
+
     <string name="itag_alarm_delay_0">No delay</string>
     <string name="itag_alarm_delay_3">3 sec</string>
     <string name="itag_alarm_delay_5">5 sec</string>
     <string name="itag_alarm_delay_10">10 sec</string>
     <string name="itag_alarm_delay_description">The alarm delay will prevent itag from buzzing on very short disconnection.</string>
+    <!--<string name="itag_connection_mode_description">Active mode will connect to your iTag device when it is in range, while passive mode will only *listen* for iTag\'s broadcasts.</string>-->
     <string name="manage_alert">Enable/disable Alert on disconnect</string>
 
     <string name="scanning">Scanning for iTags&#8230;</string>
@@ -49,6 +75,7 @@
     <string name="service_description">Click iTag\'s image to make the tag to ring.</string>
 
     <string name="notify_disconnect">%s disconnected</string>
+    <string name="notify_connect">%s connected</string>
     <string name="click_to_silent">Click to stop alarm</string>
 
     <string name="help_longpress">Long Press to Find the iTag</string>
@@ -59,27 +86,29 @@
     <string name="try_enable_bt_failed">You need to Enable Bluetooth manually in the Device Settings.</string>
     <string name="open_bt_settings">Turn on Bluetooth</string>
 
-    <string name="bt_disabled">off</string>
-    <string name="bt_connecting">connecting</string>
-    <string name="bt_disconnecting">disconnecting</string>
-    <string name="bt_setup">lost</string>
-    <string name="bt_call">yelling</string>
-    <string name="bt">linked</string>
-    <string name="bt_unk">faint</string>
-    <string name="bt_lost">lost</string>
+    <string name="bt_disabled">Off</string>
+    <string name="bt_connecting">Connecting</string>
+    <string name="bt_disconnecting">Disconnecting</string>
+    <string name="bt_setup">Lost</string>
+    <string name="bt_call">Reading/writing</string>
+    <string name="bt">Linked</string>
+    <string name="bt_unk">Faint</string>
+    <string name="bt_lost">Lost</string>
+    <string name="bt_disconnected" translatable="false">Disconnected</string>
+    <string name="bt_scanning" translatable="false">Scanning</string>
     <string name="last_seen">Last+seen+here+%d+%s+ago</string>
 
     <string name="not_connected">Not connected</string>
     <string name="status133">The device seems to have a problem. Anti lost feature may fail.</string>
 
-    <string name="no_geo_activity">It looks like your device does not have any Map location</string>
+    <string name="no_geo_activity">It looks like your device does not have any Map location viewer</string>
     <string name="can_not_get_gps_location">iTag One could not get exact location because GPS disabled for this application</string>
 
     <string name="uint_sec" translatable="false"> sec </string>
     <string name="uint_min" translatable="false"> min </string>
     <string name="uint_hour" translatable="false"> hr </string>
 
-    <string name="menu_app_exit">Stop tracking</string>
+    <string name="menu_app_exit">Shut down</string>
 
     <string name="freq_hour_1">1 hour</string>
     <string name="freq_min_30">Half an hour</string>
@@ -107,10 +136,10 @@
     <string name="disable_wt_msg">This action will remove and disable WayToday forever.\n\nThe only way to restore the tracking is removing and re-installing the application.</string>
     <string name="disable_wt_ok">Disable WayToday</string>
 
-    <string name="soundmode_on">Alarm when iTag lost</string>
-    <string name="soundmode_vibration">Vibration when iTag lost</string>
-    <string name="soundmode_off">No alarm when iTag lost</string>
+    <string name="soundmode_on">Speaker alarm</string>
+    <string name="soundmode_vibration">Vibration alarm</string>
+    <string name="soundmode_off">No alarm</string>
 
-    <string name="mode_keyfinder">Key finder mode</string>
-    <string name="mode_alertdisconnect">Lost alarm mode</string>
+    <string name="mode_passive">Mode: Passive</string>
+    <string name="mode_active">Mode: Active</string>
 </resources>

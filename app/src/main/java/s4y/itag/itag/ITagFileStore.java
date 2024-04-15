@@ -60,7 +60,7 @@ public class ITagFileStore {
                 for (Object d : dd) {
                     if (d instanceof ITagDevice) {
                         ITagDevice td = (ITagDevice) d;
-                        ITagDefault tagDefault = new ITagDefault(td.addr, td.name, td.color, td.linked, null);
+                        ITagDefault tagDefault = new ITagDefault(td.addr, td.name, td.color, td.linked, null, null, null);
                         devices.add(tagDefault);
                     }
                 }

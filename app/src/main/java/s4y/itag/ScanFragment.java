@@ -10,7 +10,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -43,28 +45,19 @@ public class ScanFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
 
         adapter = new Adapter();
+
+        DividerItemDecoration divider = new DividerItemDecoration(
+                requireContext(), DividerItemDecoration.VERTICAL
+        );
+        divider.setDrawable(
+                ContextCompat.getDrawable(requireContext(), R.drawable.line_divider)
+        );
+
         recyclerView.setAdapter(adapter);
+        recyclerView.addItemDecoration(divider);
         return view;
     }
 
-    /*
-        private ListView listView() {
-            View root = getView();
-            if (root == null) return null;
-            return root.findViewById(R.id.results_list);
-        }
-
-        private Adapter adapter(ListView listView) {
-            if (listView == null) {
-                return null;
-            }
-            return ((Adapter) (listView.getAdapter()));
-        }
-
-        private Adapter adapter() {
-            return adapter(listView());
-        }
-    */
     private long lastUpdate = 0;
 
     @Override
@@ -73,6 +66,7 @@ public class ScanFragment extends Fragment {
         ITagApplication.faScanView(ITag.store.count() > 0);
         disposableBag.add(
                 ITag.ble.scanner().observableScan().subscribe((result) -> {
+                    // TODO: check if this is why device doesn't show up after being forgotten
                     if (ITag.store.remembered(result.id)) {
                         return;
                     }
@@ -186,11 +180,6 @@ public class ScanFragment extends Fragment {
             holder.btnRemember.setOnClickListener(onClickListener);
             holder.btnRemember2.setOnClickListener(onClickListener);
 
-            if (position % 2 == 1) {
-                holder.itemView.setBackgroundColor(0xffe0e0e0);
-            } else {
-                holder.itemView.setBackgroundColor(Color.TRANSPARENT);
-            }
             holder.rssiView.setRssi(scanResult.rssi);
             if (getActivity() != null && isAdded()) {
                 // issue #38 Fragment not attached to Activity

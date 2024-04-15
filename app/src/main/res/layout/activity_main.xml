@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
@@ -20,7 +19,7 @@
         android:id="@+id/progress"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="6dp"
+        android:layout_height="16dp"
         android:layout_gravity="center_vertical"
         android:indeterminate="true" />
 </LinearLayout>

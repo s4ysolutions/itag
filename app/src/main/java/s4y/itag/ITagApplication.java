@@ -243,7 +243,7 @@ public final class ITagApplication extends Application {
     public void onTerminate() {
         Waytoday.done(context);
         try {
-            ITag.close();
+            ITag.closeApplication();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -9,7 +9,9 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import solutions.s4y.rasat.ChannelDistinct;
@@ -19,12 +21,12 @@ public class BLEDefault implements BLEInterface {
     private static final String LT = BLEDefault.class.getName();
     private static BLEInterface _shared;
 
-    public static BLEInterface shared(Context context) {
+    public static BLEInterface shared(Context context, List<String> devices_ids) {
         if (_shared == null) {
             _shared = new BLEDefault(
                     context,
                     new BLEConnectionFactoryDefault(),
-                    new BLECentralManagerDefault(context),
+                    new BLECentralManagerDefault(context, devices_ids),
                     new BLEScannerFactoryDefault()
             );
         }

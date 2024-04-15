@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">iTag One</string>
+    <string name="channel_disconnect">قطع الاتصال</string>
+    <string name="channel_connect">روابط</string>
     <string name="hello_no_ble_fragment">لا يحتوي جهازك على محول Bluetooth</string>
     <string name="request_permission_title">إذن المطلوبة</string>
     <string name="request_location_permission">بدءًا من نظام Android 6.0 Marshmallow ، يتطلب النظام ترخيصًا للموقع للبحث عن أجهزة بلوتوث LE.</string>
@@ -9,7 +11,9 @@
     <string name="confirm_disconnect">لقد طلبت أن يتم فصل iTag. هذا ليس خطيراً ، لن ننسى iTag وسوف تكون قادراً على الاتصال مرة أخرى مع نفس الجانب الجانب.  هل تريد حقا أن تفصل iTag؟</string>
     <string name="change_name">الإعدادات</string>
     <string name="itag_name">اسم</string>
-    <string name="itag_alarm_delay">تأخير التنبيه</string>
+    <string name="itag_disconnect_alarm_delay">تأخير التنبيه</string>
+    <string name="itag_connection_mode">وضع اتصال</string>
+    <string name="itag_alarm_mode">وضع التنبيه</string>
     <string name="itag_alarm_delay_0">لا تؤجل</string>
     <string name="itag_alarm_delay_3">3 sec</string>
     <string name="itag_alarm_delay_5">5 sec</string>
@@ -36,6 +40,7 @@
     <string name="service_in_background">انقر نقرًا مزدوجًا على زر iTag للعثور على الهاتف</string>
     <string name="service_description">اضغط لفترة طويلة على صورة iTag لجعلها رنانة.</string>
     <string name="notify_disconnect">انقطع الاتصال %s</string>
+    <string name="notify_connect">متصل %s</string>
     <string name="click_to_silent">انقر لإيقاف التنبيه</string>
     <string name="help_longpress">اضغط لفترة طويلة للعثور على iTag</string>
     <string name="help_scan">ليس لديك أجهزة iTag المتصلة حتى الآن.  انقر فوق Scanbutton أعلاه لبدء البحث.</string>
@@ -86,10 +91,10 @@
     <string name="bt_disconnecting">قطع</string>
     <string name="mute">كتم الصوت</string>
 
-    <string name="soundmode_on">إنذار عند فقد iTag</string>
-    <string name="soundmode_vibration">الاهتزاز عند فقد iTag</string>
-    <string name="soundmode_off">لا إنذار عند فقد iTag</string>
+    <string name="soundmode_on">إنذار مكبر الصوت</string>
+    <string name="soundmode_vibration">إنذار الاهتزاز</string>
+    <string name="soundmode_off">لا إنذار</string>
 
-    <string name="mode_keyfinder">وضع الباحث عن المفاتيح</string>
-    <string name="mode_alertdisconnect">وضع التنبيه المفقود</string>
+    <string name="mode_passive">وضع الباحث عن المفاتيح</string>
+    <string name="mode_active">وضع التنبيه المفقود</string>
 </resources>

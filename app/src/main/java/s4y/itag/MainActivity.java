@@ -6,7 +6,6 @@ import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -31,16 +30,20 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import s4y.itag.ble.AlertVolume;
 import s4y.itag.ble.BLEConnectionInterface;
+import s4y.itag.ble.BLEConnectionState;
 import s4y.itag.ble.BLEState;
 import s4y.itag.history.HistoryRecord;
 import s4y.itag.itag.ITag;
 import s4y.itag.itag.ITagInterface;
 import s4y.itag.itag.TagColor;
+import s4y.itag.itag.TagConnectionMode;
 import s4y.itag.waytoday.Waytoday;
 import solutions.s4y.rasat.DisposableBag;
 import solutions.s4y.waytoday.sdk.errors.ErrorsObservable;
@@ -62,6 +65,10 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.d("ingo", "onCreate");
+        checkForPermissions();
+        setupContent();
+        checkIfPassiveScannerShouldTurnOn();
         /*
         // ATTENTION: This was auto-generated to handle app linksI
         Intent appLinkIntent = getIntent();
@@ -72,7 +79,7 @@ public class MainActivity extends FragmentActivity {
 
     private void setupProgressBar() {
         ProgressBar pb = findViewById(R.id.progress);
-        if (ITag.ble.scanner().isScanning()) {
+        if (mSelectedFragment == FragmentType.SCANNER) {
             pb.setVisibility(View.VISIBLE);
             pb.setIndeterminate(false);
             pb.setMax(ITag.SCAN_TIMEOUT);
@@ -90,6 +97,8 @@ public class MainActivity extends FragmentActivity {
 
     private FragmentType mSelectedFragment;
     private int mEnableAttempts = 0;
+
+    Fragment fragment2 = null;
 
     static class ITagServiceConnection implements ServiceConnection {
 
@@ -118,20 +127,34 @@ public class MainActivity extends FragmentActivity {
         super.onResume();
         ErrorsObservable.addErrorListener(mErrorListener);
         sIsShown = true;
-        setupContent();
         Waytoday.gpsLocationUpdater.addOnPermissionListener(gpsPermissionListener);
-        disposableBag.add(ITag.ble.observableState().subscribe(event -> setupContent()));
+        Log.d("ingo", "onresume");
+        disposableBag.add(ITag.ble.observableState().subscribe(event -> {
+            Log.d("ingo", "disposableBag.add(ITag.ble.observableState().subscribe");
+            setupContent();
+            checkIfPassiveScannerShouldTurnOn();
+        }));
         disposableBag.add(ITag.ble.scanner().observableActive().subscribe(
                 event -> {
+                    Log.d("ingo", "disposableBag.add(ITag.ble.scanner().observableActive().subscribe(");
                     if (s4y.itag.ble.BuildConfig.DEBUG) {
                         Log.d(LT, "ble.scanner activeEvent=" + event + " isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
                     }
                     setupContent();
+                    Log.d("ingo", "sad setupamo content jer je skener postao aktivan");
                     setupProgressBar();
                 }
         ));
         disposableBag.add(ITag.ble.scanner().observableTimer().subscribe(
-                event -> setupProgressBar()
+                event -> {
+                    if(ITag.ble.scanner().observableTimer().value() < 0){
+                        newDevicesScanner = false;
+                        Log.d("ingo", "gasimo scanner");
+                        setupContent();
+                    } else {
+                        setupProgressBar();
+                    }
+                }
         ));
         disposableBag.add(ITag.store.observable().subscribe(event -> {
             switch (event.op) {
@@ -159,9 +182,10 @@ public class MainActivity extends FragmentActivity {
         } catch (IllegalArgumentException e) {
             // ignore
         }
+        Log.d("ingo", "disposeamo bag");
         disposableBag.dispose();
         sIsShown = false;
-        if (ITag.store.isDisconnectAlert() || Waytoday.tracker.isUpdating) {
+        if (ITag.store.isDisconnectAlertOn() || Waytoday.tracker.isUpdating) {
             ITagsService.start(this);
         } else {
             ITagsService.stop(this);
@@ -172,6 +196,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     private boolean mHasFocus = false;
+    private boolean newDevicesScanner = false;
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -190,47 +215,34 @@ public class MainActivity extends FragmentActivity {
         //No call for super(). Bug on API Level > 11. issue #54
     }
 
-    private boolean isFirstLaunch() {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        return sharedPref.getBoolean("first", true);
-    }
-
-    private void setNotFirstLaunch() {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor ed = sharedPref.edit();
-        ed.putBoolean("first", false);
-        ed.apply();
-    }
-
     private void setupContent() {
-        final FragmentManager fragmentManager = getSupportFragmentManager();
-        final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        Fragment fragment = null;
         if (s4y.itag.ble.BuildConfig.DEBUG) {
             Log.d(LT, "setupContent isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
         }
-        if (ITag.ble.scanner().isScanning()) {
-            setupProgressBar();
+        Fragment newFragment = null;
+        setupProgressBar();
+        Log.d("ingo", "setupContent");
+        if (newDevicesScanner) {
+            Log.d("ingo", "scanner is scanning");
             mEnableAttempts = 0;
             if (mSelectedFragment != FragmentType.SCANNER) {
-                fragment = new ScanFragment();
+                Log.d("ingo", "switch to scanner");
+                newFragment = new ScanFragment();
                 mSelectedFragment = FragmentType.SCANNER;
             }
         } else {
-            setupProgressBar();
             if (ITag.ble.state() == BLEState.NO_ADAPTER) {
-                fragment = new NoBLEFragment();
+                newFragment = new NoBLEFragment();
                 mSelectedFragment = FragmentType.OTHER;
             } else {
                 if (ITag.ble.state() == BLEState.OK) {
-                    setNotFirstLaunch();
                     mEnableAttempts = 0;
                     if (mSelectedFragment != FragmentType.ITAGS) {
-                        fragment = new ITagsFragment();
+                        newFragment = new ITagsFragment();
                         mSelectedFragment = FragmentType.ITAGS;
                     }
                 } else {
-                    if (mEnableAttempts < 60 && isFirstLaunch()) {
+                    if (mSelectedFragment == FragmentType.OTHER && mEnableAttempts < 10) { // already showing "turn on bluetooth"
                         mEnableAttempts++;
                         if (BuildConfig.DEBUG) {
                             Log.d(LT, "setupContent BT disabled, enable attempt=" + mEnableAttempts);
@@ -238,7 +250,7 @@ public class MainActivity extends FragmentActivity {
                         if (mEnableAttempts == 1) {
                             Toast.makeText(this, R.string.try_enable_bt, Toast.LENGTH_LONG).show();
                         }
-                        ITag.ble.enable();
+                        //ITag.ble.enable(); deprecated and should't do anything because bluetooth should be turned on by user action - click on "turn on bluetooth" button in fragment_ble_disabled
                         try {
                             // A bit against rules but ok in this situation
                             Thread.sleep(500);
@@ -250,23 +262,30 @@ public class MainActivity extends FragmentActivity {
                         if (BuildConfig.DEBUG) {
                             Log.d(LT, "setupContent BT disabled, auto enable failed");
                         }
-                        fragment = new DisabledBLEFragment();
+                        newFragment = new DisabledBLEFragment();
                         mSelectedFragment = FragmentType.OTHER;
                     }
                 }
             }
         }
-        if (fragment != null) {
-            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            fragmentTransaction.replace(R.id.content, fragment);
+        if (newFragment != null) {
+            final FragmentManager fragmentManager = getSupportFragmentManager();
+            final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            Log.d("ingo", "fragment je " + newFragment.getClass().getSimpleName() + ", mSelectedFragment je " + mSelectedFragment);
+            //fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            fragmentTransaction.replace(R.id.content, newFragment, null);
             fragmentTransaction.commitAllowingStateLoss();
+            fragment2 = newFragment;
         }
     }
 
     @Override
     public void onBackPressed() {
-        if (ITag.ble.scanner().isScanning()) {
+        if (mSelectedFragment == FragmentType.SCANNER && newDevicesScanner) {
             ITag.ble.scanner().stop();
+            newDevicesScanner = false;
+            setupContent();
+            checkIfPassiveScannerShouldTurnOn();
         } else {
             super.onBackPressed();// your code.
         }
@@ -334,37 +353,48 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
-    public void onITagClick(@NonNull View sender) {
-        ITagInterface itag = (ITagInterface) sender.getTag();
-        if (itag == null) {
-            return;
-        }
-        MediaPlayerUtils.getInstance().stopSound(this);
+    public boolean isItagsFragmentShown(){
+        return fragment2 != null && fragment2.getClass().getSimpleName().equals("ITagsFragment");
+    }
+
+    public void onITagClick(@NonNull ITagInterface itag) {
+        Log.d("ingo", "onITagClick");
         final BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-        Notifications.cancelDisconnectNotification(this);
-        if (connection.isFindMe()) {
-            connection.resetFindeMe();
+
+        if (connection.isFindMe()) { // iTag contacting phone
+            connection.resetFindMe();
+        } else if(itag.isShaking()) {
+            ITag.store.setShakingOnConnectDisconnect(itag.id(), false);
+            Log.d("ingo", "did it");
+            // TODO: check if fragment needs updating
+            if(isItagsFragmentShown()) {
+                Log.d("ingo", "isItagsFragmentShown true");
+                ((ITagsFragment) fragment2).updateITagImageAnimation(itag, connection);
+            }
+            Notifications.cancelDisconnectNotification(this);
+            Notifications.cancelConnectNotification(this);
+            MediaPlayerUtils.getInstance().stopSound(this);
+        } else if(!itag.isConnectModeEnabled()){
+            toggleTagConnectivity(itag);
         } else if (connection.isConnected()) {
+            Log.d("ingo", "connected");
             new Thread(() -> {
-                if (connection.isAlerting()) {
-                    connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
-                } else {
-                    connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
-                }
+                toggleAlertOnITag(connection);
             }).start();
         } else {
-            if (!itag.isAlertDisconnected()) {
-                // there's no sense to communicate if the connection
-                // in the connecting state
-                ITag.connectAsync(connection, false, () -> {
-                    if (connection.isAlerting()) {
-                        connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
-                    } else {
-                        connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
-                    }
-
-                });
+            Log.e("ingo", "device NOT connected and connectivity is enabled");
+            // nothing here is needed since scanner will connect to the device once the device is discovered
+            if(connection.state() != BLEConnectionState.connecting) {
+                connection.connect(); // TODO: remove this after scanner and reconnect correctly implemented
             }
+        }
+    }
+
+    private static void toggleAlertOnITag(BLEConnectionInterface connection) {
+        if (connection.isAlerting()) {
+            connection.writeImmediateAlert(AlertVolume.NO_ALERT, ITag.BLE_TIMEOUT);
+        } else {
+            connection.writeImmediateAlert(AlertVolume.HIGH_ALERT, ITag.BLE_TIMEOUT);
         }
     }
 
@@ -372,27 +402,34 @@ public class MainActivity extends FragmentActivity {
         if (s4y.itag.ble.BuildConfig.DEBUG) {
             Log.d(LT, "onStartStopScan isScanning=" + ITag.ble.scanner().isScanning() + " thread=" + Thread.currentThread().getName());
         }
-        if (ITag.ble.scanner().isScanning()) {
+        if (newDevicesScanner) {
+            newDevicesScanner = false;
             ITag.ble.scanner().stop();
         } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setMessage(R.string.request_location_permission)
-                                .setTitle(R.string.request_permission_title)
-                                .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
-                                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
-                                .show();
-                        return;
-                    } else {
-                        // isScanRequestAbortedBecauseOfPermission=true;
-                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
-                        return;
-                    }
+            newDevicesScanner = true;
+            checkForPermissions();
+            ITag.ble.scanner().start(true, ITag.SCAN_TIMEOUT, new String[]{});
+            Log.d("ingo", "scanner started");
+            setupContent();
+        }
+    }
+
+    void checkForPermissions(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setMessage(R.string.request_location_permission)
+                            .setTitle(R.string.request_permission_title)
+                            .setPositiveButton(android.R.string.ok, (dialog, which) -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION))
+                            .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
+                            .show();
+                } else {
+                    // isScanRequestAbortedBecauseOfPermission=true;
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, MainActivity.REQUEST_ENABLE_LOCATION);
                 }
+                return;
             }
-            ITag.ble.scanner().start(ITag.SCAN_TIMEOUT, new String[]{});
         }
     }
 
@@ -403,7 +440,7 @@ public class MainActivity extends FragmentActivity {
             //noinspection SwitchStatementWithTooFewBranches
             switch (item.getItemId()) {
                 case R.id.exit:
-                    ITag.close();
+                    ITag.closeApplication();
                     Waytoday.stop(this);
                     ITagsService.stop(this);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -552,30 +589,52 @@ public class MainActivity extends FragmentActivity {
         popupMenu.show();
     }
 
-    public void onDisconnectAlert(@NonNull View sender) {
+    public void connectivityButton(@NonNull View sender) {
         ITagInterface itag = (ITagInterface) sender.getTag();
         if (itag == null) {
             ITagApplication.handleError(new Exception("No itag"));
             return;
         }
+        toggleTagConnectivity(itag);
+    }
+
+    public void toggleTagConnectivity(@NonNull ITagInterface itag) {
         BLEConnectionInterface connection = ITag.ble.connectionById(itag.id());
-        if (itag.isAlertDisconnected()) {
-            ITag.store.setAlert(itag.id(), false);
+        if (itag.isConnectModeEnabled()) {
+            Log.d("ingo", "disconnectItag yes");
+            ITag.store.setConnectMode(itag.id(), TagConnectionMode.passive);
             new Thread(connection::disconnect).start();
         } else {
-            if (connection.isConnected()) {
-                new Thread(connection::disconnect).start();
-            } else {
-                ITag.store.setAlert(itag.id(), true);
-                ITag.connectAsync(connection);
+            Log.d("ingo", "disconnectItag no");
+            ITag.store.setConnectMode(itag.id(), TagConnectionMode.active);
+            Log.d("ingo", "isAlertEnabled? it should be: " + itag.isConnectModeEnabled());
+            connection.connect();
+            //ITag.connectAsync(connection);
+        }
+        checkIfPassiveScannerShouldTurnOn();
+    }
+
+    private void checkIfPassiveScannerShouldTurnOn() {
+        if(newDevicesScanner) return;
+        boolean shouldPassiveScannerBeOn = false;
+        for(Map.Entry<String, ITagInterface> tagEntry : ITag.store.getTagMap().entrySet()){
+            if(tagEntry.getValue().connectionMode() == TagConnectionMode.passive ||
+                    (tagEntry.getValue().connectionMode() == TagConnectionMode.active && tagEntry.getValue().reconnectMode() && !ITag.ble.connectionById(tagEntry.getKey()).isConnected())
+            ){
+                Log.d("ingo", "scanner, passive is " + tagEntry.getValue().name());
+                shouldPassiveScannerBeOn = true;
+                break;
             }
         }
-        if (itag.isAlertDisconnected()) {
-            Toast.makeText(this, R.string.mode_alertdisconnect, Toast.LENGTH_SHORT).show();
-            ITagApplication.faUnmuteTag();
-        } else {
-            Toast.makeText(this, R.string.mode_keyfinder, Toast.LENGTH_SHORT).show();
-            ITagApplication.faMuteTag();
+        Log.d("ingo", "ITag.ble.scanner().isScanning() " + ITag.ble.scanner().isScanning());
+        if(shouldPassiveScannerBeOn && !ITag.ble.scanner().isScanning()){
+            Log.d("ingo", "scanner on");
+            ITag.ble.scanner().start(false, 0, new String[]{});
+            ITag.subscribePassiveScanner();
+        } else if(!shouldPassiveScannerBeOn && ITag.ble.scanner().isScanning()){
+            Log.d("ingo", "scanner off");
+            ITag.ble.scanner().stop();
+            ITag.unsubscribePassiveScanner();
         }
     }
 
@@ -598,6 +657,7 @@ public class MainActivity extends FragmentActivity {
             switch (requestCode) {
                 case REQUEST_ENABLE_BT:
                     setupContent();
+                    Log.d("ingo", "bluetooth enabled");
                     break;
             }
         }
@@ -608,10 +668,13 @@ public class MainActivity extends FragmentActivity {
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             switch (requestCode) {
                 case REQUEST_ENABLE_BT:
+                    Log.d("ingo", "onRequestPermissionsResult REQUEST_ENABLE_BT");
                     setupContent();
                     break;
                 case REQUEST_ENABLE_LOCATION:
-                    onStartStopScan(null);
+                    Log.d("ingo", "onRequestPermissionsResult REQUEST_ENABLE_LOCATION");
+                    //onStartStopScan(null);
+                    setupContent();
                     break;
             }
         }
@@ -620,6 +683,6 @@ public class MainActivity extends FragmentActivity {
 
     public void onOpenBTSettings(View ignored) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivity(enableBtIntent);
+        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
     }
 }

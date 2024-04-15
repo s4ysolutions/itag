@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">iTag One - Ключница</string>
+    <string name="channel_disconnect">Отключения</string>
+    <string name="channel_connect">Соединения</string>
     <string name="hello_no_ble_fragment">На устройстве отсутствует bluetooth</string>
     <string name="request_permission_title">Разрешить</string>
     <string name="request_location_permission">Начиная с версии Android 6.0 для использованию Bluetooth устройств необходимо разрешить определять местоположение.\\nВам нужно будет повторить процесс сканирования после того разрешите доступ к датчику положения.</string>
@@ -8,7 +10,9 @@
     <string name="confirm_disconnect">Этот жест отключит брелок и удалит его из списка. При повторном подключении текущие настройки будут восстановлены.  Продолжить отключение?</string>
     <string name="change_name">Настроить брелок</string>
     <string name="itag_name">Название брелка</string>
-    <string name="itag_alarm_delay">Задержка тревоги</string>
+    <string name="itag_disconnect_alarm_delay">Задержка тревоги</string>
+    <string name="itag_connection_mode">Режим подключения</string>
+    <string name="itag_alarm_mode">Режим тревоги</string>
     <string name="itag_alarm_delay_0">Отсутсвует</string>
     <string name="itag_alarm_delay_3">3 секунды</string>
     <string name="itag_alarm_delay_5">5 секунд</string>
@@ -35,6 +39,7 @@
     <string name="service_in_background">Двойное нажатие кнопки на брелке для поиска телефона</string>
     <string name="service_description">Один клик на изображении брелка для его поиска</string>
     <string name="notify_disconnect">%s отключен</string>
+    <string name="notify_connect">%s подключено</string>
     <string name="click_to_silent">Одно нажатие для выключения сигнала</string>
     <string name="help_longpress">Длинное нажатие для поиска брелка</string>
     <string name="help_scan">Нет подключенных брелков. Нажмите кнопку сканирования, чтобы начать подключение.</string>
@@ -86,10 +91,10 @@
     <string name="bt_disconnecting">отключение</string>
     <string name="mute">Бесшумный режим</string>
 
-    <string name="soundmode_on">Звуковой сигнал при потере брелка</string>
-    <string name="soundmode_vibration">Вибрация при потере брелка</string>
-    <string name="soundmode_off">Нет сигнала при потере брелка</string>
+    <string name="soundmode_on">Сигнализация динамика</string>
+    <string name="soundmode_vibration">Вибрационная сигнализация</string>
+    <string name="soundmode_off">Нет будильника</string>
 
-    <string name="mode_keyfinder">Только поиск брелка</string>
-    <string name="mode_alertdisconnect">Сигнализировать при утере брелка</string>
+    <string name="mode_passive">Только поиск брелка</string>
+    <string name="mode_active">Сигнализировать при утере брелка</string>
 </resources>
