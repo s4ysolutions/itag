@@ -5,8 +5,9 @@ on:
     branches: [ "master" ]
     #tags:
     #  - "build-*"
-  pull_request:
-    branches: [ "master" ]
+  workflow_dispatch:
+  #pull_request:
+  #  branches: [ "master" ]
 
 jobs:
   build:
@@ -27,8 +28,14 @@ jobs:
     - name: Build with Gradle Wrapper
       env:
         GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        KEYSTORE: ${{ secrets.JKS }}
+        SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+        SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
       run: |
         echo "$GOOGLE_SERVICES_JSON" > app/src/google-services.json
+        mkdir ~/Downloads
+        echo "$KEYSTORE"|base64 -di > ~/Downloads/itag.one.river0.keystore
         ./gradlew bundleRelease
 
   dependency-submission:
