@@ -26,6 +26,15 @@ android {
         buildConfigField "String", "WAYTODAY_SECRET", "\"${System.getenv('WAYTODAY_SECRET') ?: properties.getProperty('waytoday.secret')}\""
     }
 
+    signingConfigs {
+        release {
+            storeFile = file("itag.one.river0.keystore")
+            storePassword System.getenv("SIGNING_STORE_PASSWORD")
+            keyAlias System.getenv("SIGNING_KEY_ALIAS")
+            keyPassword System.getenv("SIGNING_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         debug {
             minifyEnabled false
@@ -35,6 +44,7 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             manifestPlaceholders = [analytics_deactivated: "true"]
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
@@ -50,15 +60,6 @@ android {
     testOptions {
         unitTests {
             includeAndroidResources = true
-        }
-    }
-
-    signingConfigs {
-        release {
-            storeFile = file("~/Download/itag.one.river0.keystore")
-            storePassword System.getenv("SIGNING_STORE_PASSWORD")
-            keyAlias System.getenv("SIGNING_KEY_ALIAS")
-            keyPassword System.getenv("SIGNING_KEY_PASSWORD")
         }
     }
 

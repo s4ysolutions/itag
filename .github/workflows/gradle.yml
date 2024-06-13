@@ -34,8 +34,7 @@ jobs:
         SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
       run: |
         echo "$GOOGLE_SERVICES_JSON" > app/src/google-services.json
-        mkdir ~/Downloads
-        echo "$KEYSTORE"|base64 -di > ~/Downloads/itag.one.river0.keystore
+        echo "$KEYSTORE"|base64 -di > app/itag.one.river0.keystore
         ./gradlew bundleRelease
 
     - name: Upload AAB artifact
