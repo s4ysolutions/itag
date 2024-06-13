@@ -44,7 +44,3 @@
     public static int d(...);
     public static int e(...);
 }
-
--assumevalues class android.os.Build$VERSION {
-    int SDK_INT=19..2147483647;
-}
