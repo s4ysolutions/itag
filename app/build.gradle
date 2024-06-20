@@ -78,7 +78,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
 
     // implementation "solutions.s4y.gps:gps-sdk-android:1.0.0-dev.7"
-    implementation 'com.github.s4ysolutions:WayTodaySDK-Android:3.0.0-alpha1'
+    implementation 'com.github.s4ysolutions:WayTodaySDK-Android:3.0.1'
 
 /*
     testImplementation 'androidx.test.ext:junit:1.1.5'
