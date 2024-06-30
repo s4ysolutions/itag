@@ -11,8 +11,8 @@ import solutions.s4y.rasat.Observable;
 import solutions.s4y.waytoday.sdk.AndroidWayTodayClient;
 public class WayToday {
     private static AndroidWayTodayClient instance;
-    private static Channel<String> trackIdChannel = new Channel<>();
-    private static Channel<IGPSUpdatesProvider.Status> gpsStatusChannel = new Channel();
+    private static final Channel<String> trackIdChannel = new Channel<>();
+    private static final Channel<IGPSUpdatesProvider.Status> gpsStatusChannel = new Channel<>();
 
     public static void init(Context context) {
         if (instance != null) {
@@ -20,9 +20,7 @@ public class WayToday {
         }
 
         instance = new AndroidWayTodayClient(context, "iTagAndroid", "secret",  "iTagAndroid");
-        instance.wtClient.addTrackIdChangeListener(tid -> {
-            trackIdChannel.broadcast(tid);
-        });
+        instance.wtClient.addTrackIdChangeListener(trackIdChannel::broadcast);
 
         instance.gpsUpdatesManager.getStatus().addListener(status -> {
             gpsStatusChannel.broadcast(status);
@@ -34,8 +32,9 @@ public class WayToday {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             GPSUpdatesForegroundService.setNotificationChannelId("itag_gps_updates");
             GPSUpdatesForegroundService.setNotificationChannelName("ITag GPS Updates");
-            GPSUpdatesForegroundService.setNotificationId(22);
+            // GPSUpdatesForegroundService.setNotificationId(22);
             GPSUpdatesForegroundService.setNotificationContentTitle("Stop iTag WayToday tracking");
+            // GPSUpdatesForegroundService.setUseApplicationNotificationSmallIcon(true);
         }
     }
     public static AndroidWayTodayClient getInstance() {

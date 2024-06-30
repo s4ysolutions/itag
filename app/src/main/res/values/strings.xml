@@ -117,4 +117,5 @@
     <string name="wt_tracking_stopped">WayToday tracking stopped</string>
     <string name="gps_permissions_off">Unable to get the current position due to lack of location permissions</string>
     <string name="gps_permission_request">Permission required to determine current location in case of connection loss</string>
+    <string name="gps_background_permission_request">Background location is needed for continuous updates and automatic tracking on startup.</string>
 </resources>

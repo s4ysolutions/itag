@@ -1,6 +1,7 @@
 package s4y.itag;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -13,6 +14,7 @@ import android.telephony.TelephonyManager;
 
 import java.io.IOException;
 
+import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.content.Context.AUDIO_SERVICE;
 
 public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
@@ -110,10 +112,14 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
 
     public void startSoundDisconnected(Context context) {
         stopSound(context);
-        // return if we are in a call
-        TelephonyManager manager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
-        if(manager.getCallState() != TelephonyManager.CALL_STATE_IDLE){
-            return;
+        // check if we have permission get call state
+
+        if (context.checkSelfPermission(READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            // return if we are in a call
+            TelephonyManager manager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+            if(manager.getCallState() != TelephonyManager.CALL_STATE_IDLE){
+                return;
+            }
         }
 
         AudioManager am = (AudioManager) context.getSystemService(AUDIO_SERVICE);

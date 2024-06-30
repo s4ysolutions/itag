@@ -95,4 +95,5 @@
     <string name="wt_tracking_stopped">توقف تتبع WayToday</string>
     <string name="gps_permissions_off">غير قادر على الحصول على الموقع الحالي بسبب عدم وجود أذونات الموقع</string>
     <string name="gps_permission_request">مطلوب الإذن لتحديد الموقع الحالي في حالة فقدان الاتصال</string>
+    <string name="gps_background_permission_request">مطلوب الوصول إلى الموقع في الخلفية للحصول على تحديثات مستمرة والتتبع التلقائي عند التشغيل.</string>
 </resources>

@@ -49,6 +49,7 @@ import s4y.itag.waytoday.WayToday;
 import solutions.s4y.rasat.DisposableBag;
 
 public class MainActivity extends FragmentActivity {
+    private static final int REQUEST_CODE_NOTIFICATION_PERMISSION = 123;
     static public final int REQUEST_ENABLE_BT = 1;
     static public final int REQUEST_ONSCAN = 2;
     public ITagsService iTagsService;
@@ -61,6 +62,9 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (WayToday.getInstance().isTrackingOn() && !GPSPermissionManager.needPermissionRequest(this, true)) {
+            GPSUpdatesForegroundService.start(this);
+        }
     }
 
     @Override
@@ -153,9 +157,9 @@ public class MainActivity extends FragmentActivity {
         bindService(ITagsService.intentBind(this), mServiceConnection, 0);
         // unconditionally stop background service
         if (WayToday.getInstance().isTrackingOn()) {
-            if (GPSPermissionManager.needPermissionRequest(this)) {
+            if (GPSPermissionManager.needPermissionRequest(this, true)) {
                 new Handler(getMainLooper()).post(() ->
-                        GPSPermissionManager.requestPermissions(this)
+                        GPSPermissionManager.requestPermissions(this, true)
                 );
             } else if (GPSPowerManager.needRequestIgnoreOptimization(this)) {
                 if (resumeCount++ > 1) {
@@ -183,7 +187,7 @@ public class MainActivity extends FragmentActivity {
                 ITagsService.stop(this);
             }
 
-            if (WayToday.getInstance().isTrackingOn() && !GPSPermissionManager.needPermissionRequest(this)) {
+            if (WayToday.getInstance().isTrackingOn() && !GPSPermissionManager.needPermissionRequest(this, true)) {
                 GPSUpdatesForegroundService.start(this);
             }
         }
@@ -473,7 +477,7 @@ public class MainActivity extends FragmentActivity {
     public void onWaytoday(@NonNull View sender) {
         boolean first = WayTodayFirstPreference.get(this);
         String tid = WayToday.getInstance().wtClient.getCurrentTrackerId();
-        boolean on = WayToday.getInstance().isTrackingOn() && !GPSPermissionManager.needPermissionRequest(this);
+        boolean on = WayToday.getInstance().isTrackingOn() && !GPSPermissionManager.needPermissionRequest(this, true);
         int freq = WayToday.getInstance().gpsUpdatesManager.getIntervalSec();
         final PopupMenu popupMenu = new PopupMenu(this, sender);
         popupMenu.inflate(R.menu.waytoday);
@@ -562,11 +566,12 @@ public class MainActivity extends FragmentActivity {
                 builder.create().show();
             }
             if (id == R.id.wt_sec_1 || id == R.id.wt_min_5 || id == R.id.wt_hour_1) {
-                if (GPSPermissionManager.needPermissionRequest(this)) {
+                if (GPSPermissionManager.needPermissionRequest(this, true)) {
                     WayToday.getInstance().enableTrackingOn();
-                    GPSPermissionManager.requestPermissions(this);
+                    GPSPermissionManager.requestPermissions(this, true);
                 } else {
                     WayToday.getInstance().turnTrackingOn();
+                    checkNotificationPermission();
                 }
             }
             return true;
@@ -624,9 +629,13 @@ public class MainActivity extends FragmentActivity {
         if (itag.isAlertDisconnected()) {
             Toast.makeText(this, R.string.mode_alertdisconnect, Toast.LENGTH_SHORT).show();
             ITagApplication.faUnmuteTag();
-            if (GPSPermissionManager.needPermissionRequest(this)) {
-                GPSPermissionManager.requestPermissions(this, getString(R.string.gps_permission_request));
+            if (GPSPermissionManager.needPermissionRequest(this, true)) {
+                GPSPermissionManager.requestPermissions(this,
+                        getString(R.string.gps_permission_request),
+                        getString(R.string.gps_background_permission_request)
+                        );
             }
+            checkNotificationPermission();
         } else {
             Toast.makeText(this, R.string.mode_keyfinder, Toast.LENGTH_SHORT).show();
             ITagApplication.faMuteTag();
@@ -675,6 +684,9 @@ public class MainActivity extends FragmentActivity {
                         WayToday.getInstance().gpsUpdatesManager,
                         WayToday.getInstance().isTrackingOn());
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            checkNotificationPermission();
+        }
     }
 
     public void onOpenBTSettings(View ignored) {
@@ -684,6 +696,29 @@ public class MainActivity extends FragmentActivity {
         } catch (SecurityException e) {
             Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
 
+    private void checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT > 32) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // Should we show rationale?
+                if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                    new androidx.appcompat.app.AlertDialog.Builder(this)
+                            .setTitle("Notification Permission Required")
+                            .setMessage("The application will display an icon when running in the background so you can activate and stop it.")
+                            .setPositiveButton(
+                                    "OK",
+                                    (dialog, which) -> requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE_NOTIFICATION_PERMISSION))
+                            .setNegativeButton(
+                                    "Cancel",
+                                    null)
+                            .create()
+                            .show();
+                } else {
+                    // No explanation needed, request the permission directly
+                    requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE_NOTIFICATION_PERMISSION);
+                }
+            }
+        }
     }
 }

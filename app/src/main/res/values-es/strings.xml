@@ -93,4 +93,5 @@
     <string name="wt_tracking_stopped">Seguimiento de WayToday detenido</string>
     <string name="gps_permissions_off">Incapaz de obtener la posición actual debido a la falta de permisos de ubicación</string>
     <string name="gps_permission_request">Se requiere permiso para determinar la ubicación actual en caso de pérdida de conexión</string>
+    <string name="gps_background_permission_request">Se necesita acceso a la ubicación en segundo plano para actualizaciones continuas y seguimiento automático al iniciar.</string>
 </resources>

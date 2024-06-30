@@ -95,4 +95,5 @@
     <string name="wt_tracking_stopped">Отслеживание WayToday остановлено</string>
     <string name="gps_permissions_off">Невозможно получить текущее положение из-за отсутствия разрешений на местоположение</string>
     <string name="gps_permission_request">Требуется разрешение для определения текущего местоположения в случае потери связи</string>
+    <string name="gps_background_permission_request">Необходим доступ к фоновому местоположению для постоянного обновления данных и автоматического отслеживания при запуске.</string>
 </resources>
