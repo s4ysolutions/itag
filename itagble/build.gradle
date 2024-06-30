@@ -31,7 +31,7 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.8.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'
 
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 }

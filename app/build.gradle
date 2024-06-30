@@ -73,12 +73,12 @@ dependencies {
     implementation "androidx.preference:preference:1.2.1"
     implementation "com.github.s4ysolutions:rasat-android:1.0.5"
 
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
     // implementation "solutions.s4y.gps:gps-sdk-android:1.0.0-dev.7"
-    implementation 'com.github.s4ysolutions:WayTodaySDK-Android:4.0.1'
+    implementation 'com.github.s4ysolutions:WayTodaySDK-Android:4.2.0'
 
 /*
     testImplementation 'androidx.test.ext:junit:1.1.5'
