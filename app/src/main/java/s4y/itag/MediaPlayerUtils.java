@@ -114,7 +114,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnPreparedListener, MediaPl
         stopSound(context);
         // check if we have permission get call state
 
-        if (context.checkSelfPermission(READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+        if (context.checkSelfPermission(READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             // return if we are in a call
             TelephonyManager manager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
             if(manager.getCallState() != TelephonyManager.CALL_STATE_IDLE){
