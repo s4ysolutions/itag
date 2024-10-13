@@ -9,12 +9,8 @@ The devices are available for purchase through numerous online stores at an affo
 
 ## Getting Started
 
-<a href="https://play.google.com/store/apps/details?id=s4y.itag">
-  <img alt="Get it on Google Play"
-       src="/images/brand/en_generic_rgb_wo_45.png" />
-</a>
+Install from Google Play: [![Get it on Google Play](https://example.com/path-to-your-badge.png)]((https://play.google.com/store/apps/details?id=s4y.itag)
 
-First the application needs to be installed from [Google Play](https://play.google.com/store/apps/details?id=s4y.itag).
 
 The use of iTags with iTag one is as easy as scanning for the new devices with the one click of the on-screen button and remember the discovered device clicking plus button next to the discovered item
 
