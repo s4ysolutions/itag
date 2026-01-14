@@ -14,19 +14,21 @@ public interface BLEConnectionInterface extends AutoCloseable {
     String id();
     boolean isConnected();
     boolean isDisconnected();
-    BLEError connect() throws InterruptedException;
+    void connect();
     BLEError disconnect(int timeout);
     BLEError disconnect();
-    BLEError connect(boolean infinity);
     BLEError writeImmediateAlert(AlertVolume volume, int timeout);
     BLEError writeImmediateAlert(AlertVolume volume);
     void enableRSSI();
     void disableRSSI();
+    void broadcastRSSI(int rssi);
     boolean rssiEnabled();
     int rssi();
     int getLastStatus();
     BLEConnectionState state();
+    void setOldState(BLEConnectionState oldState);
+    BLEConnectionState oldState();
     boolean isAlerting();
     boolean isFindMe();
-    void resetFindeMe();
+    void resetFindMe();
 }

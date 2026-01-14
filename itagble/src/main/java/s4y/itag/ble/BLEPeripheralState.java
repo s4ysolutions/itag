@@ -5,7 +5,7 @@ enum BLEPeripheralState {
     connecting,
     connected,
     discovering,
-    discovered,
+    services_discovered,
     disconnecting,
     writting,
 }

@@ -248,7 +248,7 @@ public final class ITagApplication extends Application {
     @Override
     public void onTerminate() {
         try {
-            ITag.close();
+            ITag.closeApplication();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -62,10 +62,10 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    synchronized public boolean isDisconnectAlert() {
+    synchronized public boolean isDisconnectAlertOn() {
         for (String id : ids) {
             ITagInterface itag = tags.get(id);
-            if (itag != null && itag.isAlertDisconnected()) {
+            if (itag != null && itag.isConnectModeEnabled()) {
                 return true;
             }
         }
@@ -173,12 +173,67 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
     }
 
     @Override
-    synchronized public void setAlert(@NonNull String id, boolean alert) {
+    synchronized public void setAlertMode(@NonNull String id, TagAlertMode alertMode) {
         ITagInterface tag = tags.get(id);
         if (tag == null) {
             return;
         }
-        tag.setAlertDisconnected(alert);
+        tag.setAlertMode(alertMode);
+        new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
+    synchronized public void setShakingOnConnectDisconnect(@NonNull String id, Boolean shaking) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setShaking(shaking);
+        //new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
+    synchronized public void setPassivelyDisconnected(@NonNull String id, Boolean has_disconnected) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setPassivelyDisconnected(has_disconnected);
+        //new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
+    synchronized public void setReconnectMode(@NonNull String id, Boolean reconnect) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setReconnectMode(reconnect);
+        //new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
+    synchronized public void setConnectionMode(@NonNull String id, TagConnectionMode connectionMode) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setConnectionMode(connectionMode);
+        new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
+        channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
+    synchronized public void setConnectMode(@NonNull String id, TagConnectionMode connectionMode) {
+        ITagInterface tag = tags.get(id);
+        if (tag == null) {
+            return;
+        }
+        tag.setConnectionMode(connectionMode);
         new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
     }
@@ -203,5 +258,15 @@ public class ITagsStoreDefault implements ITagsStoreInterface {
         tag.setName(name);
         new PreferenceTagDefault(context, tag.id()).set((ITagDefault) tag);
         channel.broadcast(new StoreOp(StoreOpType.change, tag));
+    }
+
+    @Override
+    synchronized public List<String> getIds() {
+        return this.ids;
+    }
+
+    @Override
+    synchronized public Map<String, ITagInterface> getTagMap(){
+        return this.tags;
     }
 }

@@ -7,6 +7,10 @@ android {
 
     compileSdk 34
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         minSdkVersion 23 // due to mad-location-manager
         targetSdkVersion 34
@@ -25,8 +29,6 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    // implementation 'androidx.appcompat:appcompat:1.2.0'
-    // implementation 'solutions.s4y.rasat:rasat-android:1.0.3'
     implementation "com.github.s4ysolutions:rasat-android:1.0.5"
     implementation 'androidx.annotation:annotation:1.8.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'

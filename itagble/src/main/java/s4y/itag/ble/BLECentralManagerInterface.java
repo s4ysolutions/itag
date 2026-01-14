@@ -5,7 +5,8 @@ import android.bluetooth.BluetoothDevice;
 import androidx.annotation.NonNull;
 
 interface BLECentralManagerInterface {
-    void startScan();
+    void startScanForNewDevices();
+    void startScan(boolean newDevices);
     boolean isScanning();
     void stopScan();
     boolean canScan();

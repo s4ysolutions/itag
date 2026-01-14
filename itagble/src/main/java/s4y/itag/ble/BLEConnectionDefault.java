@@ -38,7 +38,8 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private final Channel<Integer> clickChannel = new Channel<>(0);
     private final ChannelDistinct<BLEConnectionState> stateChannel = new ChannelDistinct<>(BLEConnectionState.disconnected);
     private final ChannelDistinct<Integer> rssiChannel = new ChannelDistinct<>(-999);
-    
+    BLEConnectionState oldState = null;
+
     private final Boolean debug;
 
     @Override
@@ -134,11 +135,17 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
-    public BLEError connect(boolean infinity) {
+    public void connect(){
+        new Thread(() -> {
+            connectOnMainThread();
+        }).start();
+    }
+
+    public BLEError connectOnMainThread() {
         clickChannel.broadcast(0);
         alertChannel.broadcast(AlertVolume.NO_ALERT);
 
-        manager.stopScan();
+        //manager.stopScan();
         if (isConnected()) {
             if (peripheral() == null) {
                 Log.w("LT", "isConnected but peripheral is null");
@@ -164,18 +171,8 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             BLEError error = waitForScan();
             // waitForScan will set the peripheral if can
             if (peripheral() == null) {
-                if (infinity) {
-                    if (debug) Log.d(LT, "Scan failed no peripheral, will try again");
-                    try {
-                        //noinspection BusyWait
-                        Thread.sleep(10000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    if (debug) Log.d(LT, "Scan failed no peripheral, will abort");
-                    return BLEError.ok.equals(error) ? BLEError.noPeripheral : error;
-                }
+                if (debug) Log.d(LT, "Scan failed no peripheral, will abort");
+                return BLEError.ok.equals(error) ? BLEError.noPeripheral : error;
             } else {
                 if (debug) Log.d(LT, "Scan got peripheral, will connect");
             }
@@ -183,7 +180,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
 
         // connect as soon as a peripheral scanned
         if (debug) Log.d(LT, "Attempt to connect. Scan run: " + (scan ? "yes" : "no"));
-        BLEError error = waitForConnect(infinity);
+        BLEError error = waitForConnect();
         if (!BLEError.ok.equals(error) || !isConnected()) {
             if (debug) Log.d(LT, "Attempt to connect failed");
             stateChannel.broadcast(BLEConnectionState.disconnected);
@@ -268,7 +265,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     private final ThreadWait<Integer> monitorConnect = new ThreadWait<>();
 
     @SuppressWarnings("UnusedReturnValue")
-    private BLEError waitForConnect(boolean auto) {
+    private BLEError waitForConnect() {
         if (peripheral() == null)
             return BLEError.noPeripheral;
 
@@ -301,7 +298,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                 if (debug) {
                     Log.d(LT, "Start wait for connect " + Thread.currentThread().getName());
                 }
-                monitorConnect.waitFor(() -> peripheral().connect(auto), auto ? 0 : 35);
+                monitorConnect.waitFor(() -> peripheral().connect(), 0);
                 Log.d(LT, "End wait for connect");
                 disposables.dispose();
                 if (isConnected()) {
@@ -390,13 +387,13 @@ class BLEConnectionDefault implements BLEConnectionInterface {
                             .subscribe((event) -> {
                                 if (event.peripheral != null) {
                                     if (id.equals(event.peripheral.identifier())) {
-                                        manager.stopScan();
+                                        manager.stopScan(); // TODO: check if this is why the scanner stops unexpectedly
                                         monitorScan.setPayload(event.peripheral);
                                     }
                                 }
                             })
             );
-            monitorScan.waitFor(manager::startScan, 25);
+            monitorScan.waitFor(manager::startScanForNewDevices, 25);
             manager.stopScan();
             if (monitorScan.isTimedOut()) {
                 return BLEError.timeout;
@@ -417,6 +414,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             synchronized (this) {
                 c = count;
                 count = 0;
+                if(c == 1) return;
             }
             clickChannel.broadcast(c);
         };
@@ -428,24 +426,16 @@ class BLEConnectionDefault implements BLEConnectionInterface {
         synchronized void handleClick() {
             clickHandler.removeCallbacks(BLEConnectionDefault.this.clickHandler.waitNext);
             inc();
+            if(count == 1) clickChannel.broadcast(1);
             Log.d(LT, "ClickHandler.handleClick postDelayed");
             clickHandler.postDelayed(BLEConnectionDefault.this.clickHandler.waitNext, CLICK_INTERVAL);
         }
     }
 
     @Override
-    public BLEError connect() {
-        return connect(true);
-    }
-
-    @Override
     public BLEError disconnect(int timeoutSec) {
         clickChannel.broadcast(0);
         alertChannel.broadcast(AlertVolume.NO_ALERT);
-
-        if (manager.isScanning()) {
-            manager.stopScan();
-        }
 
         if (BLEConnectionState.disconnected.equals(state())) {
             return BLEError.ok;
@@ -484,6 +474,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
             );
             monitorDisconnect.waitFor(() -> peripheral().disconnect(), timeoutSec);
             if (monitorDisconnect.isTimedOut()) {
+                Log.d("ingo", "ble disconnect timeout");
                return BLEError.timeout;
             }
             lastStatus = monitorDisconnect.payload();
@@ -588,6 +579,11 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
+    public void broadcastRSSI(int rssi) {
+        rssiChannel.broadcast(rssi);
+    }
+
+    @Override
     public Observable<BLEConnectionState> observableState() {
         return stateChannel.observable;
     }
@@ -609,6 +605,16 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
+    public BLEConnectionState oldState() {
+        return oldState;
+    }
+
+    @Override
+    public void setOldState(BLEConnectionState oldState){
+        this.oldState = oldState;
+    }
+
+    @Override
     public boolean isAlerting() {
         return alertChannel.observable.value() != AlertVolume.NO_ALERT;
     }
@@ -619,7 +625,7 @@ class BLEConnectionDefault implements BLEConnectionInterface {
     }
 
     @Override
-    public void resetFindeMe() {
+    public void resetFindMe() {
        clickChannel.broadcast(0);
     }
 

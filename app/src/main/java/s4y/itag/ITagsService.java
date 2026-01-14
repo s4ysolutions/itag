@@ -140,7 +140,6 @@ public class ITagsService extends Service {
         inForeground = false;
     }
 
-
     private static boolean createdForegroundChannel;
 
     private static void createForegroundNotificationChannel(Context context) {
@@ -164,7 +163,8 @@ public class ITagsService extends Service {
         builder
                 .setTicker(null)
                 .setSmallIcon(R.drawable.app)
-                .setContentTitle(context.getString(R.string.service_in_background))
+                .setOngoing(true)
+                .setContentTitle(context.getString(R.string.service_in_background)) // TODO: change this texts to something like "iTag One Running..." and create icon on main activity which will open tutorial
                 .setContentText(context.getString(R.string.service_description));
         Intent intent = new Intent(context, MainActivity.class);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);

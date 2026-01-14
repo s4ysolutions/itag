@@ -46,7 +46,7 @@ public class RssiView extends LinearLayout {
     private View l12;
 
     static private final float BG_ON=1f;
-    static private final float BG_OFF=0.1f;
+    static private final float BG_OFF=0.3f;
 
     public void setRssi(int level) {
         // -999 indicates no signal

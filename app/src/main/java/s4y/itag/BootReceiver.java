@@ -22,7 +22,7 @@ public class BootReceiver extends BroadcastReceiver {
                         "android.intent.action.QUICKBOOT_POWERON".equals(intent.getAction())
         ) {
             ITagsStoreInterface store = new ITagsStoreDefault(ITagApplication.context);
-            if (store.isDisconnectAlert()) {
+            if (store.isDisconnectAlertOn()) {
                 ITagsService.start(context);
                 // expected to create application and thus init waytooday
                 // and enter foreground

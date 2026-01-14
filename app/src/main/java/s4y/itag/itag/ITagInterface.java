@@ -9,10 +9,20 @@ public interface ITagInterface {
     String id();
     String name();
     void setName(String name);
+    Boolean isShaking();
+    Boolean hasPassivelyDisconnected();
     TagColor color();
     void setColor(TagColor color);
-    boolean isAlertDisconnected();
-    void setAlertDisconnected(boolean alerting);
+    void setShaking(Boolean currentlyShaking);
+    void setPassivelyDisconnected(Boolean has_disconnected);
+    void setAlertMode(TagAlertMode alertMode);
+    void setReconnectMode(Boolean reconnect);
+    boolean reconnectMode();
+
+    void setConnectionMode(TagConnectionMode connectionMode);
+    TagConnectionMode connectionMode();
+    TagAlertMode alertMode();
+    boolean isConnectModeEnabled();
     int alertDelay();
     void setAlertDelay(int alarmDelay);
     void copyFromTag(ITagInterface tag);
