@@ -23,6 +23,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 34
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "String", "WAYTODAY_PRINCIPAL", "\"${System.getenv('WAYTODAY_PRINCIPAL') ?: properties.getProperty('waytoday.principal')}\""
         buildConfigField "String", "WAYTODAY_SECRET", "\"${System.getenv('WAYTODAY_SECRET') ?: properties.getProperty('waytoday.secret')}\""
     }
 

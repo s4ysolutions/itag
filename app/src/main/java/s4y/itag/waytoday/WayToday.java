@@ -9,6 +9,7 @@ import s4y.gps.sdk.dependencies.IGPSUpdatesProvider;
 import solutions.s4y.rasat.Channel;
 import solutions.s4y.rasat.Observable;
 import solutions.s4y.waytoday.sdk.AndroidWayTodayClient;
+import s4y.itag.BuildConfig;
 public class WayToday {
     private static AndroidWayTodayClient instance;
     private static final Channel<String> trackIdChannel = new Channel<>();
@@ -19,7 +20,7 @@ public class WayToday {
             throw new IllegalStateException("WayToday is already initialized");
         }
 
-        instance = new AndroidWayTodayClient(context, "iTagAndroid", "secret",  "iTagAndroid");
+        instance = new AndroidWayTodayClient(context, BuildConfig.WAYTODAY_PRINCIPAL, BuildConfig.WAYTODAY_SECRET, "iTagAndroid");
         instance.wtClient.addTrackIdChangeListener(trackIdChannel::broadcast);
 
         instance.gpsUpdatesManager.getStatus().addListener(status -> {

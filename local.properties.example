@@ -1,0 +1,5 @@
+## WayToday SDK credentials
+## Copy this file to local.properties and fill in real values.
+## local.properties is gitignored — secrets stay local.
+waytoday.principal=change-me
+waytoday.secret=change-me
