@@ -5,11 +5,11 @@ plugins {
 android {
     namespace = 's4y.itag.ble'
 
-    compileSdk 34
+    compileSdk 37
 
     defaultConfig {
         minSdkVersion 23 // due to mad-location-manager
-        targetSdkVersion 34
+        targetSdkVersion 37
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'

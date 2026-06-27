@@ -12,7 +12,7 @@ if (project.rootProject.file('local.properties').exists()) {
 android {
     namespace = 's4y.itag'
 
-    compileSdk 34
+    compileSdk 37
 
     buildFeatures {
         buildConfig true
@@ -21,7 +21,9 @@ android {
     defaultConfig {
         applicationId "s4y.itag"
         minSdkVersion 23
-        targetSdkVersion 34
+        targetSdkVersion 37
+        versionCode 164
+        versionName "2.22.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "WAYTODAY_PRINCIPAL", "\"${System.getenv('WAYTODAY_PRINCIPAL') ?: properties.getProperty('waytoday.principal')}\""
         buildConfigField "String", "WAYTODAY_SECRET", "\"${System.getenv('WAYTODAY_SECRET') ?: properties.getProperty('waytoday.secret')}\""
@@ -29,7 +31,7 @@ android {
 
     signingConfigs {
         release {
-            storeFile = file("itag.one.river0.keystore")
+            storeFile file("/Users/dsa/Library/CloudStorage/OneDrive-Personal/android/itag/itag.one.river0.keystore")
             storePassword System.getenv("SIGNING_STORE_PASSWORD")
             keyAlias System.getenv("SIGNING_KEY_ALIAS")
             keyPassword System.getenv("SIGNING_KEY_PASSWORD")
@@ -43,7 +45,7 @@ android {
         }
         release {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             manifestPlaceholders = [analytics_deactivated: "true"]
             signingConfig signingConfigs.release
         }
@@ -70,6 +72,8 @@ dependencies {
 
     implementation project(':itagble')
     implementation "androidx.preference:preference:1.2.1"
+    implementation "androidx.core:core-ktx:1.12.0"
+    implementation "com.google.android.material:material:1.11.0"
     implementation "com.github.s4ysolutions:rasat-android:1.0.5"
 
     implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
@@ -77,7 +81,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
 
     // implementation "solutions.s4y.gps:gps-sdk-android:1.0.0-dev.7"
-    implementation 'com.github.s4ysolutions:WayTodaySDK-Android:4.2.0'
+    implementation 'com.github.s4ysolutions:WayTodaySDK-Android:v4.4.3'
 
 /*
     testImplementation 'androidx.test.ext:junit:1.1.5'

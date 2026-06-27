@@ -50,3 +50,8 @@
 -dontwarn org.slf4j.helpers.NOPLoggerFactory
 -dontwarn org.slf4j.spi.LocationAwareLogger
 -dontwarn reactor.blockhound.integration.BlockHoundIntegration
+-dontwarn org.bouncycastle.**
+-dontwarn org.bouncycastle.openssl.PEMParser
+-dontwarn org.bouncycastle.openssl.jcajce.**
+-dontwarn org.bouncycastle.pkcs.**
+-dontwarn org.bouncycastle.operator.**
